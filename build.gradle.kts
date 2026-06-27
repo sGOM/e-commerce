@@ -1,0 +1,92 @@
+plugins {
+	kotlin("jvm") version "1.9.25"
+	kotlin("plugin.spring") version "1.9.25"
+	id("org.springframework.boot") version "3.5.3"
+	id("io.spring.dependency-management") version "1.1.7"
+	kotlin("plugin.jpa") version "1.9.25"
+}
+
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// Docker 29(API 1.54) 호환: Testcontainers 1.21.x 가 번들하는 docker-java 3.4.2 는
+// Docker 29 의 /info 응답에 400 을 받는다. docker-java 만 3.7.1 로 끌어올린다(3.x 내 API 호환).
+configurations.all {
+	resolutionStrategy.eachDependency {
+		if (requested.group == "com.github.docker-java") {
+			useVersion("3.7.1")
+		}
+	}
+}
+
+val kotlinJdslVersion = "3.5.4"
+val springMockkVersion = "4.0.2"
+
+dependencies {
+	// Spring Boot
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+
+	// Kotlin
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+	// Kotlin JDSL (동적/복잡 쿼리)
+	implementation("com.linecorp.kotlin-jdsl:jpql-dsl:$kotlinJdslVersion")
+	implementation("com.linecorp.kotlin-jdsl:jpql-render:$kotlinJdslVersion")
+	implementation("com.linecorp.kotlin-jdsl:spring-data-jpa-support:$kotlinJdslVersion")
+
+	// DB / Migration
+	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-database-postgresql")
+	runtimeOnly("org.postgresql:postgresql")
+
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+	// Test
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude(module = "mockito-core")
+	}
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
+	testImplementation("io.mockk:mockk:1.13.12")
+	testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+		jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+	}
+}
+
+allOpen {
+	annotation("jakarta.persistence.Entity")
+	annotation("jakarta.persistence.MappedSuperclass")
+	annotation("jakarta.persistence.Embeddable")
+}
+
+tasks.withType<Test> {
+	useJUnitPlatform()
+	// Testcontainers 우회용 외부 DB 지정(-D)을 포크된 테스트 JVM 으로 전달한다.
+	listOf("it.datasource.url", "it.datasource.username", "it.datasource.password").forEach { key ->
+		System.getProperty(key)?.let { systemProperty(key, it) }
+	}
+}

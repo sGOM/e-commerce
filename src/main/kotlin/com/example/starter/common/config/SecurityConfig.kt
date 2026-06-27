@@ -1,0 +1,134 @@
+package com.example.starter.common.config
+
+import com.example.starter.common.audit.AuditLogFilter
+import com.example.starter.common.audit.AuditLogService
+import com.example.starter.common.audit.AuditProperties
+import com.example.starter.security.handler.CsrfCookieFilter
+import com.example.starter.security.handler.RestAccessDeniedHandler
+import com.example.starter.security.handler.RestAuthenticationEntryPoint
+import com.example.starter.security.oauth.CustomOAuth2UserService
+import com.example.starter.security.oauth.OAuth2LoginFailureHandler
+import com.example.starter.security.oauth.OAuth2LoginSuccessHandler
+import com.example.starter.security.userdetails.CustomUserDetailsService
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.web.access.intercept.AuthorizationFilter
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.ProviderManager
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.invoke
+import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.crypto.factory.PasswordEncoderFactories
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository
+import org.springframework.security.web.context.SecurityContextRepository
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
+import org.springframework.security.web.csrf.CsrfFilter
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
+
+/**
+ * 세션 기반 인증 + 기본 보안 하드닝.
+ *
+ * - 인증은 컨트롤러([com.example.starter.domain.auth])에서 [AuthenticationManager] 로 수행 후
+ *   [SecurityContextRepository] 를 통해 세션에 저장한다.
+ * - CSRF: SPA 친화적인 쿠키 토큰 방식(XSRF-TOKEN 쿠키 / X-XSRF-TOKEN 헤더).
+ * - 인증/인가 실패는 [com.example.starter.security.handler] 가 JSON 으로 응답.
+ * - 메서드 보안(@PreAuthorize) 활성화.
+ */
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+class SecurityConfig(
+    private val userDetailsService: CustomUserDetailsService,
+    private val authenticationEntryPoint: RestAuthenticationEntryPoint,
+    private val accessDeniedHandler: RestAccessDeniedHandler,
+    private val oAuth2UserService: CustomOAuth2UserService,
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
+    private val oAuth2LoginFailureHandler: OAuth2LoginFailureHandler,
+    private val auditLogService: AuditLogService,
+    private val auditProperties: AuditProperties,
+    private val objectMapper: ObjectMapper,
+) {
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder =
+        // {bcrypt} 등 알고리즘 식별자를 저장 → 추후 알고리즘 교체/업그레이드 용이
+        PasswordEncoderFactories.createDelegatingPasswordEncoder()
+
+    @Bean
+    fun authenticationManager(passwordEncoder: PasswordEncoder): AuthenticationManager {
+        val provider = DaoAuthenticationProvider(userDetailsService)
+        provider.setPasswordEncoder(passwordEncoder)
+        return ProviderManager(provider)
+    }
+
+    @Bean
+    fun securityContextRepository(): SecurityContextRepository = HttpSessionSecurityContextRepository()
+
+    @Bean
+    fun securityFilterChain(
+        http: HttpSecurity,
+        securityContextRepository: SecurityContextRepository,
+        clientRegistrationRepository: ObjectProvider<ClientRegistrationRepository>,
+    ): SecurityFilterChain {
+        // OAuth2 클라이언트 등록정보가 있을 때만(=시크릿이 설정됐을 때만) 소셜 로그인을 켠다.
+        val oauthEnabled = clientRegistrationRepository.ifAvailable != null
+        http {
+            csrf {
+                csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse()
+                // BREACH 보호 + SPA 호환을 위한 표준 핸들러
+                csrfTokenRequestHandler = CsrfTokenRequestAttributeHandler()
+            }
+            // 지연 로딩된 CSRF 토큰을 매 요청에서 강제 렌더링 → XSRF-TOKEN 쿠키 항상 발급
+            addFilterAfter<CsrfFilter>(CsrfCookieFilter())
+            // 감사 로그: 인가 이후에 두어 SecurityContext(사용자)를 안전하게 읽는다
+            addFilterAfter<AuthorizationFilter>(AuditLogFilter(auditLogService, auditProperties, objectMapper))
+            authorizeHttpRequests {
+                authorize("/api/auth/signup", permitAll)
+                authorize("/api/auth/login", permitAll)
+                authorize("/actuator/health", permitAll)
+                authorize("/oauth2/**", permitAll)
+                authorize("/login/oauth2/**", permitAll)
+                authorize("/error", permitAll)
+                authorize("/api/admin/**", hasRole("ADMIN"))
+                authorize(anyRequest, authenticated)
+            }
+            securityContext {
+                this.securityContextRepository = securityContextRepository
+            }
+            sessionManagement {
+                sessionCreationPolicy = SessionCreationPolicy.IF_REQUIRED
+                sessionConcurrency {
+                    maximumSessions = 1
+                    maxSessionsPreventsLogin = false
+                }
+            }
+            exceptionHandling {
+                authenticationEntryPoint = this@SecurityConfig.authenticationEntryPoint
+                accessDeniedHandler = this@SecurityConfig.accessDeniedHandler
+            }
+            // 소셜 로그인 (등록정보가 있을 때만 활성화)
+            if (oauthEnabled) {
+                oauth2Login {
+                    userInfoEndpoint {
+                        userService = oAuth2UserService
+                    }
+                    authenticationSuccessHandler = oAuth2LoginSuccessHandler
+                    authenticationFailureHandler = oAuth2LoginFailureHandler
+                }
+            }
+            // 폼/베이직 로그인 비활성화 — 로그인은 JSON 컨트롤러로 처리
+            formLogin { disable() }
+            httpBasic { disable() }
+            logout { disable() }
+        }
+        return http.build()
+    }
+}
