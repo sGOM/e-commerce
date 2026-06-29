@@ -2,6 +2,7 @@ package com.example.starter.domain.catalog
 
 import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.admin.dto.PageResponse
+import com.example.starter.domain.catalog.dto.PopularProductResponse
 import com.example.starter.domain.catalog.dto.ProductDetailResponse
 import com.example.starter.domain.catalog.dto.ProductSearchCondition
 import com.example.starter.domain.catalog.dto.ProductSummaryResponse
@@ -10,6 +11,7 @@ import org.springframework.data.web.PageableDefault
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -27,6 +29,11 @@ class ProductController(
         @PageableDefault(size = 20) pageable: Pageable,
     ): ApiResponse<PageResponse<ProductSummaryResponse>> =
         ApiResponse.success(productService.search(condition, pageable))
+
+    /** 인기 상품 — 누적 판매 수량 상위 N개(기본 8, 최대 50). 정적 경로라 `/{id}` 보다 우선 매칭된다. */
+    @GetMapping("/popular")
+    fun popular(@RequestParam(defaultValue = "8") limit: Int): ApiResponse<List<PopularProductResponse>> =
+        ApiResponse.success(productService.getPopular(limit.coerceIn(1, 50)))
 
     @GetMapping("/{id}")
     fun getDetail(@PathVariable id: Long): ApiResponse<ProductDetailResponse> =

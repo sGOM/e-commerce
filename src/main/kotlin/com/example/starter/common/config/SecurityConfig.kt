@@ -100,6 +100,9 @@ class SecurityConfig(
                 // 상품 탐색은 공개(게스트 허용). 조회 전용이므로 전체 허용(쓰기 경로는 /api/seller, /api/admin)
                 authorize("/api/products", permitAll)
                 authorize("/api/products/**", permitAll)
+                // 카테고리 조회는 공개(상품 검색 필터용)
+                authorize("/api/categories", permitAll)
+                authorize("/api/categories/**", permitAll)
                 // 게스트 장바구니 계산/검증(localStorage 동반, 무상태) — 비회원 허용
                 authorize("/api/cart/guest", permitAll)
                 // 게스트 주문 생성/조회 — 비회원 허용(조회는 주문번호+연락처로 검증)

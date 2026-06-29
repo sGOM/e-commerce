@@ -1,5 +1,6 @@
 package com.example.starter.domain.catalog
 
+import com.example.starter.domain.catalog.entity.Category
 import com.example.starter.domain.catalog.entity.Inventory
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
@@ -7,6 +8,7 @@ import com.example.starter.domain.catalog.entity.ProductStatus
 import com.example.starter.domain.seller.entity.Seller
 import com.example.starter.domain.seller.entity.SellerStatus
 import com.example.starter.domain.seller.repository.SellerRepository
+import com.example.starter.domain.catalog.repository.CategoryRepository
 import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.UserRepository
@@ -26,6 +28,7 @@ class ProductQueryIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var userRepository: UserRepository
     @Autowired lateinit var sellerRepository: SellerRepository
     @Autowired lateinit var productRepository: ProductRepository
+    @Autowired lateinit var categoryRepository: CategoryRepository
 
     private fun seedSeller(storeName: String): Seller {
         val user = userRepository.save(User(email = "$storeName@seller.com", password = "{noop}x", name = storeName))
@@ -42,8 +45,10 @@ class ProductQueryIntegrationTest : AbstractIntegrationTest() {
         optionSku: String,
         additionalPrice: Long = 0,
         stock: Int = 0,
+        category: Category? = null,
     ): Product {
         val product = Product(seller = seller, name = name, basePrice = basePrice, status = status)
+        product.category = category
         val option = ProductOption(name = "기본", sku = optionSku, additionalPrice = additionalPrice)
         option.assignInventory(Inventory(quantity = stock, reserved = 0))
         product.addOption(option)
@@ -88,6 +93,34 @@ class ProductQueryIntegrationTest : AbstractIntegrationTest() {
         mockMvc.get("/api/products/${product.id}").andExpect {
             status { isNotFound() }
             jsonPath("$.code") { value("CATALOG-001") }
+        }
+    }
+
+    @Test
+    fun `카테고리로 검색하면 해당 카테고리 상품만 노출된다`() {
+        val seller = seedSeller("catalog-store-d")
+        val outer = categoryRepository.save(Category(name = "아우터", sortOrder = 1))
+        val shoes = categoryRepository.save(Category(name = "신발", sortOrder = 2))
+        seedProduct(seller, "패딩", 90_000, ProductStatus.ON_SALE, "SKU-CAT-OUTER", category = outer)
+        seedProduct(seller, "운동화", 80_000, ProductStatus.ON_SALE, "SKU-CAT-SHOES", category = shoes)
+
+        mockMvc.get("/api/products?categoryId=${outer.id}").andExpect {
+            status { isOk() }
+            jsonPath("$.data.totalElements") { value(1) }
+            jsonPath("$.data.content[0].name") { value("패딩") }
+            jsonPath("$.data.content[0].categoryName") { value("아우터") }
+        }
+    }
+
+    @Test
+    fun `카테고리 목록은 정렬 순서로 공개 조회된다`() {
+        categoryRepository.save(Category(name = "B카테고리", sortOrder = 2))
+        categoryRepository.save(Category(name = "A카테고리", sortOrder = 1))
+
+        mockMvc.get("/api/categories").andExpect {
+            status { isOk() }
+            jsonPath("$.data[0].name") { value("A카테고리") }
+            jsonPath("$.data[1].name") { value("B카테고리") }
         }
     }
 }

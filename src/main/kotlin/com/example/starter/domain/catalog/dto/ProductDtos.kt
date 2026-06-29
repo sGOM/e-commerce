@@ -37,6 +37,33 @@ data class ProductSummaryResponse(
     }
 }
 
+/** 인기 상품 응답 — 요약 정보 + 누적 판매 수량 */
+data class PopularProductResponse(
+    val id: Long,
+    val name: String,
+    val basePrice: Long,
+    val status: ProductStatus,
+    val sellerId: Long,
+    val storeName: String,
+    val categoryId: Long?,
+    val categoryName: String?,
+    val soldQuantity: Long,
+) {
+    companion object {
+        fun from(product: Product, soldQuantity: Long) = PopularProductResponse(
+            id = requireNotNull(product.id),
+            name = product.name,
+            basePrice = product.basePrice,
+            status = product.status,
+            sellerId = requireNotNull(product.seller.id),
+            storeName = product.seller.storeName,
+            categoryId = product.category?.id,
+            categoryName = product.category?.name,
+            soldQuantity = soldQuantity,
+        )
+    }
+}
+
 /** 상품 상세 (옵션·재고 포함) */
 data class ProductDetailResponse(
     val id: Long,
