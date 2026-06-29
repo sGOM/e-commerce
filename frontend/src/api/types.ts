@@ -146,3 +146,36 @@ export interface Payment {
   transactionId: string | null
   paidAt: string | null
 }
+
+export type DiscountType = 'RATE' | 'FIXED'
+
+export interface IssuedCoupon {
+  issuedCouponId: number
+  name: string
+  discountType: DiscountType
+  discountValue: number
+  minOrderAmount: number
+  maxDiscountAmount: number | null
+  validFrom: string
+  validUntil: string
+  used: boolean
+}
+
+export type PointTransactionType =
+  | 'EARN'
+  | 'USE'
+  | 'CANCEL_USE'
+  | 'CANCEL_EARN'
+  | 'EXPIRE'
+
+export interface PointTransaction {
+  type: PointTransactionType
+  amount: number
+  orderId: number | null
+  createdAt: string
+}
+
+export interface PointSummary {
+  balance: number
+  transactions: PointTransaction[]
+}

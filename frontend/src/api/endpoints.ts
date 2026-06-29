@@ -1,10 +1,12 @@
 import { api } from './client'
 import type {
   Cart,
+  IssuedCoupon,
   Order,
   OrderSummary,
   PageResponse,
   Payment,
+  PointSummary,
   ProductDetail,
   ProductSummary,
   User,
@@ -18,6 +20,12 @@ export const authApi = {
   signup: (email: string, password: string, name: string) =>
     api.post<User>('/api/auth/signup', { email, password, name }),
   logout: () => api.post<void>('/api/auth/logout'),
+}
+
+// ----- 내 쿠폰/포인트 -----
+export const meApi = {
+  coupons: () => api.get<IssuedCoupon[]>('/api/me/coupons'),
+  points: () => api.get<PointSummary>('/api/me/points'),
 }
 
 // ----- 상품 -----

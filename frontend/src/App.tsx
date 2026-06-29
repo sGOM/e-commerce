@@ -7,6 +7,7 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import MyOrdersPage from './pages/MyOrdersPage'
+import MyPage from './pages/MyPage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
@@ -39,6 +40,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <OrderDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my"
+              element={
+                <ProtectedRoute>
+                  <MyPage />
                 </ProtectedRoute>
               }
             />

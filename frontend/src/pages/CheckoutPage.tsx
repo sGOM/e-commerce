@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cartApi, orderApi, type ShippingAddressBody } from '../api/endpoints'
+import { cartApi, meApi, orderApi, type ShippingAddressBody } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
-import type { Cart } from '../api/types'
+import type { Cart, IssuedCoupon } from '../api/types'
+
+/** 쿠폰 할인 미리보기(서버 calculateDiscount 와 동일 규칙). 최종 금액은 서버가 재계산한다. */
+function couponDiscount(coupon: IssuedCoupon, amount: number): number {
+  if (amount < coupon.minOrderAmount) return 0
+  const raw =
+    coupon.discountType === 'RATE'
+      ? Math.floor((amount * coupon.discountValue) / 100)
+      : coupon.discountValue
+  const capped = coupon.maxDiscountAmount ? Math.min(raw, coupon.maxDiscountAmount) : raw
+  return Math.min(capped, amount)
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -14,6 +25,12 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 회원 전용: 보유 쿠폰/포인트
+  const [coupons, setCoupons] = useState<IssuedCoupon[]>([])
+  const [pointBalance, setPointBalance] = useState(0)
+  const [couponId, setCouponId] = useState<number | null>(null)
+  const [pointInput, setPointInput] = useState(0)
 
   const [form, setForm] = useState({
     ordererName: user?.name ?? '',
@@ -37,6 +54,10 @@ export default function CheckoutPage() {
           const c = await cartApi.get()
           if (c.items.length === 0) return navigate('/cart')
           setCart(c)
+          // 사용 가능한 쿠폰(미사용)과 포인트 잔액 로드
+          const [cps, pts] = await Promise.all([meApi.coupons(), meApi.points()])
+          setCoupons(cps.filter((c) => !c.used))
+          setPointBalance(pts.balance)
         }
       } catch (e) {
         setError((e as Error).message)
@@ -44,6 +65,14 @@ export default function CheckoutPage() {
     }
     loadCart()
   }, [isGuest, navigate])
+
+  // 할인/포인트 미리보기 계산(서버가 최종 재계산)
+  const subtotal = cart?.totalPrice ?? 0
+  const selectedCoupon = coupons.find((c) => c.issuedCouponId === couponId) ?? null
+  const discount = selectedCoupon ? couponDiscount(selectedCoupon, subtotal) : 0
+  const maxPoint = Math.max(0, Math.min(pointBalance, subtotal - discount))
+  const pointToUse = Math.max(0, Math.min(pointInput, maxPoint))
+  const payable = subtotal - discount - pointToUse
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value })
@@ -83,6 +112,8 @@ export default function CheckoutPage() {
           ordererPhone: form.ordererPhone,
           ordererEmail: form.ordererEmail,
           shippingAddress,
+          issuedCouponId: couponId,
+          usePoint: pointToUse,
         })
         await orderApi.pay(order.orderId) // Mock PG 즉시 결제
         navigate(`/orders/${order.orderId}`, { state: { justPaid: true } })
@@ -121,21 +152,87 @@ export default function CheckoutPage() {
         </section>
       </div>
 
-      <div className="h-fit rounded-xl border bg-white p-5">
-        <h2 className="mb-3 font-bold">결제 요약</h2>
-        {cart && (
-          <>
-            <div className="flex justify-between text-sm text-slate-600">
-              <span>상품 {cart.totalQuantity}개</span>
-              <span>{formatKRW(cart.totalPrice)}</span>
+      <div className="h-fit space-y-4 rounded-xl border bg-white p-5">
+        <h2 className="font-bold">결제 요약</h2>
+
+        {!isGuest && cart && (
+          <div className="space-y-3 border-b pb-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">쿠폰</label>
+              <select
+                value={couponId ?? ''}
+                onChange={(e) => setCouponId(e.target.value ? Number(e.target.value) : null)}
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+              >
+                <option value="">선택 안 함</option>
+                {coupons.map((c) => {
+                  const usable = subtotal >= c.minOrderAmount
+                  return (
+                    <option key={c.issuedCouponId} value={c.issuedCouponId} disabled={!usable}>
+                      {c.name} (
+                      {c.discountType === 'RATE'
+                        ? `${c.discountValue}%`
+                        : formatKRW(c.discountValue)}
+                      )
+                      {!usable ? ` · ${formatKRW(c.minOrderAmount)} 이상` : ''}
+                    </option>
+                  )
+                })}
+              </select>
+              {coupons.length === 0 && (
+                <p className="mt-1 text-xs text-slate-400">보유한 쿠폰이 없습니다.</p>
+              )}
             </div>
-            <div className="mt-2 flex justify-between font-bold">
-              <span>{isGuest ? '주문 금액' : '결제 금액'}</span>
-              <span className="text-indigo-600">{formatKRW(cart.totalPrice)}</span>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">
+                포인트 사용 (보유 {formatKRW(pointBalance)})
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={maxPoint}
+                  value={pointInput}
+                  onChange={(e) => setPointInput(Math.max(0, Number(e.target.value)))}
+                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPointInput(maxPoint)}
+                  className="shrink-0 rounded-lg border px-3 text-xs text-slate-600 hover:bg-slate-50"
+                >
+                  전액
+                </button>
+              </div>
             </div>
-          </>
+          </div>
         )}
-        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+
+        {cart && (
+          <div className="space-y-1 text-sm text-slate-600">
+            <div className="flex justify-between">
+              <span>상품 {cart.totalQuantity}개</span>
+              <span>{formatKRW(subtotal)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-red-500">
+                <span>쿠폰 할인</span>
+                <span>-{formatKRW(discount)}</span>
+              </div>
+            )}
+            {pointToUse > 0 && (
+              <div className="flex justify-between text-red-500">
+                <span>포인트 사용</span>
+                <span>-{formatKRW(pointToUse)}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-t pt-2 font-bold text-slate-900">
+              <span>{isGuest ? '주문 금액' : '결제 금액'}</span>
+              <span className="text-indigo-600">{formatKRW(payable)}</span>
+            </div>
+          </div>
+        )}
+        {error && <p className="text-sm text-red-500">{error}</p>}
         <button
           type="submit"
           disabled={submitting || !cart}
