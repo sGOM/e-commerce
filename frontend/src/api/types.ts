@@ -179,3 +179,44 @@ export interface PointSummary {
   balance: number
   transactions: PointTransaction[]
 }
+
+export type SellerStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED'
+
+export interface Seller {
+  sellerId: number
+  userId: number
+  storeName: string
+  description: string | null
+  status: SellerStatus
+}
+
+export interface Shipment {
+  courier: string
+  trackingNumber: string
+  status: string
+  shippedAt: string | null
+}
+
+export interface SellerSubOrder {
+  subOrderId: number
+  orderNumber: string
+  status: SubOrderStatus
+  subtotal: number
+  items: OrderItem[]
+  shipment: Shipment | null
+}
+
+export type SettlementStatus = 'PENDING' | 'PAID'
+
+export interface Settlement {
+  settlementId: number
+  sellerId: number
+  storeName: string
+  salesAmount: number
+  commissionAmount: number
+  payoutAmount: number
+  settledCount: number
+  status: SettlementStatus
+  paidAt: string | null
+  createdAt: string
+}

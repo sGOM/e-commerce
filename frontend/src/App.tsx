@@ -12,6 +12,10 @@ import OrderDetailPage from './pages/OrderDetailPage'
 import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import SellerLayout from './pages/seller/SellerLayout'
+import SellerProductsPage from './pages/seller/SellerProductsPage'
+import SellerOrdersPage from './pages/seller/SellerOrdersPage'
+import SellerSettlementsPage from './pages/seller/SellerSettlementsPage'
 
 export default function App() {
   return (
@@ -51,6 +55,20 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            {/* 판매자 백오피스 (로그인 필요, 레이아웃이 ROLE_SELLER 게이트) */}
+            <Route
+              path="seller"
+              element={
+                <ProtectedRoute>
+                  <SellerLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<SellerProductsPage />} />
+              <Route path="products" element={<SellerProductsPage />} />
+              <Route path="orders" element={<SellerOrdersPage />} />
+              <Route path="settlements" element={<SellerSettlementsPage />} />
+            </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

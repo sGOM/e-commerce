@@ -9,6 +9,10 @@ import type {
   PointSummary,
   ProductDetail,
   ProductSummary,
+  Seller,
+  SellerSubOrder,
+  Settlement,
+  SubOrderStatus,
   User,
 } from './types'
 
@@ -30,14 +34,50 @@ export const meApi = {
 
 // ----- 상품 -----
 export const productApi = {
-  search: (params: { keyword?: string; page?: number; size?: number }) => {
+  search: (params: { keyword?: string; sellerId?: number; page?: number; size?: number }) => {
     const q = new URLSearchParams()
     if (params.keyword) q.set('keyword', params.keyword)
+    if (params.sellerId != null) q.set('sellerId', String(params.sellerId))
     q.set('page', String(params.page ?? 0))
     q.set('size', String(params.size ?? 20))
     return api.get<PageResponse<ProductSummary>>(`/api/products?${q.toString()}`)
   },
   detail: (id: number) => api.get<ProductDetail>(`/api/products/${id}`),
+}
+
+export interface CreateOptionBody {
+  name: string
+  sku: string
+  additionalPrice: number
+  stockQuantity: number
+}
+export interface CreateProductBody {
+  name: string
+  basePrice: number
+  description?: string
+  status: 'DRAFT' | 'ON_SALE' | 'SOLD_OUT' | 'HIDDEN'
+  options: CreateOptionBody[]
+}
+
+// ----- 판매자 백오피스 -----
+export const sellerApi = {
+  apply: (storeName: string, description?: string) =>
+    api.post<Seller>('/api/seller/apply', { storeName, description }),
+  myStore: () => api.get<Seller>('/api/seller/store'),
+  createProduct: (body: CreateProductBody) =>
+    api.post<unknown>('/api/seller/products', body),
+  adjustStock: (productId: number, optionId: number, quantity: number) =>
+    api.patch<unknown>(`/api/seller/products/${productId}/stock`, { optionId, quantity }),
+  listOrders: (status?: SubOrderStatus) =>
+    api.get<SellerSubOrder[]>(
+      `/api/seller/orders${status ? `?status=${status}` : ''}`,
+    ),
+  ship: (subOrderId: number, courier: string, trackingNumber: string) =>
+    api.post<SellerSubOrder>(`/api/seller/orders/${subOrderId}/ship`, {
+      courier,
+      trackingNumber,
+    }),
+  settlements: () => api.get<Settlement[]>('/api/seller/settlements'),
 }
 
 export interface GuestCartLine {

@@ -35,6 +35,9 @@ export default function Layout() {
                 <NavLink to="/my" className={navClass}>
                   쿠폰/포인트
                 </NavLink>
+                <NavLink to="/seller" className={navClass}>
+                  판매자
+                </NavLink>
                 <span className="text-slate-400">|</span>
                 <span className="text-slate-600">{user.name}님</span>
                 <button
