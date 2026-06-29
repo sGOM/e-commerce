@@ -97,7 +97,18 @@ class SecurityConfig(
                 authorize("/oauth2/**", permitAll)
                 authorize("/login/oauth2/**", permitAll)
                 authorize("/error", permitAll)
+                // 상품 탐색은 공개(게스트 허용). 조회 전용이므로 전체 허용(쓰기 경로는 /api/seller, /api/admin)
+                authorize("/api/products", permitAll)
+                authorize("/api/products/**", permitAll)
+                // 게스트 장바구니 계산/검증(localStorage 동반, 무상태) — 비회원 허용
+                authorize("/api/cart/guest", permitAll)
+                // 게스트 주문 생성/조회 — 비회원 허용(조회는 주문번호+연락처로 검증)
+                authorize("/api/orders/guest", permitAll)
+                authorize("/api/orders/guest/lookup", permitAll)
                 authorize("/api/admin/**", hasRole("ADMIN"))
+                // 입점 신청은 ROLE_SELLER 가 아직 없는 일반 회원이 수행한다(나머지 셀러 API보다 먼저 매칭)
+                authorize("/api/seller/apply", authenticated)
+                authorize("/api/seller/**", hasRole("SELLER"))
                 authorize(anyRequest, authenticated)
             }
             securityContext {

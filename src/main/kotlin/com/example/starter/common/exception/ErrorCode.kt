@@ -33,4 +33,42 @@ enum class ErrorCode(
     // 소셜 로그인 (OAUTH)
     UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "OAUTH-001", "지원하지 않는 소셜 로그인 제공자입니다."),
     OAUTH_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "OAUTH-002", "소셜 계정에서 이메일을 제공받지 못했습니다."),
+
+    // 판매자 (SELLER)
+    SELLER_NOT_FOUND(HttpStatus.NOT_FOUND, "SELLER-001", "판매자를 찾을 수 없습니다."),
+    ALREADY_SELLER(HttpStatus.CONFLICT, "SELLER-002", "이미 입점 신청한 계정입니다."),
+
+    // 카탈로그/상품 (CATALOG)
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "CATALOG-001", "상품을 찾을 수 없습니다."),
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATALOG-002", "카테고리를 찾을 수 없습니다."),
+    PRODUCT_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "CATALOG-003", "상품 옵션을 찾을 수 없습니다."),
+    PRODUCT_NOT_PURCHASABLE(HttpStatus.CONFLICT, "CATALOG-004", "현재 구매할 수 없는 상품입니다."),
+    INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "CATALOG-005", "재고가 부족합니다."),
+
+    // 장바구니 (CART)
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART-001", "장바구니 항목을 찾을 수 없습니다."),
+
+    // 주문 (ORDER)
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-001", "주문을 찾을 수 없습니다."),
+    EMPTY_ORDER(HttpStatus.BAD_REQUEST, "ORDER-002", "주문할 상품이 없습니다."),
+    ORDER_NOT_CANCELABLE(HttpStatus.CONFLICT, "ORDER-003", "현재 상태에서는 주문을 취소할 수 없습니다."),
+    ORDER_NOT_PAYABLE(HttpStatus.CONFLICT, "ORDER-004", "결제할 수 없는 주문 상태입니다."),
+    SUB_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-005", "하위 주문을 찾을 수 없습니다."),
+    SUB_ORDER_NOT_SHIPPABLE(HttpStatus.CONFLICT, "ORDER-006", "결제 완료/상품준비 상태에서만 발송할 수 있습니다."),
+
+    // 결제 (PAYMENT)
+    PAYMENT_FAILED(HttpStatus.PAYMENT_REQUIRED, "PAYMENT-001", "결제가 거절되었습니다."),
+
+    // 쿠폰 (COUPON)
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON-001", "쿠폰을 찾을 수 없습니다."),
+    COUPON_ALREADY_USED(HttpStatus.CONFLICT, "COUPON-002", "이미 사용한 쿠폰입니다."),
+    COUPON_EXPIRED(HttpStatus.CONFLICT, "COUPON-003", "사용 기간이 아닌 쿠폰입니다."),
+    COUPON_MIN_ORDER_NOT_MET(HttpStatus.CONFLICT, "COUPON-004", "쿠폰 최소 주문금액을 충족하지 않습니다."),
+
+    // 포인트 (POINT)
+    INSUFFICIENT_POINT(HttpStatus.CONFLICT, "POINT-001", "보유 포인트가 부족합니다."),
+    POINT_EXCEEDS_PAYABLE(HttpStatus.BAD_REQUEST, "POINT-002", "사용 포인트가 결제금액을 초과합니다."),
+
+    // 정산 (SETTLEMENT)
+    SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-001", "정산 내역을 찾을 수 없습니다."),
 }
