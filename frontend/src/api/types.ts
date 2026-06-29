@@ -37,6 +37,18 @@ export interface ProductOption {
   availableStock: number
 }
 
+export interface PopularProduct {
+  id: number
+  name: string
+  basePrice: number
+  status: ProductStatus
+  sellerId: number
+  storeName: string
+  categoryId: number | null
+  categoryName: string | null
+  soldQuantity: number
+}
+
 export interface ProductDetail {
   id: number
   name: string

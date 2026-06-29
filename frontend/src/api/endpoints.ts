@@ -10,6 +10,7 @@ import type {
   PageResponse,
   Payment,
   PointSummary,
+  PopularProduct,
   ProductDetail,
   ProductSummary,
   Seller,
@@ -36,16 +37,30 @@ export const meApi = {
   points: () => api.get<PointSummary>('/api/me/points'),
 }
 
+// ----- 카테고리(공개) -----
+export const categoryApi = {
+  list: () => api.get<Category[]>('/api/categories'),
+}
+
 // ----- 상품 -----
 export const productApi = {
-  search: (params: { keyword?: string; sellerId?: number; page?: number; size?: number }) => {
+  search: (params: {
+    keyword?: string
+    categoryId?: number
+    sellerId?: number
+    page?: number
+    size?: number
+  }) => {
     const q = new URLSearchParams()
     if (params.keyword) q.set('keyword', params.keyword)
+    if (params.categoryId != null) q.set('categoryId', String(params.categoryId))
     if (params.sellerId != null) q.set('sellerId', String(params.sellerId))
     q.set('page', String(params.page ?? 0))
     q.set('size', String(params.size ?? 20))
     return api.get<PageResponse<ProductSummary>>(`/api/products?${q.toString()}`)
   },
+  popular: (limit = 8) =>
+    api.get<PopularProduct[]>(`/api/products/popular?limit=${limit}`),
   detail: (id: number) => api.get<ProductDetail>(`/api/products/${id}`),
 }
 
