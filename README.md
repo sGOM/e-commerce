@@ -128,7 +128,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 | POST | `/api/orders/claim` | 게스트 주문을 회원 계정에 연결(주문번호+연락처) | 회원 |
 | POST | `/api/orders/{id}/cancel` | 주문 전체 취소 | 회원 |
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
-| POST | `/api/payments/{orderId}` | 결제 요청(멱등) | 회원/게스트 |
+| POST | `/api/payments/{orderId}` | 결제 요청(멱등, 실 PG는 `paymentKey` 동반) | 회원 |
 | GET | `/api/me/coupons` · `/api/me/points` | 내 쿠폰/포인트 | 회원 |
 
 ### 판매자 API (`ROLE_SELLER`)
@@ -166,7 +166,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 ```bash
 ./gradlew test
 ```
-통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **75개** 통합/단위 테스트.
+통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **85개** 통합/단위 테스트.
 
 주요 커버리지:
 - **재고 동시성**(`OrderConcurrencyIntegrationTest`): 재고 5에 동시 주문 20건 → 정확히 5건 성공, 오버셀링 0건
@@ -174,6 +174,21 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 - **결제 멱등성** + 쿠폰/포인트 적용·복원, **포인트 lot FIFO 만료**
 - **셀러 정산**: 판매자별 집계·수수료 차감, 재정산 방지, 취소건 제외, 수수료율 정책 변경
 - **권한 격리**: 본인 주문/장바구니/정산만 접근, 판매자 상품 소유권 검증
+- **실 PG(토스) 어댑터**: confirm 호출/Basic 인증/금액 위변조 거절을 `MockRestServiceServer` 로 검증
+
+## 결제 게이트웨이 전환
+`PaymentGateway` 인터페이스로 추상화되어 있고 `@ConditionalOnProperty` 로 구현체를 고른다.
+- 기본(`payment.gateway=mock`): 외부 통신 없이 승인하는 `MockPaymentGateway`
+- 실 PG(`payment.gateway=toss`): `TossPaymentGateway` 가 `/v1/payments/confirm` 으로 승인 확정.
+  클라이언트 결제위젯이 발급한 `paymentKey` 를 `POST /api/payments/{orderId}` 본문으로 받아 전달하며,
+  승인 응답의 `totalAmount` 가 서버 계산 금액과 다르면 위변조로 보고 거절한다.
+```yaml
+payment:
+  gateway: toss
+  toss:
+    base-url: https://api.tosspayments.com
+    secret-key: ${TOSS_SECRET_KEY}
+```
 
 ### 환경 주의 (이 개발 머신 한정)
 1. **Gradle 런처 JDK**: 시스템 JDK가 26이면 Gradle 8.14.x의 내장 Kotlin 컴파일러가 깨진다.

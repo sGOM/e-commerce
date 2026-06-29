@@ -31,7 +31,7 @@ class PaymentService(
 ) {
 
     @Transactional
-    fun pay(userId: Long, orderId: Long): PaymentResponse {
+    fun pay(userId: Long, orderId: Long, paymentKey: String? = null): PaymentResponse {
         val order = orderRepository.findByIdAndUserId(orderId, userId)
             .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
 
@@ -45,7 +45,9 @@ class PaymentService(
         }
 
         val payment = existing ?: Payment(orderId = orderId, amount = order.payableAmount)
-        val result = paymentGateway.approve(PaymentApproveCommand(order.orderNumber, order.payableAmount))
+        val result = paymentGateway.approve(
+            PaymentApproveCommand(order.orderNumber, order.payableAmount, paymentKey),
+        )
         if (!result.success) {
             // MVP: 거절은 402로 반환하고 트랜잭션을 롤백한다(주문은 CREATED 유지 → 재시도 가능).
             // 실패 이력의 영속 보존은 실 PG 연동 시 별도 트랜잭션(REQUIRES_NEW)으로 도입한다.

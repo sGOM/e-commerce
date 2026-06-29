@@ -236,5 +236,5 @@ PointAccount ── PointTransaction ── 적립/사용 이력   (회원 전�
 ## 10. 미해결 질문 (Open Questions)
 - [x] 셀러 정산 모델 → **구현 완료**. 수수료율은 관리자 설정값(`settlement_policies`, 기본 10%), 정산은 관리자 수동 트리거(`POST /api/admin/settlements`). 정산 주기 스케줄러는 추후
 - [x] 포인트 적립률 → **관리자 설정값**(`point_policies`, 기본 1%). 유효기간/만료 정책 수치는 추후
-- [ ] 게스트 주문의 회원 전환 시 주문 연결 여부
-- [ ] 어떤 실 PG사를 추후 타깃으로 할 것인가? (토스페이먼츠 등)
+- [x] 게스트 주문의 회원 전환 시 주문 연결 → **구현 완료**. `POST /api/orders/claim`(주문번호+연락처 확인 후 소유자 연결)
+- [x] 실 PG사 타깃 → **토스페이먼츠**. `TossPaymentGateway` 로 confirm 연동 완성(paymentKey 수신·금액 위변조 거절), `payment.gateway=toss` 로 전환
