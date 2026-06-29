@@ -47,6 +47,30 @@ class CartService(
         return CartResponse.of(responses)
     }
 
+    /**
+     * 로그인 시 게스트(localStorage) 장바구니를 회원 서버 장바구니에 병합한다.
+     * 같은 옵션은 수량을 합산하고, 가용 재고를 넘으면 재고만큼으로 캡(병합이 통째로 실패하지 않게),
+     * 존재하지 않거나 판매 불가한 옵션은 조용히 건너뛴다. 결제 직전 재검증은 주문 단계에서 한다.
+     */
+    @Transactional
+    fun merge(userId: Long, items: List<GuestCartItemRequest>): CartResponse {
+        val cart = getOrCreateCart(userId)
+        val mergedQuantities = LinkedHashMap<Long, Int>()
+        for (item in items) {
+            mergedQuantities[item.optionId!!] = (mergedQuantities[item.optionId] ?: 0) + item.quantity!!
+        }
+        for ((optionId, guestQuantity) in mergedQuantities) {
+            val option = productOptionRepository.findWithProductAndInventoryById(optionId).orElse(null) ?: continue
+            if (!option.product.status.isPurchasable) continue
+            val available = option.inventory?.available ?: 0
+            val alreadyInCart = cart.items.firstOrNull { it.option.id == optionId }?.quantity ?: 0
+            val addable = minOf(guestQuantity, available - alreadyInCart) // 재고 초과분은 버린다
+            if (addable > 0) cart.addOrIncrease(option, addable)
+        }
+        cartRepository.flush() // 신규 항목 id 확정 후 응답 생성
+        return CartResponse.from(cart)
+    }
+
     @Transactional
     fun addItem(userId: Long, optionId: Long, quantity: Int): CartResponse {
         val cart = getOrCreateCart(userId)

@@ -117,6 +117,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 | GET | `/api/products/{id}` | 상품 상세 | 불필요 |
 | GET | `/api/cart` | 내 장바구니(서버 저장) | 회원 |
 | POST | `/api/cart/guest` | 게스트 장바구니 계산/검증(무상태) | 불필요 |
+| POST | `/api/cart/merge` | 로그인 시 게스트 localStorage 장바구니 병합 | 회원 |
 | POST | `/api/cart/items` | 장바구니 담기 | 회원 |
 | PATCH | `/api/cart/items/{id}` | 수량 변경 | 회원 |
 | DELETE | `/api/cart/items/{id}` | 항목 삭제 | 회원 |

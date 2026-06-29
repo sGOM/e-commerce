@@ -38,6 +38,17 @@ class CartController(
     fun previewGuestCart(@RequestBody @Valid request: GuestCartRequest): ApiResponse<CartResponse> =
         ApiResponse.success(cartService.previewGuestCart(request.items))
 
+    /**
+     * 로그인 시 게스트(localStorage) 장바구니를 서버 장바구니에 병합한다. 같은 옵션은 수량 합산,
+     * 재고 초과분은 캡, 판매 불가/소멸 옵션은 제외한다. 병합 후 서버 장바구니 전체를 반환한다.
+     */
+    @PostMapping("/merge")
+    fun merge(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @RequestBody @Valid request: GuestCartRequest,
+    ): ApiResponse<CartResponse> =
+        ApiResponse.success(cartService.merge(principal.userId, request.items), "장바구니를 병합했습니다.")
+
     @PostMapping("/items")
     fun addItem(
         @AuthenticationPrincipal principal: CustomUserDetails,

@@ -154,4 +154,46 @@ class CartIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.data.items[0].availableStock") { value(1) }
         }
     }
+
+    @Test
+    fun `로그인 시 게스트 장바구니를 서버 장바구니에 병합한다`() {
+        val buyer = seedMember("merge-buyer-1@example.com")
+        val a = seedOption("MERGE-A", ProductStatus.ON_SALE, stock = 10)
+        val b = seedOption("MERGE-B", ProductStatus.ON_SALE, stock = 10)
+
+        // 서버 장바구니에 A 2개가 이미 있다
+        mockMvc.post("/api/cart/items") {
+            with(user(buyer)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"optionId":$a,"quantity":2}"""
+        }.andExpect { status { isOk() } }
+
+        // 게스트(localStorage) 장바구니: A 1개(중복 줄 포함) + B 3개 병합
+        mockMvc.post("/api/cart/merge") {
+            with(user(buyer)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"items":[{"optionId":$a,"quantity":1},{"optionId":$a,"quantity":1},{"optionId":$b,"quantity":3}]}"""
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.items.length()") { value(2) }
+            jsonPath("$.data.totalQuantity") { value(7) } // A: 2+2, B: 3
+        }
+    }
+
+    @Test
+    fun `병합 시 재고 초과분은 가용 재고까지만 담고 판매 불가 옵션은 제외한다`() {
+        val buyer = seedMember("merge-buyer-2@example.com")
+        val capped = seedOption("MERGE-CAP", ProductStatus.ON_SALE, stock = 3)
+        val soldOut = seedOption("MERGE-SOLD", ProductStatus.SOLD_OUT, stock = 10)
+
+        mockMvc.post("/api/cart/merge") {
+            with(user(buyer)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"items":[{"optionId":$capped,"quantity":9},{"optionId":$soldOut,"quantity":2}]}"""
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.items.length()") { value(1) } // 판매중지 옵션 제외
+            jsonPath("$.data.totalQuantity") { value(3) }   // 재고 3까지만
+        }
+    }
 }
