@@ -8,6 +8,7 @@ import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import MyOrdersPage from './pages/MyOrdersPage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 
@@ -21,22 +22,10 @@ export default function App() {
             <Route path="products/:id" element={<ProductDetailPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
-            <Route
-              path="cart"
-              element={
-                <ProtectedRoute>
-                  <CartPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="checkout"
-              element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              }
-            />
+            {/* 장바구니·주문은 게스트(localStorage)와 회원 모두 사용 */}
+            <Route path="cart" element={<CartPage />} />
+            <Route path="checkout" element={<CheckoutPage />} />
+            <Route path="orders/lookup" element={<GuestOrderLookupPage />} />
             <Route
               path="orders"
               element={

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { cartApi, productApi } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
+import { addGuestItem } from '../cart/guestCart'
 import { useAuth } from '../auth/AuthContext'
 import { productStatusLabel } from '../labels'
 import type { ProductDetail } from '../api/types'
@@ -9,7 +10,6 @@ import type { ProductDetail } from '../api/types'
 export default function ProductDetailPage() {
   const { id } = useParams()
   const productId = Number(id)
-  const navigate = useNavigate()
   const { user } = useAuth()
 
   const [product, setProduct] = useState<ProductDetail | null>(null)
@@ -37,13 +37,15 @@ export default function ProductDetailPage() {
 
   const addToCart = async () => {
     if (!optionId) return
+    setMessage(null)
+    setError(null)
+    // 비회원은 localStorage 게스트 장바구니에 담는다(서버 저장은 회원 전용).
     if (!user) {
-      navigate('/login', { state: { from: `/products/${productId}` } })
+      addGuestItem(optionId, quantity)
+      setMessage('장바구니에 담았습니다. (비회원)')
       return
     }
     setSubmitting(true)
-    setMessage(null)
-    setError(null)
     try {
       await cartApi.addItem(optionId, quantity)
       setMessage('장바구니에 담았습니다.')

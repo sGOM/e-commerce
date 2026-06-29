@@ -6,8 +6,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { authApi } from '../api/endpoints'
+import { authApi, cartApi } from '../api/endpoints'
 import { ApiError } from '../api/client'
+import { clearGuestCart, readGuestCart } from '../cart/guestCart'
 import type { User } from '../api/types'
 
 interface AuthState {
@@ -40,12 +41,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh()
   }, [refresh])
 
+  // 로그인 직후 게스트(localStorage) 장바구니를 서버로 병합하고 비운다.
+  const mergeGuestCart = async () => {
+    const lines = readGuestCart()
+    if (lines.length === 0) return
+    try {
+      await cartApi.merge(lines)
+      clearGuestCart()
+    } catch (e) {
+      console.error('장바구니 병합 실패', e)
+    }
+  }
+
   const login = async (email: string, password: string) => {
     setUser(await authApi.login(email, password))
+    await mergeGuestCart()
   }
   const signup = async (email: string, password: string, name: string) => {
     await authApi.signup(email, password, name)
     setUser(await authApi.login(email, password))
+    await mergeGuestCart()
   }
   const logout = async () => {
     await authApi.logout()

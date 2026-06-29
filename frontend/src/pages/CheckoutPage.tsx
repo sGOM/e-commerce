@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cartApi, orderApi, type CreateOrderBody } from '../api/endpoints'
+import { cartApi, orderApi, type ShippingAddressBody } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { clearGuestCart, readGuestCart } from '../cart/guestCart'
 import type { Cart } from '../api/types'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const isGuest = !user
+
   const [cart, setCart] = useState<Cart | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,14 +27,23 @@ export default function CheckoutPage() {
   })
 
   useEffect(() => {
-    cartApi
-      .get()
-      .then((c) => {
-        if (c.items.length === 0) navigate('/cart')
-        else setCart(c)
-      })
-      .catch((e) => setError(e.message))
-  }, [navigate])
+    const loadCart = async () => {
+      try {
+        if (isGuest) {
+          const lines = readGuestCart()
+          if (lines.length === 0) return navigate('/cart')
+          setCart(await cartApi.guestPreview(lines))
+        } else {
+          const c = await cartApi.get()
+          if (c.items.length === 0) return navigate('/cart')
+          setCart(c)
+        }
+      } catch (e) {
+        setError((e as Error).message)
+      }
+    }
+    loadCart()
+  }, [isGuest, navigate])
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [k]: e.target.value })
@@ -40,23 +52,41 @@ export default function CheckoutPage() {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
-    const body: CreateOrderBody = {
-      ordererName: form.ordererName,
-      ordererPhone: form.ordererPhone,
-      ordererEmail: form.ordererEmail,
-      shippingAddress: {
-        receiverName: form.receiverName,
-        receiverPhone: form.receiverPhone,
-        zipcode: form.zipcode,
-        address1: form.address1,
-        address2: form.address2 || undefined,
-      },
+    const shippingAddress: ShippingAddressBody = {
+      receiverName: form.receiverName,
+      receiverPhone: form.receiverPhone,
+      zipcode: form.zipcode,
+      address1: form.address1,
+      address2: form.address2 || undefined,
     }
     try {
-      const order = await orderApi.create(body)
-      // Mock PG 즉시 결제 → 결제 완료 후 주문 상세로 이동
-      await orderApi.pay(order.orderId)
-      navigate(`/orders/${order.orderId}`, { state: { justPaid: true } })
+      if (isGuest) {
+        // 비회원: 주문 생성(CREATED)까지. 결제는 회원 전용이므로 주문번호로 조회 안내.
+        const order = await orderApi.createGuest({
+          ordererName: form.ordererName,
+          ordererPhone: form.ordererPhone,
+          ordererEmail: form.ordererEmail,
+          shippingAddress,
+          items: readGuestCart(),
+        })
+        clearGuestCart()
+        navigate('/orders/lookup', {
+          state: {
+            orderNumber: order.orderNumber,
+            ordererPhone: form.ordererPhone,
+            justOrdered: true,
+          },
+        })
+      } else {
+        const order = await orderApi.create({
+          ordererName: form.ordererName,
+          ordererPhone: form.ordererPhone,
+          ordererEmail: form.ordererEmail,
+          shippingAddress,
+        })
+        await orderApi.pay(order.orderId) // Mock PG 즉시 결제
+        navigate(`/orders/${order.orderId}`, { state: { justPaid: true } })
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '주문에 실패했습니다.')
       setSubmitting(false)
@@ -69,7 +99,9 @@ export default function CheckoutPage() {
     <form onSubmit={submit} className="grid gap-6 md:grid-cols-3">
       <div className="space-y-6 md:col-span-2">
         <section className="rounded-xl border bg-white p-5">
-          <h2 className="mb-3 font-bold">주문자 정보</h2>
+          <h2 className="mb-3 font-bold">
+            주문자 정보 {isGuest && <span className="text-sm font-normal text-slate-400">(비회원)</span>}
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <input required placeholder="이름" value={form.ordererName} onChange={set('ordererName')} className={field} />
             <input required placeholder="연락처" value={form.ordererPhone} onChange={set('ordererPhone')} className={field} />
@@ -98,7 +130,7 @@ export default function CheckoutPage() {
               <span>{formatKRW(cart.totalPrice)}</span>
             </div>
             <div className="mt-2 flex justify-between font-bold">
-              <span>결제 금액</span>
+              <span>{isGuest ? '주문 금액' : '결제 금액'}</span>
               <span className="text-indigo-600">{formatKRW(cart.totalPrice)}</span>
             </div>
           </>
@@ -109,10 +141,12 @@ export default function CheckoutPage() {
           disabled={submitting || !cart}
           className="mt-5 w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
         >
-          {submitting ? '결제 중…' : '결제하기 (Mock PG)'}
+          {submitting ? '처리 중…' : isGuest ? '비회원 주문하기' : '결제하기 (Mock PG)'}
         </button>
         <p className="mt-2 text-center text-xs text-slate-400">
-          데모 결제는 외부 PG 없이 즉시 승인됩니다.
+          {isGuest
+            ? '주문 후 주문번호와 연락처로 조회할 수 있습니다.'
+            : '데모 결제는 외부 PG 없이 즉시 승인됩니다.'}
         </p>
       </div>
     </form>

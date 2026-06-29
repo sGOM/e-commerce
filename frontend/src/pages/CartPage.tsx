@@ -1,35 +1,73 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { cartApi } from '../api/endpoints'
 import { formatKRW } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
+import {
+  readGuestCart,
+  removeGuestItem,
+  setGuestItemQuantity,
+} from '../cart/guestCart'
 import type { Cart } from '../api/types'
 
 export default function CartPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isGuest = !user
+
   const [cart, setCart] = useState<Cart | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    cartApi
-      .get()
-      .then(setCart)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
+  const load = useCallback(async () => {
+    try {
+      if (isGuest) {
+        const lines = readGuestCart()
+        setCart(
+          lines.length === 0
+            ? { items: [], totalQuantity: 0, totalPrice: 0 }
+            : await cartApi.guestPreview(lines),
+        )
+      } else {
+        setCart(await cartApi.get())
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }, [isGuest])
 
-  const updateQty = async (itemId: number, quantity: number) => {
+  useEffect(() => {
+    load()
+  }, [load])
+
+  // 회원은 itemId, 게스트는 optionId 로 항목을 다룬다.
+  const updateQty = async (
+    key: { itemId: number | null; optionId: number },
+    quantity: number,
+  ) => {
     if (quantity < 1) return
     try {
-      setCart(await cartApi.updateItem(itemId, quantity))
+      if (isGuest) {
+        setGuestItemQuantity(key.optionId, quantity)
+        await load()
+      } else {
+        setCart(await cartApi.updateItem(key.itemId!, quantity))
+      }
     } catch (e) {
       setError((e as Error).message)
     }
   }
 
-  const remove = async (itemId: number) => {
+  const remove = async (key: { itemId: number | null; optionId: number }) => {
     try {
-      setCart(await cartApi.removeItem(itemId))
+      if (isGuest) {
+        removeGuestItem(key.optionId)
+        await load()
+      } else {
+        setCart(await cartApi.removeItem(key.itemId!))
+      }
     } catch (e) {
       setError((e as Error).message)
     }
@@ -39,7 +77,9 @@ export default function CartPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-bold">장바구니</h1>
+      <h1 className="mb-6 text-xl font-bold">
+        장바구니 {isGuest && <span className="text-sm font-normal text-slate-400">(비회원)</span>}
+      </h1>
       {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
       {!cart || cart.items.length === 0 ? (
@@ -54,7 +94,7 @@ export default function CartPage() {
           <ul className="space-y-3 md:col-span-2">
             {cart.items.map((item) => (
               <li
-                key={item.itemId}
+                key={item.optionId}
                 className="flex items-center gap-4 rounded-xl border bg-white p-4"
               >
                 <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 text-2xl">
@@ -74,21 +114,21 @@ export default function CartPage() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => updateQty(item.itemId!, item.quantity - 1)}
+                    onClick={() => updateQty(item, item.quantity - 1)}
                     className="h-7 w-7 rounded border text-slate-600"
                   >
                     −
                   </button>
                   <span className="w-8 text-center text-sm">{item.quantity}</span>
                   <button
-                    onClick={() => updateQty(item.itemId!, item.quantity + 1)}
+                    onClick={() => updateQty(item, item.quantity + 1)}
                     className="h-7 w-7 rounded border text-slate-600"
                   >
                     +
                   </button>
                 </div>
                 <button
-                  onClick={() => remove(item.itemId!)}
+                  onClick={() => remove(item)}
                   className="text-xs text-slate-400 hover:text-red-500"
                 >
                   삭제
@@ -113,6 +153,11 @@ export default function CartPage() {
             >
               주문하기
             </button>
+            {isGuest && (
+              <p className="mt-2 text-center text-xs text-slate-400">
+                비회원으로 주문하거나 로그인 시 장바구니가 병합됩니다.
+              </p>
+            )}
           </div>
         </div>
       )}

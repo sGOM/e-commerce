@@ -42,9 +42,14 @@ export default function Layout() {
                 </button>
               </>
             ) : (
-              <NavLink to="/login" className={navClass}>
-                로그인
-              </NavLink>
+              <>
+                <NavLink to="/orders/lookup" className={navClass}>
+                  주문조회
+                </NavLink>
+                <NavLink to="/login" className={navClass}>
+                  로그인
+                </NavLink>
+              </>
             )}
           </nav>
         </div>
