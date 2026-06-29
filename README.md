@@ -125,6 +125,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 | POST | `/api/orders/guest` | 게스트 주문 생성 | 불필요 |
 | GET | `/api/orders` · `/api/orders/{id}` | 내 주문 목록/상세 | 회원 |
 | POST | `/api/orders/guest/lookup` | 게스트 주문 조회(주문번호+연락처) | 불필요 |
+| POST | `/api/orders/claim` | 게스트 주문을 회원 계정에 연결(주문번호+연락처) | 회원 |
 | POST | `/api/orders/{id}/cancel` | 주문 전체 취소 | 회원 |
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
 | POST | `/api/payments/{orderId}` | 결제 요청(멱등) | 회원/게스트 |

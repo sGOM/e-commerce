@@ -74,6 +74,12 @@ data class GuestOrderLookupRequest(
     @field:NotBlank val ordererPhone: String?,
 )
 
+/** 게스트 주문을 회원 계정에 연결(claim) 요청 — 주문번호 + 연락처로 본인 확인 */
+data class ClaimGuestOrderRequest(
+    @field:NotBlank val orderNumber: String?,
+    @field:NotBlank val ordererPhone: String?,
+)
+
 /** 주문 항목(스냅샷) 응답 */
 data class OrderItemResponse(
     val optionId: Long,

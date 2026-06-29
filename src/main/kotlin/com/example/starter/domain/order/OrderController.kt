@@ -2,6 +2,7 @@ package com.example.starter.domain.order
 
 import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.admin.dto.PageResponse
+import com.example.starter.domain.order.dto.ClaimGuestOrderRequest
 import com.example.starter.domain.order.dto.CreateOrderRequest
 import com.example.starter.domain.order.dto.GuestOrderLookupRequest
 import com.example.starter.domain.order.dto.GuestOrderRequest
@@ -44,6 +45,14 @@ class OrderController(
     @PostMapping("/guest/lookup")
     fun lookupGuest(@RequestBody @Valid request: GuestOrderLookupRequest): ApiResponse<OrderResponse> =
         ApiResponse.success(orderService.lookupGuestOrder(request))
+
+    /** 게스트 주문을 회원 계정에 연결(claim). 주문번호+연락처로 본인 확인 후 소유자를 채운다. */
+    @PostMapping("/claim")
+    fun claim(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @RequestBody @Valid request: ClaimGuestOrderRequest,
+    ): ApiResponse<OrderResponse> =
+        ApiResponse.success(orderService.claimGuestOrder(principal.userId, request), "주문을 계정에 연결했습니다.")
 
     @GetMapping
     fun list(

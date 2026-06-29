@@ -10,6 +10,7 @@ import com.example.starter.domain.catalog.repository.InventoryRepository
 import com.example.starter.domain.catalog.repository.ProductOptionRepository
 import com.example.starter.domain.coupon.CouponService
 import com.example.starter.domain.point.PointService
+import com.example.starter.domain.order.dto.ClaimGuestOrderRequest
 import com.example.starter.domain.order.dto.CreateOrderRequest
 import com.example.starter.domain.order.dto.GuestOrderItemRequest
 import com.example.starter.domain.order.dto.GuestOrderLookupRequest
@@ -122,6 +123,22 @@ class OrderService(
         val order = orderRepository.findByOrderNumber(request.orderNumber!!)
             .filter { it.ordererPhone == request.ordererPhone }
             .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
+        return OrderResponse.from(order)
+    }
+
+    /**
+     * 게스트 주문을 로그인한 회원 계정에 연결(claim)한다. 주문번호 + 주문 시 연락처로 본인 확인 후
+     * 해당 게스트 주문(userId == null)의 소유자를 회원으로 채운다. 이미 회원 주문이면 거부한다.
+     */
+    @Transactional
+    fun claimGuestOrder(userId: Long, request: ClaimGuestOrderRequest): OrderResponse {
+        val order = orderRepository.findByOrderNumber(request.orderNumber!!)
+            .filter { it.ordererPhone == request.ordererPhone }
+            .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
+        if (order.userId != null) {
+            throw BusinessException(ErrorCode.ORDER_ALREADY_CLAIMED)
+        }
+        order.claimBy(userId)
         return OrderResponse.from(order)
     }
 

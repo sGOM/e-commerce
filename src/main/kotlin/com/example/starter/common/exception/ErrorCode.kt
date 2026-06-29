@@ -55,6 +55,7 @@ enum class ErrorCode(
     ORDER_NOT_PAYABLE(HttpStatus.CONFLICT, "ORDER-004", "결제할 수 없는 주문 상태입니다."),
     SUB_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-005", "하위 주문을 찾을 수 없습니다."),
     SUB_ORDER_NOT_SHIPPABLE(HttpStatus.CONFLICT, "ORDER-006", "결제 완료/상품준비 상태에서만 발송할 수 있습니다."),
+    ORDER_ALREADY_CLAIMED(HttpStatus.CONFLICT, "ORDER-007", "이미 회원 계정에 연결된 주문입니다."),
 
     // 결제 (PAYMENT)
     PAYMENT_FAILED(HttpStatus.PAYMENT_REQUIRED, "PAYMENT-001", "결제가 거절되었습니다."),

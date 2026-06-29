@@ -26,7 +26,7 @@ class Order(
     val orderNumber: String,
 
     @Column(name = "user_id")
-    val userId: Long?, // 게스트 주문은 null
+    var userId: Long?, // 게스트 주문은 null. 게스트→회원 연결(claim) 시 회원 id 로 채워진다.
 
     @Column(name = "orderer_name", nullable = false, length = 100)
     val ordererName: String,
@@ -63,6 +63,12 @@ class Order(
 
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
     val subOrders: MutableList<SubOrder> = mutableListOf()
+
+    /** 게스트 주문을 회원 계정에 연결한다. 이미 회원 주문이면 거부. */
+    fun claimBy(memberId: Long) {
+        if (userId != null) throw IllegalStateException("이미 회원에 연결된 주문")
+        userId = memberId
+    }
 
     /** 하위 주문을 추가하고 양방향 연관관계를 맞춘다. */
     fun addSubOrder(subOrder: SubOrder) {
