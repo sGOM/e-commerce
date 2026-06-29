@@ -206,6 +206,25 @@ export interface SellerSubOrder {
   shipment: Shipment | null
 }
 
+export interface Coupon {
+  couponId: number
+  name: string
+  discountType: DiscountType
+  discountValue: number
+  minOrderAmount: number
+  maxDiscountAmount: number | null
+  validFrom: string
+  validUntil: string
+  issuedCount: number
+}
+
+export interface Category {
+  categoryId: number
+  name: string
+  parentId: number | null
+  sortOrder: number
+}
+
 export type SettlementStatus = 'PENDING' | 'PAID'
 
 export interface Settlement {

@@ -16,6 +16,11 @@ import SellerLayout from './pages/seller/SellerLayout'
 import SellerProductsPage from './pages/seller/SellerProductsPage'
 import SellerOrdersPage from './pages/seller/SellerOrdersPage'
 import SellerSettlementsPage from './pages/seller/SellerSettlementsPage'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminSellersPage from './pages/admin/AdminSellersPage'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage'
+import AdminCouponsPage from './pages/admin/AdminCouponsPage'
+import AdminSettlementsPage from './pages/admin/AdminSettlementsPage'
 
 export default function App() {
   return (
@@ -68,6 +73,21 @@ export default function App() {
               <Route path="products" element={<SellerProductsPage />} />
               <Route path="orders" element={<SellerOrdersPage />} />
               <Route path="settlements" element={<SellerSettlementsPage />} />
+            </Route>
+            {/* 관리자 백오피스 (로그인 필요, 레이아웃이 ROLE_ADMIN 게이트) */}
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminSellersPage />} />
+              <Route path="sellers" element={<AdminSellersPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="coupons" element={<AdminCouponsPage />} />
+              <Route path="settlements" element={<AdminSettlementsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

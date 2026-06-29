@@ -38,6 +38,11 @@ export default function Layout() {
                 <NavLink to="/seller" className={navClass}>
                   판매자
                 </NavLink>
+                {user.roles.includes('ROLE_ADMIN') && (
+                  <NavLink to="/admin" className={navClass}>
+                    관리자
+                  </NavLink>
+                )}
                 <span className="text-slate-400">|</span>
                 <span className="text-slate-600">{user.name}님</span>
                 <button

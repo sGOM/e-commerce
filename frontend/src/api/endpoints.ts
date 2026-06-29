@@ -1,8 +1,11 @@
 import { api } from './client'
 import type {
   Cart,
+  Category,
+  Coupon,
   IssuedCoupon,
   Order,
+  OrderStatus,
   OrderSummary,
   PageResponse,
   Payment,
@@ -10,6 +13,7 @@ import type {
   ProductDetail,
   ProductSummary,
   Seller,
+  SellerStatus,
   SellerSubOrder,
   Settlement,
   SubOrderStatus,
@@ -78,6 +82,44 @@ export const sellerApi = {
       trackingNumber,
     }),
   settlements: () => api.get<Settlement[]>('/api/seller/settlements'),
+}
+
+export interface CreateCouponBody {
+  name: string
+  discountType: 'RATE' | 'FIXED'
+  discountValue: number
+  minOrderAmount: number
+  maxDiscountAmount?: number | null
+  validFrom: string
+  validUntil: string
+  issueToUserIds?: number[]
+}
+
+// ----- 관리자 백오피스 -----
+export const adminApi = {
+  listSellers: (status?: SellerStatus) =>
+    api.get<Seller[]>(`/api/admin/sellers${status ? `?status=${status}` : ''}`),
+  approveSeller: (sellerId: number, approved: boolean) =>
+    api.patch<Seller>(`/api/admin/sellers/${sellerId}/approve`, { approved }),
+  searchOrders: (params: { status?: OrderStatus; page?: number }) => {
+    const q = new URLSearchParams()
+    if (params.status) q.set('status', params.status)
+    q.set('page', String(params.page ?? 0))
+    return api.get<PageResponse<OrderSummary>>(`/api/admin/orders?${q.toString()}`)
+  },
+  refundOrder: (orderId: number) => api.post<Order>(`/api/admin/orders/${orderId}/refund`),
+  createCoupon: (body: CreateCouponBody) => api.post<Coupon>('/api/admin/coupons', body),
+  createCategory: (name: string, parentId?: number | null) =>
+    api.post<Category>('/api/admin/categories', { name, parentId }),
+  generateSettlements: () => api.post<Settlement[]>('/api/admin/settlements'),
+  paySettlement: (settlementId: number) =>
+    api.patch<Settlement>(`/api/admin/settlements/${settlementId}/pay`),
+  getSettlementPolicy: () =>
+    api.get<{ commissionRateBp: number }>('/api/admin/settlements/policy'),
+  updateSettlementPolicy: (commissionRateBp: number) =>
+    api.patch<{ commissionRateBp: number }>('/api/admin/settlements/policy', {
+      commissionRateBp,
+    }),
 }
 
 export interface GuestCartLine {
