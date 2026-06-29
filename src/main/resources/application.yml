@@ -38,6 +38,13 @@ management:
     health:
       show-details: when-authorized
 
+# 셀러 정산 주기 자동화(기본 비활성 — 관리자 수동 트리거만). 운영에서 켜려면:
+# settlement:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 4 * * MON"   # 매주 월요일 04:00
+#     zone: "Asia/Seoul"
+
 logging:
   level:
     com.example.starter: DEBUG
