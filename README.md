@@ -1,10 +1,13 @@
-# E-Commerce Platform (B2C 마켓플레이스 백엔드)
+# E-Commerce Platform (B2C 마켓플레이스)
 
-Kotlin + Spring Boot **스타터 킷 위에 구축한 B2C 마켓플레이스 이커머스 백엔드**.
-다수 판매자가 입점하고, 고객(또는 게스트)이 상품을 탐색·주문·결제하며, 쿠폰/포인트·배송·환불·셀러 정산까지 지원한다.
-스타터 킷의 인증/RBAC/감사로그/공통응답을 그대로 재사용하고 그 위에 이커머스 도메인을 확장했다.
+Kotlin + Spring Boot 백엔드와 React 고객 스토어프론트로 구성된 **B2C 마켓플레이스 이커머스 풀스택 애플리케이션**.
+다수 판매자가 입점하고, 고객(또는 게스트)이 상품을 탐색·검색·주문·결제하며, 쿠폰/포인트·배송·환불·셀러 정산까지 지원한다.
+검증된 스타터 킷의 세션 인증/RBAC/감사로그/공통응답을 토대로 그 위에 이커머스 도메인을 확장했다.
 
-> 제품 요구사항·설계 결정의 전체 맥락은 [`PRD.md`](PRD.md) 참조.
+- **백엔드**: Kotlin · Spring Boot 3.5 · PostgreSQL/Flyway · 세션 인증/RBAC — `src/`
+- **프론트엔드**: React 19 · Vite · TypeScript · Tailwind CSS — [`frontend/`](frontend/) (고객 스토어프론트 SPA)
+
+> 제품 요구사항·설계 결정의 전체 맥락은 [`PRD.md`](PRD.md), 향후 백로그는 [`docs/ROADMAP.md`](docs/ROADMAP.md) 참조.
 
 ## 이커머스 핵심 개념
 - **마켓플레이스(멀티 셀러)**: 한 주문에 여러 판매자 상품이 섞이면 **SubOrder(판매자 단위)** 로 분리된다. 결제는 Order 단위 1건, 배송·취소·정산은 SubOrder 단위.
@@ -15,15 +18,80 @@ Kotlin + Spring Boot **스타터 킷 위에 구축한 B2C 마켓플레이스 이
 
 ---
 
+## 아키텍처
+
+### 시스템 구성
+세션 기반 인증을 쓰는 모놀리식 백엔드 + 별도 SPA. 둘 다 같은 오리진(개발 시 Vite 프록시)으로 묶여 쿠키 세션/CSRF가 자연스럽게 동작한다.
+
+```
+┌──────────────────────────┐        ┌──────────────────────────────────────┐
+│  React 스토어프론트 (SPA) │        │     Spring Boot (모놀리식 API)         │
+│  Vite · TS · Tailwind     │        │                                        │
+│                           │  HTTP  │  SecurityFilterChain                   │
+│  fetch 클라이언트         │ ─────► │   ├ CSRF(쿠키토큰) · 세션 인증/RBAC     │
+│   · 세션 쿠키(credentials)│  JSON  │   └ AuditLogFilter(@Async JSONB)       │
+│   · XSRF-TOKEN → 헤더     │ ◄───── │  @RestController  (도메인별)            │
+│                           │        │  Service (트랜잭션 경계·금액 계산)      │
+│  AuthContext · Protected  │        │  Repository (Spring Data JPA + JDSL)   │
+│  Route(역할 게이트)        │        └───────────────┬────────────────────────┘
+└──────────────────────────┘                        │ JPA / 원자적 UPDATE
+                                                     ▼
+                                     ┌──────────────────────────────────────┐
+                                     │  PostgreSQL  (스키마: Flyway V1~V13)   │
+                                     │  audit_logs JSONB(GIN) · 정책행 런타임  │
+                                     └──────────────────────────────────────┘
+                            결제: PaymentGateway 추상화 → Mock / Toss(@ConditionalOnProperty)
+                            스케줄러: 셀러 정산 주기 배치(@Scheduled, 조건부 활성화)
+```
+
+### 계층 구조 (백엔드)
+도메인별 수직 슬라이스. 각 도메인은 `Controller → Service → Repository → Entity` 로 일관된다.
+
+```
+Controller   요청/응답 DTO 변환, 인가(URL 규칙 + @PreAuthorize 이중 방어)
+   ↓
+Service      트랜잭션 경계, 비즈니스 규칙(금액 서버계산·재고 원자성·상태 전이)
+   ↓
+Repository   Spring Data JPA + Kotlin JDSL(동적 검색) + 네이티브 원자적 UPDATE
+   ↓
+Entity       BaseTimeEntity(JPA Auditing), 화폐=Long(KRW), 비율=basis point
+```
+
+### 핵심 도메인 모델
+```
+User ─< Seller(Store) ─< Product ─< ProductOption ─ Inventory(quantity/reserved)
+                                         │
+Order ─< SubOrder(판매자 단위) ─< OrderItem ┘     ← 멀티셀러 주문 분리
+  │         │
+  │         └─ Shipment(송장) · Settlement(정산, 수수료 차감)
+  └─ Payment ─< PaymentEvent        Coupon/IssuedCoupon · PointAccount/PointLot(FIFO)
+```
+
+### 주문 라이프사이클
+```
+장바구니 → 주문생성(SubOrder 분리 + 재고 reserved 원자적 차감 + 쿠폰/포인트 적용)
+        → 결제(멱등, 금액 서버검증) → 판매자 송장등록(SHIPPED) → 배송완료(DELIVERED)
+        → (정산 집계·수수료 차감) ─ 지급
+        취소/환불: Order 전체 또는 SubOrder 부분 단위로 재고 복원 + 쿠폰/포인트 복원
+```
+
+---
+
 ## (기반) Spring Starter Kit
 이 프로젝트의 토대인 스타터 킷은 세션 로그인 / OAuth2 소셜 로그인 / RBAC 권한 / 공통 응답·에러 / 감사 로그 / 관리자 기능을 제공한다.
 
 ## 기술 스택
+**백엔드**
 - **언어/빌드**: Kotlin, Gradle(Kotlin DSL), JVM 21 toolchain
-- **프레임워크**: Spring Boot 3.5.x (Web MVC, Security, Data JPA, OAuth2 Client)
+- **프레임워크**: Spring Boot 3.5.x (Web MVC, Security, Data JPA, OAuth2 Client, Actuator, Validation)
 - **쿼리**: [Kotlin JDSL](https://github.com/line/kotlin-jdsl) — 타입 안전한 동적 쿼리
 - **DB**: PostgreSQL (로컬/운영), Flyway 마이그레이션
 - **테스트**: JUnit5, MockK, SpringMockK, Testcontainers, spring-security-test
+
+**프론트엔드** (`frontend/`)
+- **React 19** + **Vite** + **TypeScript** + **Tailwind CSS v4**
+- **react-router-dom v7** 라우팅, fetch 기반 API 클라이언트(CSRF 자동 첨부)
+- 세션 기반 `AuthContext` + `ProtectedRoute`(역할 게이트), 게스트 장바구니는 localStorage
 
 ## 구현 현황 (이커머스)
 | 단계 | 내용 | 상태 |
@@ -36,6 +104,8 @@ Kotlin + Spring Boot **스타터 킷 위에 구축한 B2C 마켓플레이스 이
 | Phase 6 | 판매자 백오피스 + 관리자 운영(셀러 심사·카테고리·쿠폰·주문검색·환불) | ✅ |
 | 추가 | SubOrder 부분 취소/환불 · 포인트 만료(lot FIFO) · PG 어댑터 골격 · 셀러 정산 | ✅ |
 | Phase 7 | 테스트 보강 / 문서화 | ✅ |
+| Phase 8 | 고객 스토어프론트(React SPA) + 판매자/관리자 백오피스 | ✅ |
+| Phase 9 | 상품 검색(키워드·카테고리·판매자) + 판매량 기반 인기 상품 | ✅ |
 
 > 기반 스타터 킷 단계(공통 응답/에러, RBAC, OAuth2, 감사로그, 관리자)는 모두 완료된 상태에서 출발한다.
 
@@ -107,6 +177,29 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 - 콜백: `/login/oauth2/code/{provider}` → 성공 시 `app.oauth2.success-redirect-uri` 로 이동
 - 한 사용자가 여러 소셜 계정을 연동 가능(`oauth_accounts` 테이블)
 
+## 프론트엔드 (고객 스토어프론트)
+React + Vite SPA. 백엔드와 **세션 쿠키 + CSRF 쿠키토큰**으로 통신하며, fetch 래퍼가 상태 변경 요청에 `X-XSRF-TOKEN` 헤더를 자동 첨부한다.
+
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 프록시)
+```
+
+주요 화면:
+- **고객**: 상품 목록(카테고리 필터·인기 상품)·상세, 장바구니, 체크아웃(쿠폰/포인트 적용), 게스트 주문/조회, 마이페이지(주문·쿠폰·포인트)
+- **판매자 백오피스**: 상품 관리, 주문/송장, 정산 내역
+- **관리자 백오피스**: 셀러 심사, 주문/환불, 쿠폰 발행, 정산 관리
+- **게스트 → 회원 전환**: 비회원 장바구니(localStorage)는 로그인 시 서버 장바구니로 병합(`/api/cart/merge`)
+
+```
+frontend/src
+├── api/         client(fetch+CSRF) · endpoints · types
+├── auth/        AuthContext(세션) · 게스트 장바구니 병합
+├── components/  Layout · ProtectedRoute · ProductCard · OrderView
+└── pages/       고객 화면 + seller/* + admin/* 백오피스
+```
+
 ## 이커머스 API
 > 모든 응답은 공통 규약 `{ success, code, message, data }`. 상태 변경 요청은 CSRF 토큰 필요.
 
@@ -166,7 +259,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 ```bash
 ./gradlew test
 ```
-통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **85개** 통합/단위 테스트.
+통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **90개** 통합/단위 테스트.
 
 주요 커버리지:
 - **재고 동시성**(`OrderConcurrencyIntegrationTest`): 재고 5에 동시 주문 20건 → 정확히 5건 성공, 오버셀링 0건
@@ -175,6 +268,7 @@ export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
 - **셀러 정산**: 판매자별 집계·수수료 차감, 재정산 방지, 취소건 제외, 수수료율 정책 변경
 - **권한 격리**: 본인 주문/장바구니/정산만 접근, 판매자 상품 소유권 검증
 - **실 PG(토스) 어댑터**: confirm 호출/Basic 인증/금액 위변조 거절을 `MockRestServiceServer` 로 검증
+- **상품 검색/인기 상품**: 키워드·카테고리·판매자 동적 검색, 판매량 집계 기반 인기 상품 정렬
 
 ## 결제 게이트웨이 전환
 `PaymentGateway` 인터페이스로 추상화되어 있고 `@ConditionalOnProperty` 로 구현체를 고른다.
