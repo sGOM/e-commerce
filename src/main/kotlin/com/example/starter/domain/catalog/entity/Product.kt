@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import java.math.BigDecimal
 
 /**
  * 상품. 마켓플레이스에서 반드시 한 [Seller] 에 속한다.
@@ -45,6 +46,12 @@ class Product(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: ProductStatus = ProductStatus.DRAFT,
+
+    // 새벽배송 가능 상품 여부(`docs/planning/delivery-slot.md` AC3). 실무적으로는 셀러(물류 계약) 단위가
+    // 더 합리적이지만(§9 오픈이슈 #2), 문서 초안대로 상품 단위 필드로 확정했다 — 셀러 단위 계약은 향후
+    // Seller 엔티티에 계약 플래그를 추가하고 상품 등록 시 상속시키는 방식으로 후속 확장 가능.
+    @Column(name = "dawn_delivery_eligible", nullable = false)
+    var dawnDeliveryEligible: Boolean = false,
 ) : BaseTimeEntity() {
 
     @Id
@@ -54,9 +61,23 @@ class Product(
     @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], orphanRemoval = true)
     val options: MutableList<ProductOption> = mutableListOf()
 
+    // 평점 요약(비정규화) — 조회 트래픽이 리뷰 변경보다 훨씬 잦아 매 조회 집계 대신 컬럼으로 캐시한다.
+    // 리뷰 작성/수정/삭제/숨김·복원 시 [com.example.starter.domain.review.ReviewService] 가 재계산해 갱신한다.
+    @Column(name = "avg_rating", nullable = false, precision = 2, scale = 1)
+    var avgRating: BigDecimal = BigDecimal.ZERO
+
+    @Column(name = "review_count", nullable = false)
+    var reviewCount: Int = 0
+
     /** 옵션을 추가하고 양방향 연관관계를 맞춘다. */
     fun addOption(option: ProductOption) {
         options.add(option)
         option.product = this
+    }
+
+    /** 리뷰 집계 결과로 평점 요약을 갱신한다(노출/숨김 제외 리뷰 기준은 호출측에서 계산). */
+    fun updateReviewSummary(avgRating: BigDecimal, reviewCount: Int) {
+        this.avgRating = avgRating
+        this.reviewCount = reviewCount
     }
 }

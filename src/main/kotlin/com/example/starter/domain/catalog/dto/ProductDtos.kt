@@ -3,6 +3,7 @@ package com.example.starter.domain.catalog.dto
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.entity.ProductStatus
+import java.math.BigDecimal
 import java.time.Instant
 
 /** 상품 검색 조건 (모두 선택적 → 동적 쿼리) */
@@ -22,6 +23,9 @@ data class ProductSummaryResponse(
     val storeName: String,
     val categoryId: Long?,
     val categoryName: String?,
+    val avgRating: BigDecimal,
+    val reviewCount: Int,
+    val dawnDeliveryEligible: Boolean,
 ) {
     companion object {
         fun from(product: Product) = ProductSummaryResponse(
@@ -33,6 +37,9 @@ data class ProductSummaryResponse(
             storeName = product.seller.storeName,
             categoryId = product.category?.id,
             categoryName = product.category?.name,
+            avgRating = product.avgRating,
+            reviewCount = product.reviewCount,
+            dawnDeliveryEligible = product.dawnDeliveryEligible,
         )
     }
 }
@@ -47,7 +54,10 @@ data class PopularProductResponse(
     val storeName: String,
     val categoryId: Long?,
     val categoryName: String?,
+    val avgRating: BigDecimal,
+    val reviewCount: Int,
     val soldQuantity: Long,
+    val dawnDeliveryEligible: Boolean,
 ) {
     companion object {
         fun from(product: Product, soldQuantity: Long) = PopularProductResponse(
@@ -59,7 +69,10 @@ data class PopularProductResponse(
             storeName = product.seller.storeName,
             categoryId = product.category?.id,
             categoryName = product.category?.name,
+            avgRating = product.avgRating,
+            reviewCount = product.reviewCount,
             soldQuantity = soldQuantity,
+            dawnDeliveryEligible = product.dawnDeliveryEligible,
         )
     }
 }
@@ -75,8 +88,11 @@ data class ProductDetailResponse(
     val storeName: String,
     val categoryId: Long?,
     val categoryName: String?,
+    val avgRating: BigDecimal,
+    val reviewCount: Int,
     val options: List<ProductOptionResponse>,
     val createdAt: Instant,
+    val dawnDeliveryEligible: Boolean,
 ) {
     companion object {
         fun from(product: Product) = ProductDetailResponse(
@@ -89,8 +105,11 @@ data class ProductDetailResponse(
             storeName = product.seller.storeName,
             categoryId = product.category?.id,
             categoryName = product.category?.name,
+            avgRating = product.avgRating,
+            reviewCount = product.reviewCount,
             options = product.options.map { ProductOptionResponse.from(product, it) },
             createdAt = product.createdAt,
+            dawnDeliveryEligible = product.dawnDeliveryEligible,
         )
     }
 }

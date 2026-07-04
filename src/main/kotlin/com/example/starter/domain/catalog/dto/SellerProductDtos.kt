@@ -24,6 +24,7 @@ data class CreateProductRequest(
     val categoryId: Long? = null,
     val description: String? = null,
     val status: ProductStatus = ProductStatus.DRAFT,
+    val dawnDeliveryEligible: Boolean = false,
     @field:Valid @field:NotEmpty val options: List<CreateOptionRequest> = emptyList(),
 )
 
@@ -34,6 +35,7 @@ data class UpdateProductRequest(
     val categoryId: Long? = null,
     val description: String? = null,
     @field:NotNull val status: ProductStatus?,
+    val dawnDeliveryEligible: Boolean = false,
 )
 
 /** 재고 조정 요청 — 옵션 재고 절대값 설정 */
@@ -75,6 +77,7 @@ data class SellerProductResponse(
     val basePrice: Long,
     val status: ProductStatus,
     val categoryId: Long?,
+    val dawnDeliveryEligible: Boolean,
     val options: List<SellerOptionResponse>,
 ) {
     companion object {
@@ -84,6 +87,7 @@ data class SellerProductResponse(
             basePrice = product.basePrice,
             status = product.status,
             categoryId = product.category?.id,
+            dawnDeliveryEligible = product.dawnDeliveryEligible,
             options = product.options.sortedBy { it.id }.map { SellerOptionResponse.from(it) },
         )
     }

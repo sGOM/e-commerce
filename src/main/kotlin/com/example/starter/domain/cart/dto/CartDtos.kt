@@ -50,6 +50,11 @@ data class CartItemResponse(
     val lineTotal: Long,
     val availableStock: Int,
     val purchasable: Boolean, // 상품이 판매중이고 재고가 수량 이상인지
+    // 체크아웃 화면이 판매자(SubOrder) 단위로 항목을 묶어 배송 슬롯을 선택할 수 있도록 노출한다
+    // (`docs/planning/delivery-slot.md` AC6 — 슬롯은 SubOrder=판매자 단위로 선택).
+    val sellerId: Long,
+    val storeName: String,
+    val dawnDeliveryEligible: Boolean,
 ) {
     companion object {
         fun from(item: CartItem): CartItemResponse {
@@ -68,6 +73,9 @@ data class CartItemResponse(
                 lineTotal = unitPrice * item.quantity,
                 availableStock = stock,
                 purchasable = product.status.isPurchasable && stock >= item.quantity,
+                sellerId = requireNotNull(product.seller.id),
+                storeName = product.seller.storeName,
+                dawnDeliveryEligible = product.dawnDeliveryEligible,
             )
         }
 
@@ -87,6 +95,9 @@ data class CartItemResponse(
                 lineTotal = unitPrice * quantity,
                 availableStock = stock,
                 purchasable = product.status.isPurchasable && stock >= quantity,
+                sellerId = requireNotNull(product.seller.id),
+                storeName = product.seller.storeName,
+                dawnDeliveryEligible = product.dawnDeliveryEligible,
             )
         }
     }
