@@ -1,7 +1,19 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -28,39 +40,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-10">
-      <h1 className="mb-6 text-center text-xl font-bold">로그인</h1>
-      <form onSubmit={submit} className="space-y-3">
-        <input
-          required
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
-        />
-        <input
-          required
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
-        />
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <button
-          disabled={submitting}
-          className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-        >
-          {submitting ? '로그인 중…' : '로그인'}
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        계정이 없으신가요?{' '}
-        <Link to="/signup" className="text-indigo-600">
-          회원가입
-        </Link>
-      </p>
+    <div className="grid min-h-[70vh] place-items-center py-8">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-xl">로그인</CardTitle>
+          <CardDescription>이메일과 비밀번호로 로그인하세요.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-4">
+            {error && (
+              <p
+                role="alert"
+                className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                이메일 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                aria-required="true"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                비밀번호 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                aria-required="true"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button type="submit" disabled={submitting} className="h-11 w-full">
+              {submitting && <Loader2 className="size-4 animate-spin" />}
+              {submitting ? '로그인 중…' : '로그인'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center text-sm text-muted-foreground">
+          계정이 없으신가요?
+          <Link to="/signup" className="ml-1 font-medium text-primary hover:underline">
+            회원가입
+          </Link>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

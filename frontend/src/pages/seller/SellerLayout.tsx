@@ -107,6 +107,9 @@ export default function SellerLayout() {
         <NavLink to="/seller/settlements" className={tab}>
           정산
         </NavLink>
+        <NavLink to="/seller/flash-sales" className={tab}>
+          타임딜
+        </NavLink>
       </nav>
       {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
       <Outlet context={store} />

@@ -1,7 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Loader2 } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 export default function SignupPage() {
   const { signup } = useAuth()
@@ -28,46 +40,83 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-10">
-      <h1 className="mb-6 text-center text-xl font-bold">회원가입</h1>
-      <form onSubmit={submit} className="space-y-3">
-        <input
-          required
-          placeholder="이름"
-          value={form.name}
-          onChange={set('name')}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
-        />
-        <input
-          required
-          type="email"
-          placeholder="이메일"
-          value={form.email}
-          onChange={set('email')}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
-        />
-        <input
-          required
-          type="password"
-          placeholder="비밀번호 (8~64자)"
-          value={form.password}
-          onChange={set('password')}
-          className="w-full rounded-lg border px-3 py-2 text-sm"
-        />
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <button
-          disabled={submitting}
-          className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-        >
-          {submitting ? '가입 중…' : '회원가입'}
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-slate-500">
-        이미 계정이 있으신가요?{' '}
-        <Link to="/login" className="text-indigo-600">
-          로그인
-        </Link>
-      </p>
+    <div className="grid min-h-[70vh] place-items-center py-8">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-xl">회원가입</CardTitle>
+          <CardDescription>간단한 정보로 계정을 만드세요.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-4">
+            {error && (
+              <p
+                role="alert"
+                className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                이름 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                autoComplete="name"
+                required
+                aria-required="true"
+                value={form.name}
+                onChange={set('name')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                이메일 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                aria-required="true"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={set('email')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">
+                비밀번호 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                aria-required="true"
+                minLength={8}
+                maxLength={64}
+                aria-describedby="password-help"
+                value={form.password}
+                onChange={set('password')}
+              />
+              <p id="password-help" className="text-xs text-muted-foreground">
+                8~64자로 입력하세요.
+              </p>
+            </div>
+            <Button type="submit" disabled={submitting} className="h-11 w-full">
+              {submitting && <Loader2 className="size-4 animate-spin" />}
+              {submitting ? '가입 중…' : '회원가입'}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center text-sm text-muted-foreground">
+          이미 계정이 있으신가요?
+          <Link to="/login" className="ml-1 font-medium text-primary hover:underline">
+            로그인
+          </Link>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

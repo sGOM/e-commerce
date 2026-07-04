@@ -31,6 +31,30 @@ export default function AdminLayout() {
         <NavLink to="/admin/settlements" className={tab}>
           정산
         </NavLink>
+        <NavLink to="/admin/reviews" className={tab}>
+          리뷰
+        </NavLink>
+        <NavLink to="/admin/collections" className={tab}>
+          기획전
+        </NavLink>
+        <NavLink to="/admin/flash-sales" className={tab}>
+          타임딜
+        </NavLink>
+        <NavLink to="/admin/delivery-slots" className={tab}>
+          배송 슬롯
+        </NavLink>
+        <NavLink to="/admin/delivery-regions" className={tab}>
+          새벽배송 지역
+        </NavLink>
+        <NavLink to="/admin/memberships" className={tab}>
+          멤버십
+        </NavLink>
+        <NavLink to="/admin/delivery-subscriptions" className={tab}>
+          정기배송
+        </NavLink>
+        <NavLink to="/admin/gift-claims" className={tab}>
+          선물하기
+        </NavLink>
       </nav>
       <Outlet />
     </div>

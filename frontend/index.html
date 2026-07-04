@@ -1,10 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko" suppressHydrationWarning>
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>마켓 · B2C 마켓플레이스</title>
+    <script>
+      // 테마 FOUC 방지: 페인트 전에 저장된/시스템 선호 테마를 .dark 로 선반영한다.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme')
+          var isDark =
+            stored === 'dark' ||
+            ((!stored || stored === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (isDark) document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

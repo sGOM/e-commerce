@@ -163,6 +163,7 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
   const [basePrice, setBasePrice] = useState(0)
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<'DRAFT' | 'ON_SALE'>('ON_SALE')
+  const [dawnDeliveryEligible, setDawnDeliveryEligible] = useState(false)
   const [options, setOptions] = useState<CreateOptionBody[]>([emptyOption()])
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -175,7 +176,14 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
     setSubmitting(true)
     setError(null)
     try {
-      await sellerApi.createProduct({ name, basePrice, description: description || undefined, status, options })
+      await sellerApi.createProduct({
+        name,
+        basePrice,
+        description: description || undefined,
+        status,
+        dawnDeliveryEligible,
+        options,
+      })
       onCreated()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '등록 실패')
@@ -196,6 +204,15 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
         <option value="ON_SALE">판매중</option>
         <option value="DRAFT">준비중</option>
       </select>
+
+      <label className="flex items-center gap-2 text-sm text-slate-600">
+        <input
+          type="checkbox"
+          checked={dawnDeliveryEligible}
+          onChange={(e) => setDawnDeliveryEligible(e.target.checked)}
+        />
+        새벽배송 가능 상품
+      </label>
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-slate-500">옵션</p>
