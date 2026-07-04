@@ -2,6 +2,8 @@ package com.example.starter.domain.order
 
 import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.admin.dto.PageResponse
+import com.example.starter.domain.gift.GiftOrderService
+import com.example.starter.domain.gift.dto.GiftClaimResponse
 import com.example.starter.domain.order.dto.ClaimGuestOrderRequest
 import com.example.starter.domain.order.dto.CreateOrderRequest
 import com.example.starter.domain.order.dto.GuestOrderLookupRequest
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/orders")
 class OrderController(
     private val orderService: OrderService,
+    private val giftOrderService: GiftOrderService,
 ) {
 
     @PostMapping
@@ -85,4 +88,31 @@ class OrderController(
             orderService.cancelSubOrder(principal.userId, subOrderId),
             "해당 판매자 주문이 취소되었습니다.",
         )
+
+    /** 하위 주문(판매자 단위) 수령 확인(구매확정). SHIPPED → DELIVERED. 이후 해당 항목에 리뷰를 쓸 수 있다. */
+    @PostMapping("/sub-orders/{subOrderId}/confirm-delivery")
+    fun confirmDelivery(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable subOrderId: Long,
+    ): ApiResponse<OrderResponse> =
+        ApiResponse.success(
+            orderService.confirmDelivery(principal.userId, subOrderId),
+            "수령을 확인했습니다.",
+        )
+
+    /** 선물 링크 상태 조회(공유 링크 재확인/"보낸 선물" 상세, `docs/planning/gift-order.md`). */
+    @GetMapping("/{orderId}/gift")
+    fun giftStatus(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable orderId: Long,
+    ): ApiResponse<GiftClaimResponse> =
+        ApiResponse.success(giftOrderService.getStatus(principal.userId, orderId))
+
+    /** 구매자의 선물 주문 취소(AC11 — 수락 전이면 전액 환불, 이후는 일반 취소 정책과 동일). */
+    @PostMapping("/{orderId}/gift/cancel")
+    fun cancelGift(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable orderId: Long,
+    ): ApiResponse<OrderResponse> =
+        ApiResponse.success(giftOrderService.cancelByBuyer(principal.userId, orderId), "선물 주문이 취소되었습니다.")
 }

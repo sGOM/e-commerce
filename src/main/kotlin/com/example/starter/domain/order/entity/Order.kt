@@ -18,6 +18,11 @@ import jakarta.persistence.Table
  *
  * 금액은 전부 서버 계산이며 클라이언트 값을 신뢰하지 않는다. 게스트 주문도 표현하기 위해
  * 주문자 연락처([ordererName]/[ordererPhone]/[ordererEmail])를 보관한다([userId] 는 게스트면 null).
+ *
+ * 선물 주문([isGift] = true, `docs/planning/gift-order.md`)은 [shippingAddress] 없이 생성되고
+ * 결제까지 진행된다 — 수령자가 [com.example.starter.domain.gift.GiftClaimService] 를 통해 배송지를
+ * 입력(수락)하면 [assignGiftShippingAddress] 로 뒤늦게 채워진다. 그 전에는 배송(SHIPPED)으로 전이할
+ * 수 없다([SubOrder.isShippable] 가드).
  */
 @Entity
 @Table(name = "orders")
@@ -37,8 +42,15 @@ class Order(
     @Column(name = "orderer_email", nullable = false, length = 255)
     val ordererEmail: String,
 
+    // 선물 주문은 생성 시점에 null 로 시작해 수령자 수락 시 채워진다(그 외에는 항상 생성 시점에 채워짐).
     @Embedded
-    val shippingAddress: ShippingAddress,
+    var shippingAddress: ShippingAddress?,
+
+    @Column(name = "is_gift", nullable = false)
+    val isGift: Boolean = false,
+
+    @Column(name = "gift_message", columnDefinition = "text")
+    val giftMessage: String? = null,
 ) : BaseTimeEntity() {
 
     @Id
@@ -61,6 +73,11 @@ class Order(
     @Column(name = "payable_amount", nullable = false)
     var payableAmount: Long = 0
 
+    // 배송 슬롯 추가요금 합계(SubOrder.deliveryFee 의 합, `docs/planning/delivery-slot.md`).
+    // 공통 배송비 모델이 아직 없어(오픈 이슈) 슬롯 이용 시에 한해 결제금액에 반영한다.
+    @Column(name = "delivery_fee_total", nullable = false)
+    var deliveryFeeTotal: Long = 0
+
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
     val subOrders: MutableList<SubOrder> = mutableListOf()
 
@@ -70,16 +87,33 @@ class Order(
         userId = memberId
     }
 
+    /**
+     * 선물 수령자가 배송지를 입력(수락)하면 호출된다([com.example.starter.domain.gift.GiftClaimService]).
+     * 선물 주문에서만 허용하며(일반 주문은 생성 시점에 이미 확정), 이미 배송지가 있으면(중복 수락 등)
+     * 거부한다 — 정상 흐름이라면 [com.example.starter.domain.gift.entity.GiftClaim] 상태 가드가
+     * 먼저 막지만, 엔티티 레벨에서도 이중으로 방어한다.
+     */
+    fun assignGiftShippingAddress(address: ShippingAddress) {
+        check(isGift) { "선물 주문만 배송지를 나중에 지정할 수 있습니다." }
+        check(shippingAddress == null) { "이미 배송지가 지정된 주문입니다." }
+        shippingAddress = address
+    }
+
     /** 하위 주문을 추가하고 양방향 연관관계를 맞춘다. */
     fun addSubOrder(subOrder: SubOrder) {
         subOrders.add(subOrder)
         subOrder.order = this
     }
 
-    /** 모든 SubOrder 가 확정된 뒤 금액 합계를 재계산한다(쿠폰/포인트는 Phase 4에서 차감 반영). */
+    /**
+     * 모든 SubOrder 가 확정된 뒤 금액 합계를 재계산한다(쿠폰/포인트는 Phase 4에서 차감 반영).
+     * [deliveryFeeTotal] 은 상품합계([totalAmount])와 별개로 결제금액에 더해진다 — 배송비는 쿠폰/포인트
+     * 할인 대상(상품가) 이 아니라는 판단([distributePayable] 참고). 정산은 subtotal 만 쓰므로 영향 없음.
+     */
     fun recalculateAmounts() {
         totalAmount = subOrders.sumOf { it.subtotal }
-        payableAmount = totalAmount - discountAmount - pointUsed
+        deliveryFeeTotal = subOrders.sumOf { it.deliveryFee }
+        payableAmount = totalAmount + deliveryFeeTotal - discountAmount - pointUsed
     }
 
     /** 하위 주문 중 하나라도 발송/배송 단계에 들어갔는지 — 배송 시작 후에는 취소 불가. */
@@ -95,17 +129,25 @@ class Order(
     /**
      * 최종 결제금액([payableAmount])을 하위 주문 상품합계 비례로 배분해 각 [SubOrder.payableShare] 에 저장한다.
      * 정수 나눗셈 잔액은 마지막 하위 주문에 몰아 합계 정합성을 보장한다. 쿠폰/포인트 적용 후 호출한다.
+     *
+     * 배송비([deliveryFeeTotal])는 상품합계 비례 배분 대상에서 제외하고, 각 SubOrder 자신의
+     * [SubOrder.deliveryFee] 를 그대로 더한다(자기 슬롯의 추가요금은 자기 몫이 원칙).
      */
     fun distributePayable() {
         val subtotalSum = subOrders.sumOf { it.subtotal }
-        if (subtotalSum == 0L) return
+        val merchandiseNet = payableAmount - deliveryFeeTotal
+        if (subtotalSum == 0L) {
+            subOrders.forEach { it.payableShare = it.deliveryFee }
+            return
+        }
         var allocated = 0L
         subOrders.forEachIndexed { index, sub ->
-            sub.payableShare = if (index == subOrders.lastIndex) {
-                payableAmount - allocated
+            val merchandiseShare = if (index == subOrders.lastIndex) {
+                merchandiseNet - allocated
             } else {
-                (payableAmount * sub.subtotal / subtotalSum).also { allocated += it }
+                (merchandiseNet * sub.subtotal / subtotalSum).also { allocated += it }
             }
+            sub.payableShare = merchandiseShare + sub.deliveryFee
         }
     }
 }
