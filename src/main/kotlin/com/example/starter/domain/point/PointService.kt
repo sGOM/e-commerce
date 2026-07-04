@@ -2,6 +2,7 @@ package com.example.starter.domain.point
 
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
+import com.example.starter.domain.membership.MembershipBenefitService
 import com.example.starter.domain.point.dto.PointSummaryResponse
 import com.example.starter.domain.point.entity.PointAccount
 import com.example.starter.domain.point.entity.PointPolicy
@@ -20,6 +21,7 @@ import java.time.Instant
 class PointService(
     private val pointAccountRepository: PointAccountRepository,
     private val pointPolicyRepository: PointPolicyRepository,
+    private val membershipBenefitService: MembershipBenefitService,
 ) {
 
     /** 주문에 포인트 사용(차감). 결제금액 초과/잔액 부족 시 예외로 주문 트랜잭션을 롤백. */
@@ -35,13 +37,31 @@ class PointService(
         }
     }
 
-    /** 결제 확정 적립. 정책 적립률을 결제금액에 적용하고 유효기간 만료일을 부여한다. 적립액을 반환. */
+    /**
+     * 결제 확정 적립. 정책 적립률을 결제금액에 적용하고 유효기간 만료일을 부여한다. 적립액을 반환.
+     * 멤버십 활성 회원은 우대 배율(예: 1.5배)이 추가로 곱해진다(`docs/planning/subscription-membership.md` AC9).
+     */
     @Transactional
     fun earn(userId: Long, payableAmount: Long, orderId: Long): Long {
         val policy = pointPolicyRepository.findFirstByOrderByIdAsc() ?: return 0
-        val amount = policy.calculateEarn(payableAmount)
+        val baseAmount = policy.calculateEarn(payableAmount)
+        if (baseAmount <= 0) return 0
+        val multiplierBp = membershipBenefitService.pointEarnMultiplierBp(userId)
+        val amount = baseAmount * multiplierBp / 10_000
         if (amount <= 0) return 0
         getOrCreateAccount(userId).earn(amount, orderId, policy.expiresAtFrom(Instant.now()))
+        return amount
+    }
+
+    /**
+     * 리뷰 작성 적립([review] 도메인 전용). 결제 확정 적립([earn])과 달리 특정 주문에 연결하지 않는다
+     * (`sourceOrderId = null`) — 리뷰가 달린 주문이 이후 취소되어도 [revokeEarnForOrder] 로 회수되지
+     * 않게 하기 위함(기획서 AC7: 삭제해도 회수하지 않음 — 애초에 주문 취소 회수 대상도 아니다).
+     */
+    @Transactional
+    fun earnForReview(userId: Long, amount: Long): Long {
+        if (amount <= 0) return 0
+        getOrCreateAccount(userId).earn(amount, orderId = null, expiresAtByPolicy())
         return amount
     }
 
