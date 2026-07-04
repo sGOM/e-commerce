@@ -45,6 +45,31 @@ management:
 #     cron: "0 0 4 * * MON"   # 매주 월요일 04:00
 #     zone: "Asia/Seoul"
 
+# 멤버십 정기결제 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/memberships/billing/run` 만). 운영에서 켜려면:
+# membership:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 3 * * *"   # 매일 03:00
+#     zone: "Asia/Seoul"
+
+# 정기배송 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/delivery-subscriptions/billing/run` 만). 운영에서 켜려면:
+# delivery-subscription:
+#   scheduler:
+#     enabled: true
+#     cron: "0 30 3 * * *"   # 매일 03:30(멤버십 정기결제 배치 이후)
+#     zone: "Asia/Seoul"
+
+# 정기결제 게이트웨이(현재 mock만 제공 — 실 PG 연동 시 어댑터 추가 후 전환, 멤버십/정기배송이 공유):
+# billing:
+#   gateway: mock
+
+# 선물 미수락 만료 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/gift-claims/expire/run` 만). 운영에서 켜려면:
+# gift:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 4 * * *"   # 매일 04:00
+#     zone: "Asia/Seoul"
+
 logging:
   level:
     com.example.starter: DEBUG
