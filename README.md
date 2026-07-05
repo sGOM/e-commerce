@@ -7,7 +7,7 @@ Kotlin + Spring Boot 백엔드와 React 고객 스토어프론트로 구성된 *
 - **백엔드**: Kotlin · Spring Boot 3.5 · PostgreSQL/Flyway · 세션 인증/RBAC — `src/`
 - **프론트엔드**: React 19 · Vite · TypeScript · Tailwind CSS — [`frontend/`](frontend/) (고객 스토어프론트 SPA)
 
-> 제품 요구사항·설계 결정의 전체 맥락은 [`PRD.md`](PRD.md), 향후 백로그는 [`docs/ROADMAP.md`](docs/ROADMAP.md) 참조.
+> 제품 요구사항·설계 결정의 전체 맥락은 [`PRD.md`](PRD.md), 기능 기획·백로그는 [`docs/planning/`](docs/planning/), 내부 구현은 [`docs/SERVER_ARCHITECTURE.md`](docs/SERVER_ARCHITECTURE.md) 참조.
 
 ## 이커머스 핵심 개념
 - **마켓플레이스(멀티 셀러)**: 한 주문에 여러 판매자 상품이 섞이면 **SubOrder(판매자 단위)** 로 분리된다. 결제는 Order 단위 1건, 배송·취소·정산은 SubOrder 단위.
@@ -37,11 +37,12 @@ Kotlin + Spring Boot 백엔드와 React 고객 스토어프론트로 구성된 *
 └──────────────────────────┘                        │ JPA / 원자적 UPDATE
                                                      ▼
                                      ┌──────────────────────────────────────┐
-                                     │  PostgreSQL  (스키마: Flyway V1~V13)   │
+                                     │  PostgreSQL  (스키마: Flyway V1~V25)   │
                                      │  audit_logs JSONB(GIN) · 정책행 런타임  │
                                      └──────────────────────────────────────┘
                             결제: PaymentGateway 추상화 → Mock / Toss(@ConditionalOnProperty)
-                            스케줄러: 셀러 정산 주기 배치(@Scheduled, 조건부 활성화)
+                            스케줄러: 정산·포인트만료·멤버십빌링·로열티등급·카트리마인드 배치(@Scheduled, 조건부 활성화)
+                            알림: 범용 인앱 알림함(Notification) + @Async·AFTER_COMMIT 이벤트(재입고·가격인하 등)
 ```
 
 ### 계층 구조 (백엔드)
@@ -106,8 +107,17 @@ Order ─< SubOrder(판매자 단위) ─< OrderItem ┘     ← 멀티셀러 �
 | Phase 7 | 테스트 보강 / 문서화 | ✅ |
 | Phase 8 | 고객 스토어프론트(React SPA) + 판매자/관리자 백오피스 | ✅ |
 | Phase 9 | 상품 검색(키워드·카테고리·판매자) + 판매량 기반 인기 상품 | ✅ |
+| 커머스 스위트 | 상품 리뷰/포토리뷰 + 재입고 알림 + 범용 인앱 알림함(Notification) | ✅ |
+| 커머스 스위트 | 기획전/컬렉션 큐레이션(promotion) + 플래시세일/타임딜(flashsale) | ✅ |
+| 커머스 스위트 | 배송 권역·배송 슬롯 예약(delivery) + 새벽배송 플래그 | ✅ |
+| 커머스 스위트 | 유료 멤버십 + 정기결제 빌링(membership/billing) + 정기배송 구독(subscription) | ✅ |
+| 커머스 스위트 | 선물하기/기프트 클레임(gift) | ✅ |
+| 리텐션 | 위시리스트 + 가격 인하 알림(wishlist) | ✅ |
+| 리텐션 | 누적구매 로열티 등급 + 등급 승급 쿠폰 자동발급(loyalty) | ✅ |
+| 리텐션 | 장바구니 이탈 리마인드(cart, 알림 전용) | ✅ |
 
 > 기반 스타터 킷 단계(공통 응답/에러, RBAC, OAuth2, 감사로그, 관리자)는 모두 완료된 상태에서 출발한다.
+> 커머스 스위트·리텐션 기능의 "무엇을·왜"는 [`docs/planning/`](docs/planning/) 기획 문서를 참조.
 
 ## 패키지 구조
 ```
@@ -124,14 +134,26 @@ com.example.starter
     ├── auth/      회원가입·로그인·로그아웃·내정보 API        (스타터 킷)
     ├── admin/     사용자/권한/감사로그 관리 + PageResponse  (스타터 킷)
     ├── seller/    입점 신청·심사, 본인 SubOrder 조회/송장
-    ├── catalog/   카테고리·상품·옵션·재고(원자적 차감), 상품 검색
-    ├── cart/      회원 장바구니 + 게스트 무상태 계산 API
+    ├── catalog/   카테고리·상품·옵션·재고(원자적 차감), 상품 검색, 리뷰 요약·새벽배송 플래그
+    ├── cart/      회원 장바구니 + 게스트 무상태 계산 API, 이탈 리마인드 배치
     ├── order/     Order·SubOrder·OrderItem, 생성/취소/부분취소, 게스트 주문
     ├── payment/   Payment·PaymentEvent, PaymentGateway(Mock/Toss), 멱등 결제
     ├── coupon/    Coupon·IssuedCoupon, 관리자 발행
     ├── point/     PointAccount·PointLot(FIFO)·PointTransaction, 적립/사용/만료, 정책
     ├── member/    내 쿠폰/포인트 조회(MeController)
-    └── settlement/ 셀러 정산(판매자별 집계·수수료 차감), 수수료 정책
+    ├── settlement/ 셀러 정산(판매자별 집계·수수료 차감), 수수료 정책
+    ├── review/    상품 리뷰/포토리뷰, 구매 인증, 리뷰 요약(상품 상세 노출)
+    ├── restock/   재입고 알림(옵션 단위 임계값 감지 → 인앱 알림)
+    ├── notification/ 범용 인앱 알림함(NotificationType enum), @Async 발송
+    ├── promotion/ 기획전/컬렉션 큐레이션(MD 편집 진열)
+    ├── flashsale/ 플래시세일/타임딜(한정특가·수량, 재고 원자성 재사용)
+    ├── delivery/  배송 권역·배송 슬롯 예약(새벽/시간대), 새벽배송
+    ├── membership/ 유료 멤버십(등급/혜택), 구독 상태
+    ├── billing/   정기결제 빌링키 발급·저장·청구(멤버십/정기배송 공통 기반)
+    ├── subscription/ 정기배송 구독(반복 주문 자동화)
+    ├── gift/      선물하기(배송지 없는 결제) + 수령자 기프트 클레임
+    ├── wishlist/  위시리스트(찜) + 가격 인하 알림(Product.basePrice 하락 감지)
+    └── loyalty/   누적구매 로열티 등급(최근 12개월 순구매액) + 승급 쿠폰 자동발급
 ```
 
 > 화폐는 KRW 정수(`Long`), 비율은 basis point(100 = 1%, 1000 = 10%)로 다룬다.
@@ -187,18 +209,21 @@ npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 
 ```
 
 주요 화면:
-- **고객**: 상품 목록(카테고리 필터·인기 상품)·상세, 장바구니, 체크아웃(쿠폰/포인트 적용), 게스트 주문/조회, 마이페이지(주문·쿠폰·포인트)
-- **판매자 백오피스**: 상품 관리, 주문/송장, 정산 내역
-- **관리자 백오피스**: 셀러 심사, 주문/환불, 쿠폰 발행, 정산 관리
+- **고객**: 상품 목록(카테고리 필터·인기 상품)·상세(리뷰·찜), 장바구니, 체크아웃(쿠폰/포인트·배송슬롯 적용), 게스트 주문/조회, 선물하기/기프트 클레임, 마이페이지(주문·쿠폰·포인트·찜한 상품·내 등급·멤버십·정기배송·알림함)
+- **판매자 백오피스**: 상품 관리, 주문/송장, 정산 내역, 플래시세일 신청
+- **관리자 백오피스**: 셀러 심사, 주문/환불, 쿠폰 발행, 정산 관리, 컬렉션·플래시세일 편성, 배송 권역/슬롯, 멤버십, 리뷰 검수, 로열티 등급
 - **게스트 → 회원 전환**: 비회원 장바구니(localStorage)는 로그인 시 서버 장바구니로 병합(`/api/cart/merge`)
 
 ```
 frontend/src
 ├── api/         client(fetch+CSRF) · endpoints · types
 ├── auth/        AuthContext(세션) · 게스트 장바구니 병합
-├── components/  Layout · ProtectedRoute · ProductCard · OrderView
-└── pages/       고객 화면 + seller/* + admin/* 백오피스
+├── hooks/       useWishlist(찜 상태 컨텍스트) 등
+├── components/  Layout · ProtectedRoute · ProductCard · OrderView · WishlistButton · NotificationBell
+└── pages/       고객 화면(찜/등급/멤버십/알림함/선물하기 포함) + seller/* + admin/* 백오피스
 ```
+
+> UI 리디자인(shadcn/ui + Tailwind v4 토큰, 라이트/다크)은 [`docs/design/storefront-ui-spec.md`](docs/design/storefront-ui-spec.md) 참조.
 
 ## 이커머스 API
 > 모든 응답은 공통 규약 `{ success, code, message, data }`. 상태 변경 요청은 CSRF 토큰 필요.
@@ -223,6 +248,17 @@ frontend/src
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
 | POST | `/api/payments/{orderId}` | 결제 요청(멱등, 실 PG는 `paymentKey` 동반) | 회원 |
 | GET | `/api/me/coupons` · `/api/me/points` | 내 쿠폰/포인트 | 회원 |
+| GET | `/api/collections` · `/api/collections/{id}` | 기획전/컬렉션 목록·상세 | 불필요 |
+| GET | `/api/flash-sales` · `/api/flash-sales/{id}` | 진행/예정 플래시세일 | 불필요 |
+| GET · POST | `/api/products/{id}/reviews` | 상품 리뷰 조회 / 작성(구매 인증) | 조회 불필요·작성 회원 |
+| POST · DELETE | `/api/products/options/{optionId}/restock-alerts` | 재입고 알림 신청/해제 | 회원 |
+| POST · DELETE · GET | `/api/me/wishlist` · `/api/me/wishlist/{productId}` | 위시리스트 담기/빼기/목록(가격 인하 배지) | 회원 |
+| GET | `/api/me/loyalty-tier` | 내 로열티 등급·다음 등급까지 남은 금액 | 회원 |
+| GET · PATCH | `/api/me/notifications` · `/api/me/notifications/{id}/read` | 인앱 알림함 조회·읽음(재입고·가격인하·카트리마인드 등) | 회원 |
+| GET · POST | `/api/me/membership` | 내 멤버십 조회 / 구독(빌링키) | 회원 |
+| GET | `/api/delivery-slots?regionId=&date=` | 배송 권역·슬롯 예약 가능 조회 | 불필요 |
+| POST · GET | `/api/gift` · `/api/gift/{token}/claim` | 선물 주문 생성 / 수령자 기프트 클레임(토큰) | 회원 |
+| GET · POST | `/api/me/delivery-subscriptions` | 정기배송 구독 조회/생성(일시정지·건너뛰기·재개) | 회원 |
 
 ### 판매자 API (`ROLE_SELLER`)
 | 메서드 | 경로 | 설명 |
@@ -233,6 +269,7 @@ frontend/src
 | GET | `/api/seller/orders?status=` | 본인 판매분 SubOrder 조회 |
 | POST | `/api/seller/orders/{subOrderId}/ship` | 송장 등록 → SHIPPED |
 | GET | `/api/seller/settlements` | 본인 상점 정산 내역 |
+| GET · POST | `/api/seller/flash-sales` | 본인 상품 플래시세일 신청/조회 |
 
 ### 관리자 API (`ROLE_ADMIN`)
 | 메서드 | 경로 | 설명 |
@@ -246,6 +283,15 @@ frontend/src
 | POST | `/api/admin/points/expire` | 포인트 만료 트리거 |
 | POST · PATCH | `/api/admin/settlements` · `/api/admin/settlements/{id}/pay` | 정산 생성/지급 |
 | GET · PATCH | `/api/admin/settlements/policy` | 수수료율 정책 |
+| GET · POST | `/api/admin/collections` | 기획전/컬렉션 편성·상품 배치 |
+| GET · POST | `/api/admin/flash-sales` | 플래시세일 승인/편성 |
+| GET · POST | `/api/admin/delivery-regions` · `/api/admin/delivery-slots` | 배송 권역·슬롯 운영 |
+| GET · POST | `/api/admin/memberships` | 멤버십 플랜/구독 관리 |
+| GET · PATCH | `/api/admin/reviews` · `/api/admin/review-policy` | 리뷰 검수·신고 처리, 리뷰 적립 정책 |
+| GET | `/api/admin/loyalty-tiers?tier=` | 로열티 등급 조회 |
+| POST | `/api/admin/loyalty-tiers/recalculate/run` | 로열티 등급 재계산 배치(수동) |
+| POST | `/api/admin/cart-reminders/run` | 장바구니 이탈 리마인드 발송 배치(수동) |
+| GET · POST | `/api/admin/gift-claims` · `/api/admin/delivery-subscriptions` | 선물 클레임·정기배송 운영 |
 
 ## 공통 응답 형태
 ```jsonc
@@ -259,7 +305,7 @@ frontend/src
 ```bash
 ./gradlew test
 ```
-통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **90개** 통합/단위 테스트.
+통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **109개** 통합/단위 테스트.
 
 주요 커버리지:
 - **재고 동시성**(`OrderConcurrencyIntegrationTest`): 재고 5에 동시 주문 20건 → 정확히 5건 성공, 오버셀링 0건

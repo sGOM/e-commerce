@@ -421,6 +421,36 @@ grid (기본 1열, lg:3열)
 
 ---
 
+### 5.6 리텐션 화면 (찜·등급·알림함) — 확장 기능
+
+MVP 리디자인(§5.1~§5.5) 이후 추가된 커머스 스위트·리텐션 화면. 위 토큰·컴포넌트 체계를 그대로 따르며,
+아래는 각 화면 고유의 스펙만 짚는다(공통 상태 규약·접근성은 §5 서두·§6 준수).
+
+**하트(찜) 토글 — `WishlistButton`** (상품 카드 우상단 / 상세 제목 옆)
+- `button variant=ghost size=icon`, 아이콘 하트(빈/채움). `aria-label`은 "찜하기"/"찜 해제".
+- 상태: 찜됨 = 채운 하트 `text-primary`(또는 `text-destructive` 계열 중 택1, 전 화면 일관), 미찜 = 빈 하트 `text-muted-foreground`.
+- 비로그인 클릭 → `sonner` 토스트로 로그인 유도(모달/리다이렉트). 카드 링크 클릭과 이벤트 전파 분리(`stopPropagation`).
+- 최소 터치 타깃 44px(카드 위 오버레이여도 히트박스 확보).
+
+**찜한 상품 — `MyWishlistPage`** (마이페이지 탭)
+- 상품 그리드(§5.2 카드 재사용). 각 카드에 **가격 인하 배지**: `badge variant=destructive` "▼ 15% 인하"
+  + 원가(취소선 `text-muted-foreground line-through`) / 현재가(`text-primary font-bold`).
+- 상단 필터: "가격 인하만 보기" 토글(`switch` 또는 outline 토글 버튼).
+- 품절/판매중지: §부록A 배지 규칙. 항목별 찜 해제·장바구니 담기 액션.
+
+**내 등급 — `MyLoyaltyTierPage`** (마이페이지 탭)
+- 등급 카드: 상단 등급 뱃지(§부록A 등급 색), 최근 12개월 순구매액, **다음 등급까지 진행바**
+  (`progress`, 남은 금액 캡션), 산정 시각(`text-xs text-muted-foreground`).
+- "등급 전용 쿠폰" 혜택 안내 문구(가격 배수 아님을 오인하지 않게 담백하게).
+
+**알림함 — `NotificationBell` / `NotificationsPage`**
+- 벨 아이콘 + 안읽음 개수 `badge`(개수 0이면 미표시), `aria-label="알림, N개 안읽음"`.
+- 각 알림 앞에 **타입별 아이콘**(재입고/가격인하/카트리마인드/멤버십/정기배송). 제목·본문·이동은 서버값
+  (`title`/`body`/`linkUrl`) 그대로 — 프론트는 아이콘만 분기.
+- 읽음/안읽음 시각 위계: 안읽음 배경 `bg-accent/40`, 읽음 뉴트럴.
+
+---
+
 ## 6. 접근성 체크리스트 (WCAG 2.1 AA)
 
 react-expert가 각 컴포넌트 완료 시 확인.
@@ -489,5 +519,12 @@ react-expert가 각 컴포넌트 완료 시 확인.
 | 인기 | soldQuantity | secondary | N개 판매 |
 | 장바구니 | !purchasable | destructive(텍스트) | 재고 부족 |
 | 계정 | 비회원 | outline | 비회원 |
+| 찜 | isPriceDropped | destructive | ▼ N% 인하 |
+| 로열티 | BRONZE | secondary(뉴트럴 브론즈 톤) | 브론즈 |
+| 로열티 | SILVER | secondary(실버 톤) | 실버 |
+| 로열티 | GOLD | warning 계열(골드 톤) | 골드 |
+| 로열티 | VIP | primary(강조) | VIP |
 
 주문 상태(주문 관련 화면은 1차 범위 밖이나 일관성 위해 기록): CREATED=warning, PAID=success, SHIPPED/DELIVERED=default/success, CANCELED=destructive.
+
+알림 타입 아이콘(단일 소스, `labels.ts` 매핑): RESTOCK=📦, PRICE_DROP=🔻, CART_REMINDER=🛒, MEMBERSHIP=⭐, DELIVERY_SUBSCRIPTION=🔁, GIFT=🎁. 색으로만 구분하지 말고 아이콘+텍스트 병행(§6.1).

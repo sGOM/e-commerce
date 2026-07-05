@@ -320,9 +320,15 @@ try {
 | `payment.gateway` = `mock`/`toss` | 결제 게이트웨이 구현체 선택 | `@ConditionalOnProperty` |
 | `settlement.scheduler.enabled` | 주기 자동 정산 스케줄러 등록 여부 | `@ConditionalOnProperty` |
 | `settlement.scheduler.cron`/`zone` | 정산 주기/타임존 | `@Scheduled` placeholder |
+| `membership.billing.scheduler.enabled` | 멤버십/정기배송 정기결제 청구 스케줄러 | `@ConditionalOnProperty` |
+| `loyalty.scheduler.enabled` | 로열티 등급 주기 재계산 스케줄러(기본 off, 수동 트리거) | `@ConditionalOnProperty` |
+| `cart-reminder.scheduler.enabled` | 장바구니 이탈 리마인드 발송 스케줄러(기본 off) | `@ConditionalOnProperty` |
+| `loyalty.silverThreshold`/`goldThreshold`/`vipThreshold` | 등급 임계 순구매액(원) | `@ConfigurationProperties(loyalty)` |
+| `loyalty-coupon.couponIdByTier` | 승급 시 발급할 등급별 쿠폰 매핑(미등록 시 미발급) | `@ConfigurationProperties(loyalty-coupon)` |
+| `cart-reminder.inactivityHours` | 이탈 판정 미활동 시간(기본 24h) | `@ConfigurationProperties(cart-reminder)` |
 | OAuth2 client registration 유무 | 소셜 로그인 활성화 | 런타임 `ClientRegistrationRepository` 존재 검사 |
 | `app.audit.*` | 감사 로그 on/off·제외경로·마스킹 키·본문 길이 | `@ConfigurationProperties` |
-| 적립률·유효기간·수수료율 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`) |
+| 적립률·유효기간·수수료율·리뷰적립 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`) |
 
 ---
 
@@ -335,8 +341,56 @@ Hibernate는 `ddl-auto: validate`로 **매핑↔스키마 일치 검증만** 한
 ```
 V1 init · V2 oauth · V3 audit_logs · V4 catalog · V5 cart · V6 order · V7 payment
 V8 coupon_point · V9 order_shipping_address · V10 shipment · V11 sub_order payable_share
-V12 point_expiry · V13 settlement
+V12 point_expiry · V13 settlement · V14 sub_order_delivery · V15 reviews
+V16 restock_alert_and_notification · V17 collections · V18 flash_sales · V19 delivery_slots
+V20 memberships · V21 delivery_subscriptions · V22 gift_orders
+V23 wishlist · V24 loyalty_tier · V25 cart_reminder
 ```
+
+---
+
+## 13. 이벤트 기반 알림 & 멱등 배치 (커머스 스위트·리텐션)
+
+Phase 9 이후 확장된 기능들은 세 가지 공통 패턴 위에 얹혀 있다. 새 기능을 추가할 때 이 패턴을 재사용한다.
+
+### 13-1. 범용 인앱 알림함 (`notification`)
+재입고·가격인하·카트리마인드·멤버십·정기배송 등 서로 다른 사건이 **하나의 알림함**으로 모인다.
+`Notification`은 `type`(enum) + `title`/`body`/`linkUrl`만 가진 범용 엔티티라, 새 알림 종류는
+**enum 값 추가만으로** 스키마 변경 없이 확장된다(`PRICE_DROP`, `CART_REMINDER`가 그 예). 프론트
+알림함은 `linkUrl`로 이동하고 `type`으로 아이콘만 분기하므로, 백엔드가 값만 채우면 화면 변경이 없다.
+
+### 13-2. 트랜잭션 분리 이벤트 발송 (`@Async` + `AFTER_COMMIT`)
+"본 작업 트랜잭션을 지연시키지 않는다"는 원칙 아래, 부수 효과(알림)는 이벤트로 분리한다. 재입고
+알림(`InventoryRestockedEvent`)과 가격 인하 알림(`ProductPriceChangedEvent`)이 같은 골격이다.
+
+```kotlin
+// 발행: 도메인 서비스가 상태 변경 커밋 경로에서 이벤트만 publish
+if (product.basePrice > newPrice) publisher.publishEvent(ProductPriceChangedEvent(productId, newPrice))
+
+// 수신: 커밋 이후 비동기로 알림 생성 → 원 트랜잭션(상품 수정)을 붙잡지 않음
+@TransactionalEventListener(phase = AFTER_COMMIT)
+@Async("notificationExecutor")
+fun on(e: ProductPriceChangedEvent) { wishlistService.notifyPriceDrop(e.productId, e.newPrice) }
+```
+- **왜 AFTER_COMMIT**: 롤백된 변경에 알림이 나가는 것을 막는다. 롤백 기반 통합 테스트에서는 커밋이
+  없어 리스너가 안 뜨므로, 서비스 메서드(`notifyPriceDrop`)를 직접 호출해 핵심 로직을 검증한다.
+- **재알림 정책**: 재입고 알림은 1회 소멸성이지만, 가격 인하는 발송 시 `baselinePrice`를 현재가로
+  **갱신**해 연속 인하를 계속 추적한다(반복 이벤트).
+
+### 13-3. 멱등 배치 (스케줄러 조건부 등록 + 실패 격리)
+정산과 동일하게, 주기 작업은 `@ConditionalOnProperty`로 스케줄러 빈을 켜고(기본 off, 관리자 수동
+트리거 병행) **멱등**하게 설계한다. 로열티 등급·카트 리마인드가 그 예다.
+
+- **로열티 등급**(`LoyaltyTierBatchService`): 최근 12개월 순구매액(취소/환불 제외)을 네이티브 집계해
+  등급을 재계산(강등 포함). 승급이 감지되면 `LoyaltyTierBenefitService`가 **별도 트랜잭션**으로 등급
+  전용 쿠폰을 발급하는데, `existsByCouponIdAndUserId`로 **이미 받은 쿠폰이면 건너뛰어**(멱등) 배치가
+  여러 번 돌아도 중복 발급되지 않는다. 쿠폰 발급 실패는 try/catch로 격리해 등급 갱신을 되돌리지 않는다.
+- **카트 리마인드**(`CartReminderBatchService`): `lastActivityAt`이 임계 시간(기본 24h)보다 오래된
+  **비어있지 않은** 장바구니를 스캔해 알림 1회 발송. `lastReminderAt < lastActivityAt` 조건으로
+  **중복 발송을 dedup**하고, 건별 실패를 격리한다. 자동 쿠폰 발급은 어뷰징 방지를 위해 하지 않는다.
+
+> 화폐/정책/동시성 원칙은 앞 절들과 동일하다. 이 세 패턴만 익히면 리텐션 계열 기능은 기존 도메인에
+> 최소 침습으로 얹을 수 있다.
 
 ---
 
@@ -351,5 +405,17 @@ V12 point_expiry · V13 settlement
 | `coupon` | 쿠폰 발행/적용/복원 | `CouponService` |
 | `settlement` | 셀러 정산·스케줄러 | `SettlementService`(멱등 집계), `SettlementScheduler` |
 | `seller` | 입점/심사, 송장 | `SellerOrderService` |
+| `review` | 상품 리뷰/포토리뷰, 구매 인증·요약 | `ReviewService`(구매내역 검증), `ReviewPolicy` |
+| `restock` | 재입고 알림(옵션 임계값 감지) | `RestockAlertEventListener`(@Async·AFTER_COMMIT) |
+| `notification` | 범용 인앱 알림함 | `NotificationType`(enum), `NotificationService`(@Async 발송) |
+| `promotion` | 기획전/컬렉션 큐레이션 | `CollectionService` |
+| `flashsale` | 플래시세일/타임딜 | `FlashSaleService`(재고 원자성 재사용) |
+| `delivery` | 배송 권역·슬롯 예약 | `DeliverySlotService`(슬롯 정원 동시성) |
+| `membership`·`billing` | 유료 멤버십 + 정기결제 빌링 | `MembershipService`, `BillingScheduler`(빌링키 청구) |
+| `subscription` | 정기배송 구독 | `SubscriptionService`(반복 주문 생성) |
+| `gift` | 선물하기 + 기프트 클레임 | `GiftService`(토큰 수령·배송지 없는 결제) |
+| `wishlist` | 위시리스트 + 가격 인하 알림 | `WishlistPriceAlertEventListener`(§13, restock 패턴 재사용) |
+| `loyalty` | 로열티 등급 + 승급 쿠폰 | `LoyaltyTierBatchService`, `LoyaltyTierBenefitService`(§13, 멱등 발급) |
+| `cart` | 장바구니 + 이탈 리마인드 | `CartReminderBatchService`(§13, dedup 발송) |
 | `common/audit` | 감사 로그 | `AuditLogFilter`(필터 위치·마스킹) |
 | `common/config` | 보안·스케줄링·비동기·JDSL 설정 | `SecurityConfig`(필터 순서) |
