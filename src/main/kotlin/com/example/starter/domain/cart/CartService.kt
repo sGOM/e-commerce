@@ -67,6 +67,7 @@ class CartService(
             val addable = minOf(guestQuantity, available - alreadyInCart) // 재고 초과분은 버린다
             if (addable > 0) cart.addOrIncrease(option, addable)
         }
+        cart.touch()
         cartRepository.flush() // 신규 항목 id 확정 후 응답 생성
         return CartResponse.from(cart)
     }
@@ -78,6 +79,7 @@ class CartService(
         val alreadyInCart = cart.items.firstOrNull { it.option.id == optionId }?.quantity ?: 0
         validatePurchasable(option, alreadyInCart + quantity)
         cart.addOrIncrease(option, quantity)
+        cart.touch()
         cartRepository.flush() // 신규 항목의 id 확정 후 응답 생성
         return CartResponse.from(cart)
     }
@@ -88,6 +90,7 @@ class CartService(
         val item = findItem(cart, itemId)
         validatePurchasable(item.option, quantity)
         item.quantity = quantity
+        cart.touch()
         return CartResponse.from(cart)
     }
 
@@ -96,6 +99,7 @@ class CartService(
         val cart = getOrCreateCart(userId)
         val item = findItem(cart, itemId)
         cart.removeItem(item)
+        cart.touch()
         return CartResponse.from(cart)
     }
 
