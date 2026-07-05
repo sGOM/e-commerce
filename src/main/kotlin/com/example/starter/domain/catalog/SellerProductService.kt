@@ -10,6 +10,7 @@ import com.example.starter.domain.catalog.entity.Inventory
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.event.InventoryRestockedEvent
+import com.example.starter.domain.catalog.event.ProductPriceChangedEvent
 import com.example.starter.domain.catalog.repository.CategoryRepository
 import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.seller.entity.Seller
@@ -51,15 +52,25 @@ class SellerProductService(
         return SellerProductResponse.from(product)
     }
 
+    /**
+     * 정가([Product.basePrice])가 바뀌면 [ProductPriceChangedEvent] 를 발행해 위시리스트 가격 인하
+     * 알림을 트리거한다(`docs/planning/wishlist-price-alert.md` AC12). `adjustStock` 의
+     * [InventoryRestockedEvent] 와 동일하게 트랜잭션 커밋 이후 비동기로만 처리되도록 구독측에
+     * `@TransactionalEventListener(AFTER_COMMIT)` + `@Async` 를 위임한다.
+     */
     @Transactional
     fun update(userId: Long, productId: Long, request: UpdateProductRequest): SellerProductResponse {
         val product = ownedProduct(userId, productId)
+        val oldPrice = product.basePrice
         product.name = request.name!!
         product.basePrice = request.basePrice!!
         product.description = request.description
         product.status = request.status!!
         product.category = findCategory(request.categoryId)
         product.dawnDeliveryEligible = request.dawnDeliveryEligible
+        if (product.basePrice != oldPrice) {
+            eventPublisher.publishEvent(ProductPriceChangedEvent(requireNotNull(product.id), oldPrice, product.basePrice))
+        }
         return SellerProductResponse.from(product)
     }
 

@@ -16,4 +16,10 @@ enum class NotificationType {
 
     /** 선물 수락/만료 취소 등 선물 링크 상태 변경 안내(구매자 대상, `docs/planning/gift-order.md`) */
     GIFT,
+
+    /** 위시리스트에 담은 상품의 정가(Product.basePrice)가 인하됨(`docs/planning/wishlist-price-alert.md`) */
+    PRICE_DROP,
+
+    /** 장바구니에 담긴 채 일정 시간 결제하지 않아 발송하는 이탈 리마인드(자동 쿠폰 발급 없음) */
+    CART_REMINDER,
 }

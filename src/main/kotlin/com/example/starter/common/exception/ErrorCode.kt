@@ -138,4 +138,9 @@ enum class ErrorCode(
     GIFT_CLAIM_NOT_CLAIMABLE(HttpStatus.CONFLICT, "GIFT-004", "수락할 수 없는 선물 링크입니다."),
     GIFT_DELIVERY_SLOT_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "GIFT-005", "선물 주문은 배송 슬롯을 선택할 수 없습니다."),
     GIFT_NOT_A_GIFT_ORDER(HttpStatus.BAD_REQUEST, "GIFT-006", "선물 주문이 아닙니다."),
+
+    // 위시리스트/가격 인하 알림 (WISHLIST)
+    WISHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "WISHLIST-001", "위시리스트 항목을 찾을 수 없습니다."),
+    WISHLIST_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISHLIST-002", "이미 위시리스트에 담은 상품입니다."),
+    WISHLIST_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "WISHLIST-003", "위시리스트에 담을 수 있는 최대 개수를 초과했습니다."),
 }
