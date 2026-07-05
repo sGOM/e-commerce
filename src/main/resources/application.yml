@@ -82,6 +82,15 @@ management:
 #     cron: "0 0 2 * * *"   # 매일 02:00
 #     zone: "Asia/Seoul"
 
+# 로열티 등급 승급 혜택(등급 전용 쿠폰 자동 발급, 오너 확정 2026-07-05 — 무료배송 등은 out of scope).
+# 먼저 `POST /api/admin/coupons` 로 등급별 쿠폰 정의를 만든 뒤(발급 대상 없이 정의만), 그 쿠폰 id 를
+# 아래 매핑에 등록해야 실제로 발급된다(매핑이 없으면 조용히 미발급 — 안전한 기본값). 예:
+# loyalty-coupon:
+#   couponIdByTier:
+#     SILVER: 101
+#     GOLD: 102
+#     VIP: 103
+
 # 장바구니 이탈 리마인드 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/cart-reminders/run` 만).
 # MVP는 인앱 알림만 발송하고 자동 쿠폰은 발급하지 않는다(어뷰징 회피). 운영에서 켜려면:
 # cart-reminder:

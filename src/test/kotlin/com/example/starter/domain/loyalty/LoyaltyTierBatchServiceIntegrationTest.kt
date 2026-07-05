@@ -94,4 +94,21 @@ class LoyaltyTierBatchServiceIntegrationTest : AbstractIntegrationTest() {
         assertEquals(LoyaltyTier.BRONZE, myTier.tier)
         assertEquals(0, myTier.netPurchaseAmount12m)
     }
+
+    /**
+     * 등급 쿠폰 매핑(`loyalty-coupon.couponIdByTier`)이 비어있는 기본 설정에서도 승급 처리 자체는
+     * 예외 없이 끝까지 완료된다(운영에서 쿠폰을 아직 안 만든 상태에 안전 — [LoyaltyTierBenefitService]
+     * 가 조용히 스킵). 실제 쿠폰 발급 멱등성 검증은 [LoyaltyTierBenefitServiceIntegrationTest] 참고.
+     */
+    @Test
+    fun `쿠폰 매핑이 없어도 등급 승급 배치는 정상 완료된다`() {
+        val buyer = seedBuyer("loyalty-buyer-3@example.com")
+        val optionId = seedOption("LOY-SKU-3", 500_000)
+        placePaidOrder(buyer, optionId, 3) // GOLD 승급
+
+        val result = loyaltyTierBatchService.recalculateAll()
+
+        assertEquals(0, result.erroredCount)
+        assertEquals(LoyaltyTier.GOLD, loyaltyTierService.getMyTier(buyer.userId).tier)
+    }
 }

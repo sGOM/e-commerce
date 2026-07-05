@@ -16,4 +16,11 @@ interface IssuedCouponRepository : JpaRepository<IssuedCoupon, Long> {
 
     /** 주문에 사용된 발급쿠폰(취소 시 복원용) */
     fun findByOrderId(orderId: Long): Optional<IssuedCoupon>
+
+    /**
+     * 특정 쿠폰 정의를 회원이 이미 발급받은 적 있는지(멱등성 체크). 로열티 등급 승급 쿠폰이
+     * 같은 승급에 중복 발급되지 않도록 하는 용도로 쓰인다
+     * ([com.example.starter.domain.loyalty.LoyaltyTierBenefitService]).
+     */
+    fun existsByCouponIdAndUserId(couponId: Long, userId: Long): Boolean
 }

@@ -1,6 +1,7 @@
 package com.example.starter.domain.loyalty
 
 import com.example.starter.domain.loyalty.dto.LoyaltyTierBatchResult
+import com.example.starter.domain.loyalty.entity.LoyaltyTier
 import com.example.starter.domain.loyalty.entity.LoyaltyTierProfile
 import com.example.starter.domain.loyalty.repository.LoyaltyTierProfileRepository
 import com.example.starter.domain.order.repository.OrderRepository
@@ -15,7 +16,9 @@ import java.time.ZoneOffset
  * (`docs/planning` 요청사항 — 최근 12개월 순구매액 롤링 윈도우 재집계, 강등 포함).
  *
  * [com.example.starter.domain.gift.GiftExpiryBatchService] 와 동일하게 대상 1건의 실패가 다른 건
- * 처리를 막지 않도록 개별로 격리한다.
+ * 처리를 막지 않도록 개별로 격리한다. 승급 시 발급하는 등급 전용 쿠폰([LoyaltyTierBenefitService])은
+ * 등급 갱신 트랜잭션과 별도로 처리해, 쿠폰 발급 실패가 이미 확정된 등급 갱신을 되돌리거나 배치 전체를
+ * 중단시키지 않게 한다(오너 결정 — "등급 전용 쿠폰 자동 발급" 혜택, 2026-07-05).
  */
 @Service
 @Transactional(readOnly = true)
@@ -23,6 +26,7 @@ class LoyaltyTierBatchService(
     private val orderRepository: OrderRepository,
     private val loyaltyTierProfileRepository: LoyaltyTierProfileRepository,
     private val loyaltyTierProperties: LoyaltyTierProperties,
+    private val loyaltyTierBenefitService: LoyaltyTierBenefitService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -42,9 +46,15 @@ class LoyaltyTierBatchService(
         var unchanged = 0
         var errored = 0
         targetUserIds.forEach { userId ->
+            val netAmount = netAmountByUser[userId] ?: 0L
             try {
-                when (recalculateOne(userId, netAmountByUser[userId] ?: 0L, now)) {
-                    RecalcResult.UPGRADED -> upgraded++
+                when (recalculateOne(userId, netAmount, now)) {
+                    RecalcResult.UPGRADED -> {
+                        upgraded++
+                        // 등급 갱신은 이미 커밋됨 — 쿠폰 발급은 별도 트랜잭션 + 별도 격리로 실행해
+                        // 실패해도 방금 확정된 승급을 되돌리거나 이 배치를 중단시키지 않는다.
+                        grantUpgradeCouponSafely(userId, loyaltyTierProperties.resolveTier(netAmount))
+                    }
                     RecalcResult.DOWNGRADED -> downgraded++
                     RecalcResult.UNCHANGED -> unchanged++
                 }
@@ -56,6 +66,19 @@ class LoyaltyTierBatchService(
         val result = LoyaltyTierBatchResult(upgraded, downgraded, unchanged, errored)
         log.info("로열티 등급 재계산 배치 완료: {}", result)
         return result
+    }
+
+    private fun grantUpgradeCouponSafely(userId: Long, newTier: LoyaltyTier) {
+        try {
+            loyaltyTierBenefitService.grantUpgradeCoupon(userId, newTier)
+        } catch (ex: Exception) {
+            log.error(
+                "로열티 등급 승급 쿠폰 발급 실패(userId={}, tier={}) — 등급 갱신은 유지하고 쿠폰 발급만 건너뜀",
+                userId,
+                newTier,
+                ex,
+            )
+        }
     }
 
     @Transactional
