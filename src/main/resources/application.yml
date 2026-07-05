@@ -70,6 +70,27 @@ management:
 #     cron: "0 0 4 * * *"   # 매일 04:00
 #     zone: "Asia/Seoul"
 
+# 로열티 등급(최근 12개월 순구매액) 재계산 배치(기본 비활성 — 관리자 수동 트리거
+# `/api/admin/loyalty-tiers/recalculate/run` 만). 임계값(silver/gold/vip Threshold)도 여기서 조정 가능
+# (기본값 근거는 LoyaltyTierProperties 참고). 운영에서 켜려면:
+# loyalty:
+#   silverThreshold: 300000
+#   goldThreshold: 1000000
+#   vipThreshold: 3000000
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 2 * * *"   # 매일 02:00
+#     zone: "Asia/Seoul"
+
+# 장바구니 이탈 리마인드 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/cart-reminders/run` 만).
+# MVP는 인앱 알림만 발송하고 자동 쿠폰은 발급하지 않는다(어뷰징 회피). 운영에서 켜려면:
+# cart-reminder:
+#   inactivityHours: 24
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 * * * *"   # 매시 정각
+#     zone: "Asia/Seoul"
+
 logging:
   level:
     com.example.starter: DEBUG
