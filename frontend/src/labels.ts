@@ -6,7 +6,9 @@ import type {
   DeliverySubscriptionStatus,
   FlashSalePhase,
   GiftClaimStatus,
+  LoyaltyTier,
   MembershipStatus,
+  NotificationType,
   OrderStatus,
   ProductStatus,
   RestockAlertStatus,
@@ -98,4 +100,30 @@ export const giftClaimStatusLabel: Record<GiftClaimStatus, string> = {
   CLAIMED: '수락 완료',
   EXPIRED: '기한 만료(자동 취소)',
   CANCELED: '취소됨',
+}
+
+export const loyaltyTierLabel: Record<LoyaltyTier, string> = {
+  BRONZE: '브론즈',
+  SILVER: '실버',
+  GOLD: '골드',
+  VIP: 'VIP',
+}
+
+/** 등급별 시각 차별화(뱃지/카드 강조색). Badge의 variant 대신 커스텀 클래스를 덧입힌다. */
+export const loyaltyTierBadgeClass: Record<LoyaltyTier, string> = {
+  BRONZE: 'border-transparent bg-amber-700/15 text-amber-800 dark:text-amber-400',
+  SILVER: 'border-transparent bg-slate-400/20 text-slate-600 dark:text-slate-300',
+  GOLD: 'border-transparent bg-yellow-400/20 text-yellow-700 dark:text-yellow-400',
+  VIP: 'border-transparent bg-violet-500/20 text-violet-700 dark:text-violet-400',
+}
+
+// 알림함(NotificationsPage/NotificationBell)은 제목/본문을 서버가 그대로 내려주므로 타입별 렌더는
+// 아이콘 정도만 덧붙인다. 등록되지 않은(미래) 타입은 undefined 로 떨어져 기본 아이콘(🔔)을 쓴다.
+export const notificationTypeIcon: Partial<Record<NotificationType, string>> = {
+  RESTOCK: '📦',
+  MEMBERSHIP: '💳',
+  DELIVERY_SUBSCRIPTION: '🔁',
+  GIFT: '🎁',
+  PRICE_DROP: '💰',
+  CART_REMINDER: '🛒',
 }

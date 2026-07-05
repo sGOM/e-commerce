@@ -479,8 +479,61 @@ export interface MembershipBillingRunResult {
   expired: number
 }
 
+// ----- 위시리스트(찜) + 가격 인하 알림 -----
+export interface WishlistResponse {
+  id: number
+  productId: number
+  productName: string
+  productStatus: ProductStatus
+  baselinePrice: number
+  currentPrice: number
+  priceDropAmount: number
+  priceDropRate: number // 정수 %(내림)
+  isPriceDropped: boolean
+  createdAt: string
+}
+
+// ----- 로열티 등급 -----
+export type LoyaltyTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'VIP'
+
+export interface MyLoyaltyTierResponse {
+  tier: LoyaltyTier
+  netPurchaseAmount12m: number
+  nextTier: LoyaltyTier | null
+  amountToNextTier: number | null
+  calculatedAt: string | null
+}
+
+/** 관리자 등급 조회 응답 — 다음 등급 정보는 없다(마이페이지 응답과 다른 shape). */
+export interface AdminLoyaltyTierResponse {
+  userId: number
+  tier: LoyaltyTier
+  netPurchaseAmount12m: number
+  calculatedAt: string | null
+}
+
+export interface LoyaltyTierBatchResult {
+  upgradedCount: number
+  downgradedCount: number
+  unchangedCount: number
+  erroredCount: number
+}
+
+// ----- 장바구니 이탈 리마인드(관리자 수동 트리거) -----
+export interface CartReminderBatchResult {
+  remindedCount: number
+  erroredCount: number
+}
+
 // ----- 범용 인앱 알림함 -----
-export type NotificationType = 'RESTOCK' | string
+export type NotificationType =
+  | 'RESTOCK'
+  | 'MEMBERSHIP'
+  | 'DELIVERY_SUBSCRIPTION'
+  | 'GIFT'
+  | 'PRICE_DROP'
+  | 'CART_REMINDER'
+  | string
 
 export interface AppNotification {
   id: number

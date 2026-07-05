@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from './auth/AuthContext'
+import { WishlistProvider } from './hooks/useWishlist'
 import { Toaster } from '@/components/ui/sonner'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -17,6 +18,8 @@ import MyReviewsPage from './pages/MyReviewsPage'
 import MyRestockAlertsPage from './pages/MyRestockAlertsPage'
 import MyMembershipPage from './pages/MyMembershipPage'
 import MyDeliverySubscriptionsPage from './pages/MyDeliverySubscriptionsPage'
+import MyWishlistPage from './pages/MyWishlistPage'
+import MyLoyaltyTierPage from './pages/MyLoyaltyTierPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import GiftClaimPage from './pages/GiftClaimPage'
@@ -44,6 +47,7 @@ import AdminMembershipDetailPage from './pages/admin/AdminMembershipDetailPage'
 import AdminDeliverySubscriptionsPage from './pages/admin/AdminDeliverySubscriptionsPage'
 import AdminDeliverySubscriptionDetailPage from './pages/admin/AdminDeliverySubscriptionDetailPage'
 import AdminGiftClaimsPage from './pages/admin/AdminGiftClaimsPage'
+import AdminLoyaltyTiersPage from './pages/admin/AdminLoyaltyTiersPage'
 
 export default function App() {
   return (
@@ -54,6 +58,7 @@ export default function App() {
       disableTransitionOnChange
     >
       <AuthProvider>
+        <WishlistProvider>
         <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
@@ -127,6 +132,22 @@ export default function App() {
               }
             />
             <Route
+              path="my/wishlist"
+              element={
+                <ProtectedRoute>
+                  <MyWishlistPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my/loyalty-tier"
+              element={
+                <ProtectedRoute>
+                  <MyLoyaltyTierPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="notifications"
               element={
                 <ProtectedRoute>
@@ -175,12 +196,14 @@ export default function App() {
               <Route path="delivery-subscriptions" element={<AdminDeliverySubscriptionsPage />} />
               <Route path="delivery-subscriptions/:id" element={<AdminDeliverySubscriptionDetailPage />} />
               <Route path="gift-claims" element={<AdminGiftClaimsPage />} />
+              <Route path="loyalty-tiers" element={<AdminLoyaltyTiersPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
         </BrowserRouter>
         <Toaster position="top-center" richColors />
+        </WishlistProvider>
       </AuthProvider>
     </ThemeProvider>
   )

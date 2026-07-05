@@ -5,6 +5,7 @@ import type { ProductStatus } from '../api/types'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StarRatingDisplay } from './StarRating'
+import WishlistButton from './WishlistButton'
 
 interface Props {
   id: number
@@ -52,6 +53,7 @@ export default function ProductCard({
             {badge}
           </Badge>
         )}
+        <WishlistButton productId={id} className="absolute bottom-2 right-2" />
       </div>
       <p className="truncate text-xs text-muted-foreground">{storeName}</p>
       <p className="mt-0.5 line-clamp-2 text-sm font-medium">{name}</p>

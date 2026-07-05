@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { cn } from '@/lib/utils'
 
 /** 관리자 백오피스 공통 레이아웃: ROLE_ADMIN 게이트 + 서브내비. */
 export default function AdminLayout() {
@@ -8,17 +9,20 @@ export default function AdminLayout() {
 
   if (!isAdmin) {
     return (
-      <p className="py-20 text-center text-slate-400">관리자 전용 페이지입니다.</p>
+      <p className="py-20 text-center text-sm text-muted-foreground">관리자 전용 페이지입니다.</p>
     )
   }
 
   const tab = ({ isActive }: { isActive: boolean }) =>
-    `pb-2 text-sm ${isActive ? 'border-b-2 border-indigo-600 font-semibold text-indigo-600' : 'text-slate-500'}`
+    cn(
+      'pb-2 text-sm',
+      isActive ? 'border-b-2 border-primary font-semibold text-primary' : 'text-muted-foreground',
+    )
 
   return (
     <div>
       <h1 className="mb-2 text-xl font-bold">관리자 센터</h1>
-      <nav className="mb-6 flex gap-6 border-b">
+      <nav className="mb-6 flex flex-wrap gap-6 border-b border-border">
         <NavLink to="/admin/sellers" className={tab}>
           셀러 심사
         </NavLink>
@@ -54,6 +58,9 @@ export default function AdminLayout() {
         </NavLink>
         <NavLink to="/admin/gift-claims" className={tab}>
           선물하기
+        </NavLink>
+        <NavLink to="/admin/loyalty-tiers" className={tab}>
+          로열티 등급
         </NavLink>
       </nav>
       <Outlet />

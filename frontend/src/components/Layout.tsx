@@ -105,6 +105,8 @@ export default function Layout() {
     ? [
         { to: '/orders', label: '내 주문' },
         { to: '/my', label: '쿠폰/포인트' },
+        { to: '/my/loyalty-tier', label: '내 등급' },
+        { to: '/my/wishlist', label: '찜한 상품' },
         { to: '/my/membership', label: '멤버십' },
         { to: '/my/delivery-subscriptions', label: '정기배송' },
         { to: '/my/reviews', label: '리뷰' },

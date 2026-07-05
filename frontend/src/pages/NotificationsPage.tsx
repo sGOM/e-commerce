@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notificationApi } from '../api/endpoints'
 import { notifyNotificationsChanged } from '../hooks/useNotifications'
+import { notificationTypeIcon } from '../labels'
 import { ApiError } from '../api/client'
 import type { AppNotification, PageResponse } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -103,6 +104,7 @@ export default function NotificationsPage() {
                   {!n.isRead && (
                     <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
                   )}
+                  <span aria-hidden="true">{notificationTypeIcon[n.type] ?? '🔔'}</span>
                   <span className="font-medium">{n.title}</span>
                   <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                     {timeAgo(n.createdAt)}

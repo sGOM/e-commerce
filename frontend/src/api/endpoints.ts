@@ -1,9 +1,11 @@
 import { api } from './client'
 import type {
   AdminDeliverySubscription,
+  AdminLoyaltyTierResponse,
   AdminMembership,
   AppNotification,
   Cart,
+  CartReminderBatchResult,
   Category,
   CollectionDetail,
   CollectionStatus,
@@ -26,6 +28,8 @@ import type {
   GiftPolicy,
   GiftPreview,
   IssuedCoupon,
+  LoyaltyTier,
+  LoyaltyTierBatchResult,
   Membership,
   MembershipBillingHistory,
   MembershipBillingKey,
@@ -33,6 +37,7 @@ import type {
   MembershipPlan,
   MembershipPolicy,
   MembershipStatus,
+  MyLoyaltyTierResponse,
   Order,
   OrderStatus,
   OrderSummary,
@@ -54,6 +59,7 @@ import type {
   Settlement,
   SubOrderStatus,
   User,
+  WishlistResponse,
 } from './types'
 
 // ----- 인증 -----
@@ -95,18 +101,61 @@ export const restockAlertApi = {
     api.del<void>(`/api/products/options/${optionId}/restock-alerts`),
 }
 
+// ----- 위시리스트(찜) + 가격 인하 알림(회원 전용) -----
+export const wishlistApi = {
+  my: (params: { priceDropOnly?: boolean; page?: number; size?: number } = {}) => {
+    const q = new URLSearchParams()
+    if (params.priceDropOnly) q.set('priceDropOnly', 'true')
+    q.set('page', String(params.page ?? 0))
+    q.set('size', String(params.size ?? 20))
+    return api.get<PageResponse<WishlistResponse>>(`/api/me/wishlist?${q.toString()}`)
+  },
+  add: (productId: number) => api.post<WishlistResponse>('/api/me/wishlist', { productId }),
+  remove: (productId: number) => api.del<void>(`/api/me/wishlist/${productId}`),
+}
+
+// ----- 로열티 등급(회원 전용) -----
+export const loyaltyTierApi = {
+  my: () => api.get<MyLoyaltyTierResponse>('/api/me/loyalty-tier'),
+}
+
+// ----- 로열티 등급(관리자) -----
+export const adminLoyaltyTierApi = {
+  search: (params: { tier?: LoyaltyTier; page?: number; size?: number } = {}) => {
+    const q = new URLSearchParams()
+    q.set('tier', params.tier ?? 'BRONZE')
+    q.set('page', String(params.page ?? 0))
+    q.set('size', String(params.size ?? 20))
+    return api.get<PageResponse<AdminLoyaltyTierResponse>>(`/api/admin/loyalty-tiers?${q.toString()}`)
+  },
+  detail: (userId: number) => api.get<AdminLoyaltyTierResponse>(`/api/admin/loyalty-tiers/${userId}`),
+  recalculate: () =>
+    api.post<LoyaltyTierBatchResult>('/api/admin/loyalty-tiers/recalculate/run'),
+}
+
+// ----- 장바구니 이탈 리마인드(관리자 수동 트리거) -----
+export const adminCartReminderApi = {
+  run: () => api.post<CartReminderBatchResult>('/api/admin/cart-reminders/run'),
+}
+
 // ----- 범용 인앱 알림함 (재입고 외 향후 알림도 재사용) -----
 export interface NotificationPage extends PageResponse<AppNotification> {
   unreadCount: number
 }
 
 export const notificationApi = {
-  list: (params: { unreadOnly?: boolean; page?: number; size?: number } = {}) => {
+  list: (params: { unreadOnly?: boolean; page?: number; size?: number } = {}): Promise<NotificationPage> => {
     const q = new URLSearchParams()
     if (params.unreadOnly) q.set('unreadOnly', 'true')
     q.set('page', String(params.page ?? 0))
     q.set('size', String(params.size ?? 20))
-    return api.get<NotificationPage>(`/api/me/notifications?${q.toString()}`)
+    // 서버 응답은 { notifications: Page<AppNotification>, unreadCount } 형태다.
+    // 호출부(벨/알림함)는 플랫한 NotificationPage(= Page + unreadCount)를 기대하므로 여기서 병합해 준다.
+    return api
+      .get<{ notifications: PageResponse<AppNotification>; unreadCount: number }>(
+        `/api/me/notifications?${q.toString()}`,
+      )
+      .then((d) => ({ ...d.notifications, unreadCount: d.unreadCount }))
   },
   markRead: (id: number) => api.patch<AppNotification>(`/api/me/notifications/${id}/read`),
 }

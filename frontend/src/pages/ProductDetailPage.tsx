@@ -19,6 +19,7 @@ import { productStatusLabel } from '../labels'
 import type { FlashSale, ProductDetail, ProductStatus } from '../api/types'
 import { StarRatingDisplay } from '../components/StarRating'
 import ProductReviews from '../components/ProductReviews'
+import WishlistButton from '../components/WishlistButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -200,7 +201,10 @@ export default function ProductDetailPage() {
       </div>
 
       <div>
-        <p className="text-sm text-muted-foreground">{product.storeName}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm text-muted-foreground">{product.storeName}</p>
+          <WishlistButton productId={product.id} />
+        </div>
         <h1 className="mt-1 text-2xl font-bold">{product.name}</h1>
         {product.reviewCount > 0 && (
           <a href="#reviews" className="mt-2 inline-flex items-center gap-1">

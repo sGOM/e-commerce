@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { notificationApi } from '../api/endpoints'
 import { notifyNotificationsChanged, useUnreadNotificationCount } from '../hooks/useNotifications'
+import { notificationTypeIcon } from '../labels'
 import type { AppNotification } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -105,6 +106,7 @@ export default function NotificationBell() {
                     aria-hidden="true"
                   />
                 )}
+                <span aria-hidden="true">{notificationTypeIcon[n.type] ?? '🔔'}</span>
                 <span className="truncate text-sm font-medium">{n.title}</span>
               </div>
               <span className="line-clamp-2 text-xs text-muted-foreground">{n.body}</span>
