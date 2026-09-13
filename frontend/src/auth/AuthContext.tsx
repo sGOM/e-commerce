@@ -17,6 +17,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
+  /** 서버에서 역할을 다시 읽어 세션 권한까지 갱신한다(예: 판매자 승인 직후). */
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -68,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )

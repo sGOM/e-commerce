@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 /** 판매자 백오피스 공통 레이아웃: 역할 확인 → 미입점이면 신청, 심사중이면 안내, 활성이면 서브내비 + Outlet. */
 export default function SellerLayout() {
-  const { user } = useAuth()
+  const { user, refresh } = useAuth()
   const isSeller = user?.roles.includes('ROLE_SELLER') ?? false
 
   const [store, setStore] = useState<Seller | null>(null)
@@ -58,8 +58,11 @@ export default function SellerLayout() {
       <div className="mx-auto max-w-md">
         <h1 className="mb-6 text-xl font-bold">판매자 입점</h1>
         {applied ? (
-          <div className="rounded-xl bg-warning/10 p-5 text-center text-sm text-warning">
-            입점 신청이 접수되었습니다. 관리자 승인 후 <b>다시 로그인</b>하면 판매자 기능을 사용할 수 있습니다.
+          <div className="space-y-3 rounded-xl bg-warning/10 p-5 text-center text-sm text-warning">
+            <p>입점 신청이 접수되었습니다. 관리자 승인 후 아래 버튼을 누르면 판매자 기능이 열립니다.</p>
+            <Button type="button" variant="outline" size="sm" onClick={refresh}>
+              승인 여부 확인
+            </Button>
           </div>
         ) : (
           <Card>
