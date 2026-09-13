@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from './auth/AuthContext'
@@ -26,28 +27,31 @@ import GiftClaimPage from './pages/GiftClaimPage'
 import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
-import SellerLayout from './pages/seller/SellerLayout'
-import SellerProductsPage from './pages/seller/SellerProductsPage'
-import SellerOrdersPage from './pages/seller/SellerOrdersPage'
-import SellerSettlementsPage from './pages/seller/SellerSettlementsPage'
-import SellerFlashSalesPage from './pages/seller/SellerFlashSalesPage'
-import AdminLayout from './pages/admin/AdminLayout'
-import AdminSellersPage from './pages/admin/AdminSellersPage'
-import AdminOrdersPage from './pages/admin/AdminOrdersPage'
-import AdminCouponsPage from './pages/admin/AdminCouponsPage'
-import AdminSettlementsPage from './pages/admin/AdminSettlementsPage'
-import AdminReviewsPage from './pages/admin/AdminReviewsPage'
-import AdminCollectionsPage from './pages/admin/AdminCollectionsPage'
-import AdminCollectionEditPage from './pages/admin/AdminCollectionEditPage'
-import AdminFlashSalesPage from './pages/admin/AdminFlashSalesPage'
-import AdminDeliverySlotsPage from './pages/admin/AdminDeliverySlotsPage'
-import AdminDeliveryRegionsPage from './pages/admin/AdminDeliveryRegionsPage'
-import AdminMembershipsPage from './pages/admin/AdminMembershipsPage'
-import AdminMembershipDetailPage from './pages/admin/AdminMembershipDetailPage'
-import AdminDeliverySubscriptionsPage from './pages/admin/AdminDeliverySubscriptionsPage'
-import AdminDeliverySubscriptionDetailPage from './pages/admin/AdminDeliverySubscriptionDetailPage'
-import AdminGiftClaimsPage from './pages/admin/AdminGiftClaimsPage'
-import AdminLoyaltyTiersPage from './pages/admin/AdminLoyaltyTiersPage'
+// 판매자·관리자 백오피스는 일부 사용자만 쓰므로 별도 청크로 분리해 고객 첫 로딩에서 제외한다.
+const SellerLayout = lazy(() => import('./pages/seller/SellerLayout'))
+const SellerProductsPage = lazy(() => import('./pages/seller/SellerProductsPage'))
+const SellerOrdersPage = lazy(() => import('./pages/seller/SellerOrdersPage'))
+const SellerSettlementsPage = lazy(() => import('./pages/seller/SellerSettlementsPage'))
+const SellerFlashSalesPage = lazy(() => import('./pages/seller/SellerFlashSalesPage'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminSellersPage = lazy(() => import('./pages/admin/AdminSellersPage'))
+const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
+const AdminCouponsPage = lazy(() => import('./pages/admin/AdminCouponsPage'))
+const AdminSettlementsPage = lazy(() => import('./pages/admin/AdminSettlementsPage'))
+const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviewsPage'))
+const AdminCollectionsPage = lazy(() => import('./pages/admin/AdminCollectionsPage'))
+const AdminCollectionEditPage = lazy(() => import('./pages/admin/AdminCollectionEditPage'))
+const AdminFlashSalesPage = lazy(() => import('./pages/admin/AdminFlashSalesPage'))
+const AdminDeliverySlotsPage = lazy(() => import('./pages/admin/AdminDeliverySlotsPage'))
+const AdminDeliveryRegionsPage = lazy(() => import('./pages/admin/AdminDeliveryRegionsPage'))
+const AdminMembershipsPage = lazy(() => import('./pages/admin/AdminMembershipsPage'))
+const AdminMembershipDetailPage = lazy(() => import('./pages/admin/AdminMembershipDetailPage'))
+const AdminDeliverySubscriptionsPage = lazy(() => import('./pages/admin/AdminDeliverySubscriptionsPage'))
+const AdminDeliverySubscriptionDetailPage = lazy(
+  () => import('./pages/admin/AdminDeliverySubscriptionDetailPage'),
+)
+const AdminGiftClaimsPage = lazy(() => import('./pages/admin/AdminGiftClaimsPage'))
+const AdminLoyaltyTiersPage = lazy(() => import('./pages/admin/AdminLoyaltyTiersPage'))
 
 export default function App() {
   return (
@@ -60,6 +64,13 @@ export default function App() {
       <AuthProvider>
         <WishlistProvider>
         <BrowserRouter>
+        <Suspense
+          fallback={
+            <p role="status" className="py-10 text-center text-sm text-muted-foreground">
+              불러오는 중…
+            </p>
+          }
+        >
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<ProductListPage />} />
@@ -201,6 +212,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
+        </Suspense>
         </BrowserRouter>
         <Toaster position="top-center" richColors />
         </WishlistProvider>
