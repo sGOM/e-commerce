@@ -127,6 +127,32 @@ class SellerBackofficeIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `판매자 상품 목록은 비공개 상태를 포함해 본인 상품만 반환한다`() {
+        val mine = seedSeller("list-mine@example.com")
+        val other = seedSeller("list-other@example.com")
+        mockMvc.post("/api/seller/products") {
+            with(user(mine)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"name":"임시저장","basePrice":1000,"status":"DRAFT","options":[{"name":"기본","sku":"LIST-SKU-1","stockQuantity":3}]}"""
+        }.andExpect { status { isOk() } }
+        mockMvc.post("/api/seller/products") {
+            with(user(other)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"name":"남의상품","basePrice":1000,"status":"ON_SALE","options":[{"name":"기본","sku":"LIST-SKU-2","stockQuantity":3}]}"""
+        }.andExpect { status { isOk() } }
+
+        mockMvc.get("/api/seller/products") {
+            with(user(mine))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.length()") { value(1) }
+            jsonPath("$.data[0].name") { value("임시저장") }
+            jsonPath("$.data[0].status") { value("DRAFT") }
+            jsonPath("$.data[0].options[0].available") { value(3) }
+        }
+    }
+
+    @Test
     fun `남의 상품은 수정할 수 없다`() {
         val sellerA = seedSeller("owner-seller@example.com")
         val sellerB = seedSeller("other-seller@example.com")

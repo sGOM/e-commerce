@@ -8,6 +8,7 @@ import com.example.starter.domain.catalog.dto.UpdateProductRequest
 import com.example.starter.security.userdetails.CustomUserDetails
 import jakarta.validation.Valid
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,6 +25,10 @@ import org.springframework.web.bind.annotation.RestController
 class SellerProductController(
     private val sellerProductService: SellerProductService,
 ) {
+
+    @GetMapping
+    fun list(@AuthenticationPrincipal principal: CustomUserDetails): ApiResponse<List<SellerProductResponse>> =
+        ApiResponse.success(sellerProductService.getMyProducts(principal.userId))
 
     @PostMapping
     fun create(
