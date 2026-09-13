@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { meApi } from '../api/endpoints'
-import { formatKRW } from '../api/client'
+import { authApi, meApi } from '../api/endpoints'
+import { ApiError, formatKRW } from '../api/client'
 import type { IssuedCoupon, PointSummary, PointTransactionType } from '../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
@@ -92,6 +94,70 @@ export default function MyPage() {
           </ul>
         )}
       </section>
+
+      <PasswordChangeSection />
     </div>
+  )
+}
+
+/** 비밀번호 변경. 소셜 로그인만 쓰던 계정은 현재 비밀번호를 비워 두면 새로 설정된다. */
+function PasswordChangeSection() {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setMessage(null)
+    try {
+      await authApi.changePassword(newPassword, currentPassword || undefined)
+      setCurrentPassword('')
+      setNewPassword('')
+      setMessage({ ok: true, text: '비밀번호를 변경했습니다.' })
+    } catch (err) {
+      setMessage({ ok: false, text: err instanceof ApiError ? err.message : '변경하지 못했습니다.' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section>
+      <h2 className="mb-4 text-xl font-bold">비밀번호 변경</h2>
+      <Card className="p-5">
+        <form onSubmit={submit} className="grid gap-3 sm:max-w-sm">
+          <Input
+            type="password"
+            autoComplete="current-password"
+            placeholder="현재 비밀번호"
+            aria-label="현재 비밀번호"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            maxLength={64}
+            placeholder="새 비밀번호 (8~64자)"
+            aria-label="새 비밀번호"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">소셜 로그인만 사용해 온 계정은 현재 비밀번호를 비워 두세요.</p>
+          {message && (
+            <p role={message.ok ? 'status' : 'alert'} className={cn('text-sm', message.ok ? 'text-success' : 'text-destructive')}>
+              {message.text}
+            </p>
+          )}
+          <Button type="submit" disabled={saving} className="justify-self-start">
+            {saving ? '변경 중…' : '비밀번호 변경'}
+          </Button>
+        </form>
+      </Card>
+    </section>
   )
 }

@@ -3,6 +3,7 @@ package com.example.starter.domain.auth
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
 import com.example.starter.common.response.ApiResponse
+import com.example.starter.domain.auth.dto.ChangePasswordRequest
 import com.example.starter.domain.auth.dto.LoginRequest
 import com.example.starter.domain.auth.dto.SignupRequest
 import com.example.starter.domain.user.dto.UserResponse
@@ -17,10 +18,12 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.security.web.context.SecurityContextRepository
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -71,6 +74,17 @@ class AuthController(
 
         val principal = authentication.principal as CustomUserDetails
         return ApiResponse.success(UserResponse.from(principal.user), "로그인되었습니다.")
+    }
+
+    /** 비밀번호 변경(로그인 필요). 주체가 없으면 보안 설정과 무관하게 401 로 응답한다. */
+    @PatchMapping("/password")
+    fun changePassword(
+        @AuthenticationPrincipal principal: CustomUserDetails?,
+        @RequestBody @Valid request: ChangePasswordRequest,
+    ): ApiResponse<Unit> {
+        val userId = principal?.userId ?: throw BusinessException(ErrorCode.UNAUTHENTICATED)
+        authService.changePassword(userId, request)
+        return ApiResponse.success("비밀번호를 변경했습니다.")
     }
 
     @PostMapping("/logout")

@@ -17,7 +17,7 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 전체 정산 목록(`GET /api/admin/settlements?status=`), 상품 검색 정렬·가격 범위·하위 카테고리 포함
 (`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`), 판매자·관리자 라우트 lazy 분할(index 640→514KB),
 프론트 테스트 기반(Vitest + happy-dom, CI `npm test`), 판매자 승인 즉시 권한 반영(`GET /api/auth/me` 가 세션 권한 갱신), 배송지 주소록(`/api/me/addresses`, 체크아웃 불러오기),
-프론트 의존성 취약점 0건(`npm audit fix`).
+프론트 의존성 취약점 0건(`npm audit fix`), 비밀번호 변경(`PATCH /api/auth/password`, 소셜 전용 계정은 신규 설정).
 
 ---
 
@@ -44,7 +44,7 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 3.1 | **비밀번호 변경 / 재설정** | 🔴 | S | 6.1(재설정 메일) | `/api/auth`는 signup/login/logout/me뿐 |
+| 3.1 | **비밀번호 재설정(분실)** | 🔴 | S | 6.1(재설정 메일) | 변경(`PATCH /api/auth/password`)은 완료. 메일 토큰 기반 재설정만 남음 |
 | 3.3 | **회원 탈퇴 / 개인정보 처리** | 🟡 | M | - | soft delete/익명화 정책, 멤버십·정기배송 해지 연쇄 |
 
 ## 4. 판매자 백오피스

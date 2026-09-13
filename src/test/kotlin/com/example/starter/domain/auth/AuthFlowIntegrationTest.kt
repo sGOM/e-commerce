@@ -118,6 +118,74 @@ class AuthFlowIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `비밀번호를 변경하면 새 비밀번호로만 로그인된다`() {
+        val email = "pw-change-${System.nanoTime()}@example.com"
+        mockMvc.post("/api/auth/signup") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"password123","name":"변경자"}"""
+            with(csrf())
+        }.andExpect { status { isCreated() } }
+        val session = mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"password123"}"""
+            with(csrf())
+        }.andExpect { status { isOk() } }.andReturn().request.session as MockHttpSession
+
+        // 현재 비밀번호 불일치
+        mockMvc.patch("/api/auth/password") {
+            this.session = session; with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"currentPassword":"wrong-pass","newPassword":"newpass456"}"""
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.code") { value("USER-004") }
+        }
+        // 새 비밀번호 길이 규칙(가입과 동일 8~64자)
+        mockMvc.patch("/api/auth/password") {
+            this.session = session; with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"currentPassword":"password123","newPassword":"short"}"""
+        }.andExpect { status { isBadRequest() } }
+
+        mockMvc.patch("/api/auth/password") {
+            this.session = session; with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"currentPassword":"password123","newPassword":"newpass456"}"""
+        }.andExpect { status { isOk() } }
+
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"password123"}"""
+            with(csrf())
+        }.andExpect { status { isUnauthorized() } }
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"$email","password":"newpass456"}"""
+            with(csrf())
+        }.andExpect { status { isOk() } }
+    }
+
+    @Test
+    fun `소셜 전용 계정은 현재 비밀번호 없이 비밀번호를 설정할 수 있다`() {
+        val saved = userRepository.save(
+            User(email = "oauth-pw-${System.nanoTime()}@example.com", password = null, name = "소셜"),
+        )
+        val principal = CustomOAuth2User(saved, mapOf("sub" to "provider-3"), "provider-3")
+
+        mockMvc.patch("/api/auth/password") {
+            with(oauth2Login().oauth2User(principal)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"newPassword":"newpass456"}"""
+        }.andExpect { status { isOk() } }
+
+        mockMvc.post("/api/auth/login") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"email":"${saved.email}","password":"newpass456"}"""
+            with(csrf())
+        }.andExpect { status { isOk() } }
+    }
+
+    @Test
     fun `미인증 상태로 보호 자원 접근 시 401 JSON 을 반환한다`() {
         mockMvc.get("/api/auth/me").andExpect {
             status { isUnauthorized() }

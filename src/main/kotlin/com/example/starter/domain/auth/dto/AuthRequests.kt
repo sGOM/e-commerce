@@ -22,6 +22,17 @@ data class SignupRequest(
 )
 
 /**
+ * 비밀번호 변경 요청. 소셜 전용 계정(비밀번호 미설정)은 [currentPassword] 없이 새로 설정한다.
+ */
+data class ChangePasswordRequest(
+    val currentPassword: String? = null,
+
+    @field:NotBlank
+    @field:Size(min = 8, max = 64, message = "비밀번호는 8~64자여야 합니다.")
+    val newPassword: String,
+)
+
+/**
  * 자체 로그인 요청.
  */
 data class LoginRequest(
