@@ -17,4 +17,8 @@ interface UserRepository : JpaRepository<User, Long>, KotlinJdslJpqlExecutor {
     /** 로그인용 — 역할과 권한까지 한 번에 로딩 (N+1 방지) */
     @EntityGraph(attributePaths = ["roles", "roles.permissions"])
     fun findWithRolesByEmail(email: String): User?
+
+    /** 세션 권한 갱신용 — 역할과 권한까지 한 번에 로딩 */
+    @EntityGraph(attributePaths = ["roles", "roles.permissions"])
+    fun findWithRolesById(id: Long): User?
 }

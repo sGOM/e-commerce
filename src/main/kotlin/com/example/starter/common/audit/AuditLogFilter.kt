@@ -1,6 +1,5 @@
 package com.example.starter.common.audit
 
-import com.example.starter.security.oauth.CustomOAuth2User
 import com.example.starter.security.userdetails.CustomUserDetails
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
@@ -71,8 +70,7 @@ class AuditLogFilter(
 
     private fun currentUserId(): Long? =
         when (val principal = SecurityContextHolder.getContext().authentication?.principal) {
-            is CustomUserDetails -> principal.userId
-            is CustomOAuth2User -> principal.userId
+            is CustomUserDetails -> principal.userId // 소셜 로그인 주체(CustomOAuth2User)도 포함
             else -> null
         }
 
