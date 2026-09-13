@@ -366,6 +366,9 @@ export const adminApi = {
   createCoupon: (body: CreateCouponBody) => api.post<Coupon>('/api/admin/coupons', body),
   createCategory: (name: string, parentId?: number | null) =>
     api.post<Category>('/api/admin/categories', { name, parentId }),
+  updateCategory: (categoryId: number, body: { name: string; parentId: number | null; sortOrder: number }) =>
+    api.put<Category>(`/api/admin/categories/${categoryId}`, body),
+  deleteCategory: (categoryId: number) => api.del<void>(`/api/admin/categories/${categoryId}`),
   listSettlements: (params: { status?: SettlementStatus; page?: number }) => {
     const q = new URLSearchParams()
     if (params.status) q.set('status', params.status)
