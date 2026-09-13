@@ -2,6 +2,7 @@ package com.example.starter.domain.auth
 
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
+import com.example.starter.domain.auth.dto.ChangePasswordRequest
 import com.example.starter.domain.auth.dto.SignupRequest
 import com.example.starter.domain.user.entity.Role
 import com.example.starter.domain.user.entity.User
@@ -38,6 +39,17 @@ class AuthService(
         )
         user.grantRole(defaultRole())
         return userRepository.save(user)
+    }
+
+    /** 비밀번호가 이미 있으면 현재 비밀번호가 맞아야 바꿀 수 있다. 소셜 전용 계정은 바로 설정한다. */
+    fun changePassword(userId: Long, request: ChangePasswordRequest) {
+        val user = userRepository.findById(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val current = user.password
+        if (current != null && !passwordEncoder.matches(request.currentPassword.orEmpty(), current)) {
+            throw BusinessException(ErrorCode.PASSWORD_MISMATCH)
+        }
+        user.password = passwordEncoder.encode(request.newPassword)
     }
 
     private fun defaultRole(): Role =
