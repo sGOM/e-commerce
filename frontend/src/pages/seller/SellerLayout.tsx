@@ -121,6 +121,9 @@ export default function SellerLayout() {
         )}
       </div>
       <nav className="mb-6 flex gap-6 border-b border-border">
+        <NavLink to="/seller/dashboard" className={tab}>
+          대시보드
+        </NavLink>
         <NavLink to="/seller/products" className={tab}>
           상품
         </NavLink>
