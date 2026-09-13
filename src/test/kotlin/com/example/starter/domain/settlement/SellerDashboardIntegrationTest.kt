@@ -66,6 +66,19 @@ class SellerDashboardIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `주문이 없는 판매자도 대시보드를 0으로 조회한다`() {
+        val (seller, _) = seedSeller("DASH-EMPTY", basePrice = 1000)
+
+        mockMvc.get("/api/seller/dashboard") { with(user(seller)) }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.orderCount") { value(0) }
+            jsonPath("$.data.salesAmount") { value(0) }
+            jsonPath("$.data.unsettledAmount") { value(0) }
+            jsonPath("$.data.pendingPayoutAmount") { value(0) }
+        }
+    }
+
+    @Test
     fun `판매자 대시보드는 기간 매출과 미정산·지급대기 금액을 보여준다`() {
         val (seller, optionId) = seedSeller("DASH-1", basePrice = 100_000)
         placePaidOrder(optionId, 2) // 매출 200,000
