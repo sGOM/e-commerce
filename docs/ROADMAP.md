@@ -15,7 +15,8 @@
 인앱 알림함(`/api/me/notifications`), 카테고리 계층 엔티티(`categories.parent_id`),
 CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), 판매자 상품 목록(`GET /api/seller/products`),
 전체 정산 목록(`GET /api/admin/settlements?status=`), 상품 검색 정렬·가격 범위·하위 카테고리 포함
-(`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`).
+(`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`), 판매자·관리자 라우트 lazy 분할(index 640→514KB),
+프론트 테스트 기반(Vitest + happy-dom, CI `npm test`).
 
 ---
 
@@ -82,19 +83,20 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 8.2 | **프론트엔드 테스트** | 🔴 | M | - | 자동 테스트 없음(CI 의 lint + 빌드 타입체크가 유일한 검증). 체크아웃·장바구니 핵심 플로우부터 |
-| 8.3 | **프론트 번들 분할** | 🟡 | S | - | 단일 청크 ~640KB. 라우트 단위 `lazy()`로 백오피스(/seller, /admin) 분리 |
+| 8.2 | **프론트 화면 테스트 확장** | 🟡 | M | - | API 클라이언트·게스트 장바구니 단위 테스트만 있음. 체크아웃·장바구니 화면은 Testing Library 컴포넌트 테스트 필요 |
+| 8.3 | **프론트 번들 추가 분할** | 🟢 | S | - | 백오피스 분리 후에도 index 514KB(대부분 공용 라이브러리). 고객 페이지 lazy 는 로딩 깜빡임 트레이드오프 |
 | 8.4 | **Testcontainers 로컬 호환** | 🟡 | S | - | 로컬 Docker 29와 비호환이라 외부 PG + `-Dit.datasource.url` 우회 중(CI 는 서비스 컨테이너 PG 사용). Testcontainers 버전 업 검토 |
 | 8.5 | **관측성(메트릭/트레이싱)** | 🟡 | M | - | actuator만 있음. Micrometer/Prometheus, 스케줄러 배치 실행 지표 |
 | 8.6 | **캐싱** | 🟢 | M | - | 인기 상품/카테고리 매 요청 집계 |
 | 8.7 | **API 문서화** | 🟢 | S | - | springdoc(OpenAPI) |
 | 8.8 | **검색 인프라** | 🟢 | L | - | ILIKE → pg_trgm/전문검색 |
+| 8.9 | **프론트 의존성 취약점** | 🟡 | S | - | `npm audit` 15건(high 10: react-router, postcss, undici 등 기존 의존성). `npm audit fix` 후 빌드·테스트 확인 |
 
 ---
 
 ## 추천 진행 순서
 
-1. **안전망** — 8.2 프론트 테스트 (CI 위에서 회귀를 자동으로 잡기 위해 먼저)
+1. **안전망** — 8.9 의존성 취약점 → 8.2 화면 테스트 확장
 2. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 → 1.1 게스트 결제
 3. **상품 완성도** — 2.1 이미지 업로드
 4. **회원 필수** — 3.2 주소록 → 6.1 이메일 → 3.1 비밀번호 재설정
