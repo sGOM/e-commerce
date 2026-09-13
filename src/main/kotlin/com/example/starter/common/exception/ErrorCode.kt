@@ -45,6 +45,8 @@ enum class ErrorCode(
     PRODUCT_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "CATALOG-003", "상품 옵션을 찾을 수 없습니다."),
     PRODUCT_NOT_PURCHASABLE(HttpStatus.CONFLICT, "CATALOG-004", "현재 구매할 수 없는 상품입니다."),
     INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "CATALOG-005", "재고가 부족합니다."),
+    CATEGORY_INVALID_PARENT(HttpStatus.BAD_REQUEST, "CATALOG-006", "자기 자신이나 하위 카테고리를 상위로 지정할 수 없습니다."),
+    CATEGORY_IN_USE(HttpStatus.CONFLICT, "CATALOG-007", "하위 카테고리나 상품이 있는 카테고리는 삭제할 수 없습니다."),
 
     // 장바구니 (CART)
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART-001", "장바구니 항목을 찾을 수 없습니다."),
