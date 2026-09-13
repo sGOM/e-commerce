@@ -38,6 +38,68 @@ management:
     health:
       show-details: when-authorized
 
+# 셀러 정산 주기 자동화(기본 비활성 — 관리자 수동 트리거만). 운영에서 켜려면:
+# settlement:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 4 * * MON"   # 매주 월요일 04:00
+#     zone: "Asia/Seoul"
+
+# 멤버십 정기결제 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/memberships/billing/run` 만). 운영에서 켜려면:
+# membership:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 3 * * *"   # 매일 03:00
+#     zone: "Asia/Seoul"
+
+# 정기배송 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/delivery-subscriptions/billing/run` 만). 운영에서 켜려면:
+# delivery-subscription:
+#   scheduler:
+#     enabled: true
+#     cron: "0 30 3 * * *"   # 매일 03:30(멤버십 정기결제 배치 이후)
+#     zone: "Asia/Seoul"
+
+# 정기결제 게이트웨이(현재 mock만 제공 — 실 PG 연동 시 어댑터 추가 후 전환, 멤버십/정기배송이 공유):
+# billing:
+#   gateway: mock
+
+# 선물 미수락 만료 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/gift-claims/expire/run` 만). 운영에서 켜려면:
+# gift:
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 4 * * *"   # 매일 04:00
+#     zone: "Asia/Seoul"
+
+# 로열티 등급(최근 12개월 순구매액) 재계산 배치(기본 비활성 — 관리자 수동 트리거
+# `/api/admin/loyalty-tiers/recalculate/run` 만). 임계값(silver/gold/vip Threshold)도 여기서 조정 가능
+# (기본값 근거는 LoyaltyTierProperties 참고). 운영에서 켜려면:
+# loyalty:
+#   silverThreshold: 300000
+#   goldThreshold: 1000000
+#   vipThreshold: 3000000
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 2 * * *"   # 매일 02:00
+#     zone: "Asia/Seoul"
+
+# 로열티 등급 승급 혜택(등급 전용 쿠폰 자동 발급, 오너 확정 2026-07-05 — 무료배송 등은 out of scope).
+# 먼저 `POST /api/admin/coupons` 로 등급별 쿠폰 정의를 만든 뒤(발급 대상 없이 정의만), 그 쿠폰 id 를
+# 아래 매핑에 등록해야 실제로 발급된다(매핑이 없으면 조용히 미발급 — 안전한 기본값). 예:
+# loyalty-coupon:
+#   couponIdByTier:
+#     SILVER: 101
+#     GOLD: 102
+#     VIP: 103
+
+# 장바구니 이탈 리마인드 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/cart-reminders/run` 만).
+# MVP는 인앱 알림만 발송하고 자동 쿠폰은 발급하지 않는다(어뷰징 회피). 운영에서 켜려면:
+# cart-reminder:
+#   inactivityHours: 24
+#   scheduler:
+#     enabled: true
+#     cron: "0 0 * * * *"   # 매시 정각
+#     zone: "Asia/Seoul"
+
 logging:
   level:
     com.example.starter: DEBUG
