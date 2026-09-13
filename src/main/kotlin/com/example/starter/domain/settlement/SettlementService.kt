@@ -2,12 +2,15 @@ package com.example.starter.domain.settlement
 
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
+import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.order.entity.SubOrderStatus
 import com.example.starter.domain.order.repository.SubOrderRepository
 import com.example.starter.domain.seller.repository.SellerRepository
 import com.example.starter.domain.settlement.dto.SettlementResponse
 import com.example.starter.domain.settlement.entity.Settlement
+import com.example.starter.domain.settlement.entity.SettlementStatus
 import com.example.starter.domain.settlement.repository.SettlementRepository
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -48,6 +51,16 @@ class SettlementService(
 
     fun getSellerSettlements(userId: Long): List<SettlementResponse> =
         settlementRepository.findBySellerIdOrderByIdDesc(sellerId(userId)).map { SettlementResponse.from(it) }
+
+    /** 전체 정산 목록(관리자). 최신순, 상태 필터는 선택. */
+    fun getAllSettlements(status: SettlementStatus?, pageable: Pageable): PageResponse<SettlementResponse> {
+        val page = if (status == null) {
+            settlementRepository.findAllByOrderByIdDesc(pageable)
+        } else {
+            settlementRepository.findByStatusOrderByIdDesc(status, pageable)
+        }
+        return PageResponse.of(page) { SettlementResponse.from(it) }
+    }
 
     /** 판매대금 지급 완료 처리(관리자). */
     @Transactional
