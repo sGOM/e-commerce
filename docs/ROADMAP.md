@@ -18,7 +18,8 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 (`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`), 판매자·관리자 라우트 lazy 분할(index 640→514KB),
 프론트 테스트 기반(Vitest + happy-dom, CI `npm test`), 판매자 승인 즉시 권한 반영(`GET /api/auth/me` 가 세션 권한 갱신), 배송지 주소록(`/api/me/addresses`, 체크아웃 불러오기),
 프론트 의존성 취약점 0건(`npm audit fix`), 비밀번호 변경(`PATCH /api/auth/password`, 소셜 전용 계정은 신규 설정),
-Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요).
+Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요),
+카테고리 수정/삭제(`PUT·DELETE /api/admin/categories/{id}`, 순환 상위 차단, 하위·상품 있으면 삭제 거부).
 
 ---
 
@@ -59,7 +60,6 @@ Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요).
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 5.2 | **카테고리 수정/삭제 UI** | 🟢 | S | - | 생성만 가능(`AdminCouponsPage` 내). 수정/정렬/삭제 없음 |
 | 5.3 | **대시보드 / 통계** | 🟢 | M | - | GMV, 신규 가입, 주문 추이 |
 
 ## 6. 알림 / 메시징

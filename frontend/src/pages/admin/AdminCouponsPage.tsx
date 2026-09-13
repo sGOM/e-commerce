@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { adminApi } from '../../api/endpoints'
+import { useEffect, useState } from 'react'
+import { adminApi, categoryApi } from '../../api/endpoints'
 import { ApiError } from '../../api/client'
 import type { Category, Coupon, DiscountType } from '../../api/types'
 import { Button } from '@/components/ui/button'
@@ -115,51 +115,117 @@ function CouponForm() {
 }
 
 function CategoryForm() {
+  const [categories, setCategories] = useState<Category[]>([])
   const [name, setName] = useState('')
   const [parentId, setParentId] = useState('')
-  const [created, setCreated] = useState<Category | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const load = () => categoryApi.list().then(setCategories).catch(() => setError('카테고리를 불러오지 못했습니다.'))
+  useEffect(() => {
+    load()
+  }, [])
+
+  // 등록·수정·삭제 공통: 실패 메시지를 보여주고 성공하면 목록을 다시 읽는다
+  const run = async (action: () => Promise<unknown>) => {
     setSubmitting(true)
     setError(null)
-    setCreated(null)
     try {
-      const cat = await adminApi.createCategory(name, parentId ? Number(parentId) : null)
-      setCreated(cat)
-      setName('')
-      setParentId('')
+      await action()
+      await load()
+      return true
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : '등록 실패')
+      setError(err instanceof ApiError ? err.message : '요청 실패')
+      return false
     } finally {
       setSubmitting(false)
     }
   }
 
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (await run(() => adminApi.createCategory(name, parentId ? Number(parentId) : null))) {
+      setName('')
+      setParentId('')
+    }
+  }
+
   return (
     <Card>
-      <CardContent>
+      <CardContent className="space-y-4">
         <form onSubmit={submit} className="space-y-3">
-          <h2 className="font-bold">카테고리 등록</h2>
+          <h2 className="font-bold">카테고리 관리</h2>
           <Input required placeholder="카테고리명" aria-label="카테고리명" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input type="number" min={1} placeholder="상위 카테고리 id (선택)" aria-label="상위 카테고리 id" value={parentId} onChange={(e) => setParentId(e.target.value)} />
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          {created && (
-            <p className="text-sm text-success">
-              등록 완료: #{created.categoryId} {created.name}
-            </p>
-          )}
+          <select aria-label="상위 카테고리" value={parentId} onChange={(e) => setParentId(e.target.value)} className={selectClass}>
+            <option value="">상위 없음(최상위)</option>
+            {categories.map((c) => (
+              <option key={c.categoryId} value={c.categoryId}>
+                {c.name}
+              </option>
+            ))}
+          </select>
           <Button type="submit" disabled={submitting} className="w-full">
-            {submitting ? '등록 중…' : '카테고리 등록'}
+            카테고리 등록
           </Button>
         </form>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <ul className="divide-y">
+          {categories.map((c) => (
+            <CategoryRow key={c.categoryId} category={c} categories={categories} disabled={submitting} run={run} />
+          ))}
+        </ul>
       </CardContent>
     </Card>
+  )
+}
+
+function CategoryRow({
+  category,
+  categories,
+  disabled,
+  run,
+}: {
+  category: Category
+  categories: Category[]
+  disabled: boolean
+  run: (action: () => Promise<unknown>) => Promise<boolean>
+}) {
+  const [name, setName] = useState(category.name)
+  const [parentId, setParentId] = useState(category.parentId?.toString() ?? '')
+  const [sortOrder, setSortOrder] = useState(category.sortOrder)
+
+  const save = () =>
+    run(() =>
+      adminApi.updateCategory(category.categoryId, { name, parentId: parentId ? Number(parentId) : null, sortOrder }),
+    )
+  const remove = () => {
+    if (confirm(`'${category.name}' 카테고리를 삭제할까요?`)) run(() => adminApi.deleteCategory(category.categoryId))
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-2 py-2">
+      <Input aria-label={`${category.name} 이름`} value={name} onChange={(e) => setName(e.target.value)} className="min-w-0 flex-1" />
+      <select aria-label={`${category.name} 상위`} value={parentId} onChange={(e) => setParentId(e.target.value)} className={`${selectClass} w-32`}>
+        <option value="">최상위</option>
+        {categories
+          .filter((c) => c.categoryId !== category.categoryId)
+          .map((c) => (
+            <option key={c.categoryId} value={c.categoryId}>
+              {c.name}
+            </option>
+          ))}
+      </select>
+      <Input type="number" aria-label={`${category.name} 정렬`} value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-16" />
+      <Button type="button" size="sm" variant="outline" disabled={disabled || !name.trim()} onClick={save}>
+        저장
+      </Button>
+      <Button type="button" size="sm" variant="destructive" disabled={disabled} onClick={remove}>
+        삭제
+      </Button>
+    </li>
   )
 }

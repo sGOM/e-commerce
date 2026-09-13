@@ -3,8 +3,8 @@ package com.example.starter.domain.catalog.dto
 import com.example.starter.domain.catalog.entity.Category
 import jakarta.validation.constraints.NotBlank
 
-/** 카테고리 등록 요청(관리자) */
-data class CreateCategoryRequest(
+/** 카테고리 등록/수정 요청(관리자) */
+data class CategoryRequest(
     @field:NotBlank val name: String?,
     val parentId: Long? = null,
     val sortOrder: Int = 0,
