@@ -6,6 +6,8 @@ import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.auth.dto.LoginRequest
 import com.example.starter.domain.auth.dto.SignupRequest
 import com.example.starter.domain.user.dto.UserResponse
+import com.example.starter.domain.user.repository.UserRepository
+import com.example.starter.security.oauth.CustomOAuth2User
 import com.example.starter.security.userdetails.CustomUserDetails
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -13,9 +15,10 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.security.web.context.SecurityContextRepository
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -36,6 +39,7 @@ class AuthController(
     private val authService: AuthService,
     private val authenticationManager: AuthenticationManager,
     private val securityContextRepository: SecurityContextRepository,
+    private val userRepository: UserRepository,
 ) {
 
     @PostMapping("/signup")
@@ -76,7 +80,42 @@ class AuthController(
         return ApiResponse.success("로그아웃되었습니다.")
     }
 
+    /**
+     * 내 정보. 세션의 인증 주체는 로그인 시점 스냅샷이라, DB 의 최신 역할과 다르면(예: 판매자 승인·권한 회수)
+     * 같은 세션의 SecurityContext 를 새 권한으로 교체해 재로그인 없이 반영한다. 자체/소셜 로그인 모두 지원.
+     */
     @GetMapping("/me")
-    fun me(@AuthenticationPrincipal principal: CustomUserDetails): ApiResponse<UserResponse> =
-        ApiResponse.success(UserResponse.from(principal.user))
+    fun me(
+        authentication: Authentication,
+        httpRequest: HttpServletRequest,
+        httpResponse: HttpServletResponse,
+    ): ApiResponse<UserResponse> {
+        val principal = authentication.principal
+        val userId = when (principal) {
+            is CustomUserDetails -> principal.userId
+            is CustomOAuth2User -> principal.userId
+            else -> throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        }
+        val user = userRepository.findWithRolesById(userId)
+            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+
+        if (authentication.authorities.map { it.authority }.toSet() != user.authorities().toSet()) {
+            val refreshed = if (principal is CustomOAuth2User) {
+                val oauthUser = CustomOAuth2User(user, principal.attributes, principal.name)
+                OAuth2AuthenticationToken(
+                    oauthUser,
+                    oauthUser.authorities,
+                    (authentication as OAuth2AuthenticationToken).authorizedClientRegistrationId,
+                )
+            } else {
+                val details = CustomUserDetails(user)
+                UsernamePasswordAuthenticationToken.authenticated(details, null, details.authorities)
+            }
+            val context = SecurityContextHolder.createEmptyContext()
+            context.authentication = refreshed
+            SecurityContextHolder.setContext(context)
+            securityContextRepository.saveContext(context, httpRequest, httpResponse)
+        }
+        return ApiResponse.success(UserResponse.from(user))
+    }
 }
