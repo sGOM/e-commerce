@@ -73,6 +73,9 @@ export const authApi = {
   signup: (email: string, password: string, name: string) =>
     api.post<User>('/api/auth/signup', { email, password, name }),
   logout: () => api.post<void>('/api/auth/logout'),
+  /** 소셜 전용 계정(비밀번호 미설정)은 currentPassword 없이 설정할 수 있다. */
+  changePassword: (newPassword: string, currentPassword?: string) =>
+    api.patch<void>('/api/auth/password', { currentPassword, newPassword }),
 }
 
 // ----- 내 쿠폰/포인트 -----
