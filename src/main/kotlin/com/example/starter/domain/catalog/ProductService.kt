@@ -6,10 +6,12 @@ import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.catalog.dto.PopularProductResponse
 import com.example.starter.domain.catalog.dto.ProductDetailResponse
 import com.example.starter.domain.catalog.dto.ProductSearchCondition
+import com.example.starter.domain.catalog.dto.ProductSort
 import com.example.starter.domain.catalog.dto.ProductSummaryResponse
 import com.example.starter.domain.catalog.entity.Category
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductStatus
+import com.example.starter.domain.catalog.repository.CategoryRepository
 import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.seller.entity.Seller
 import org.springframework.data.domain.Pageable
@@ -24,22 +26,49 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class ProductService(
     private val productRepository: ProductRepository,
+    private val categoryRepository: CategoryRepository,
 ) {
 
     fun search(condition: ProductSearchCondition, pageable: Pageable): PageResponse<ProductSummaryResponse> {
+        val categoryIds = condition.categoryId?.let { categoryWithDescendants(it) }
         val page = productRepository.findPage(pageable) {
             select(entity(Product::class))
                 .from(entity(Product::class))
                 .whereAnd(
                     path(Product::status).`in`(ProductStatus.VISIBLE),
                     condition.keyword?.let { path(Product::name).like("%$it%") },
-                    condition.categoryId?.let { path(Product::category).path(Category::id).eq(it) },
+                    categoryIds?.let { path(Product::category).path(Category::id).`in`(it) },
                     condition.sellerId?.let { path(Product::seller).path(Seller::id).eq(it) },
+                    condition.minPrice?.let { path(Product::basePrice).ge(it) },
+                    condition.maxPrice?.let { path(Product::basePrice).le(it) },
                 )
-                .orderBy(path(Product::id).desc())
+                .orderBy(
+                    when (condition.sort) {
+                        ProductSort.LATEST -> null
+                        ProductSort.PRICE_ASC -> path(Product::basePrice).asc()
+                        ProductSort.PRICE_DESC -> path(Product::basePrice).desc()
+                        ProductSort.RATING_DESC -> path(Product::avgRating).desc()
+                    },
+                    path(Product::id).desc(),
+                )
         }
         // 단일 엔티티 조회라 결과 원소는 null 이 아니다.
         return PageResponse.of(page) { ProductSummaryResponse.from(it!!) }
+    }
+
+    /** [rootId] 와 그 아래 모든 하위 카테고리 id. */
+    // ponytail: 카테고리 전체를 읽어 메모리 BFS, 카테고리가 수천 개를 넘으면 재귀 CTE 로 전환
+    private fun categoryWithDescendants(rootId: Long): Set<Long> {
+        val childrenByParent = categoryRepository.findAll().groupBy { it.parent?.id }
+        val ids = mutableSetOf(rootId)
+        val queue = ArrayDeque(listOf(rootId))
+        while (queue.isNotEmpty()) {
+            childrenByParent[queue.removeFirst()].orEmpty().forEach { child ->
+                val childId = requireNotNull(child.id)
+                if (ids.add(childId)) queue.add(childId)
+            }
+        }
+        return ids
     }
 
     /**

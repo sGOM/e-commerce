@@ -113,6 +113,64 @@ class ProductQueryIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `가격 범위로 거르고 가격순으로 정렬한다`() {
+        val seller = seedSeller("catalog-store-e")
+        seedProduct(seller, "정렬A", 30_000, ProductStatus.ON_SALE, "SKU-SORT-A")
+        seedProduct(seller, "정렬B", 10_000, ProductStatus.ON_SALE, "SKU-SORT-B")
+        seedProduct(seller, "정렬C", 20_000, ProductStatus.ON_SALE, "SKU-SORT-C")
+
+        mockMvc.get("/api/products?keyword=정렬&sort=PRICE_ASC").andExpect {
+            status { isOk() }
+            jsonPath("$.data.content[0].name") { value("정렬B") }
+            jsonPath("$.data.content[2].name") { value("정렬A") }
+        }
+        mockMvc.get("/api/products?keyword=정렬&sort=PRICE_DESC").andExpect {
+            jsonPath("$.data.content[0].name") { value("정렬A") }
+        }
+        mockMvc.get("/api/products?keyword=정렬&minPrice=15000&maxPrice=30000&sort=PRICE_ASC").andExpect {
+            jsonPath("$.data.totalElements") { value(2) }
+            jsonPath("$.data.content[0].name") { value("정렬C") }
+        }
+    }
+
+    @Test
+    fun `평점순으로 정렬한다`() {
+        val seller = seedSeller("catalog-store-f")
+        val low = seedProduct(seller, "평점낮음", 10_000, ProductStatus.ON_SALE, "SKU-RATE-LOW")
+        val high = seedProduct(seller, "평점높음", 10_000, ProductStatus.ON_SALE, "SKU-RATE-HIGH")
+        low.updateReviewSummary(java.math.BigDecimal("3.5"), 2)
+        high.updateReviewSummary(java.math.BigDecimal("4.8"), 5)
+        productRepository.saveAll(listOf(low, high))
+
+        mockMvc.get("/api/products?keyword=평점&sort=RATING_DESC").andExpect {
+            status { isOk() }
+            jsonPath("$.data.content[0].name") { value("평점높음") }
+            jsonPath("$.data.content[1].name") { value("평점낮음") }
+        }
+    }
+
+    @Test
+    fun `상위 카테고리로 검색하면 하위 카테고리 상품도 포함된다`() {
+        val seller = seedSeller("catalog-store-g")
+        val clothing = categoryRepository.save(Category(name = "의류", sortOrder = 1))
+        val outer = categoryRepository.save(Category(name = "아우터", parent = clothing, sortOrder = 1))
+        val padding = categoryRepository.save(Category(name = "패딩류", parent = outer, sortOrder = 1))
+        val food = categoryRepository.save(Category(name = "식품", sortOrder = 2))
+        seedProduct(seller, "티셔츠", 10_000, ProductStatus.ON_SALE, "SKU-TREE-1", category = clothing)
+        seedProduct(seller, "코트", 10_000, ProductStatus.ON_SALE, "SKU-TREE-2", category = outer)
+        seedProduct(seller, "롱패딩", 10_000, ProductStatus.ON_SALE, "SKU-TREE-3", category = padding)
+        seedProduct(seller, "사과", 10_000, ProductStatus.ON_SALE, "SKU-TREE-4", category = food)
+
+        mockMvc.get("/api/products?categoryId=${clothing.id}").andExpect {
+            status { isOk() }
+            jsonPath("$.data.totalElements") { value(3) }
+        }
+        mockMvc.get("/api/products?categoryId=${outer.id}").andExpect {
+            jsonPath("$.data.totalElements") { value(2) }
+        }
+    }
+
+    @Test
     fun `카테고리 목록은 정렬 순서로 공개 조회된다`() {
         categoryRepository.save(Category(name = "B카테고리", sortOrder = 2))
         categoryRepository.save(Category(name = "A카테고리", sortOrder = 1))
