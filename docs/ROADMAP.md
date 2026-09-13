@@ -17,7 +17,8 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 전체 정산 목록(`GET /api/admin/settlements?status=`), 상품 검색 정렬·가격 범위·하위 카테고리 포함
 (`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`), 판매자·관리자 라우트 lazy 분할(index 640→514KB),
 프론트 테스트 기반(Vitest + happy-dom, CI `npm test`), 판매자 승인 즉시 권한 반영(`GET /api/auth/me` 가 세션 권한 갱신), 배송지 주소록(`/api/me/addresses`, 체크아웃 불러오기),
-프론트 의존성 취약점 0건(`npm audit fix`), 비밀번호 변경(`PATCH /api/auth/password`, 소셜 전용 계정은 신규 설정).
+프론트 의존성 취약점 0건(`npm audit fix`), 비밀번호 변경(`PATCH /api/auth/password`, 소셜 전용 계정은 신규 설정),
+Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요).
 
 ---
 
@@ -84,7 +85,6 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 |---|------|:------:|:----:|------|------|
 | 8.2 | **프론트 화면 테스트 확장** | 🟡 | M | - | API 클라이언트·게스트 장바구니 단위 테스트만 있음. 체크아웃·장바구니 화면은 Testing Library 컴포넌트 테스트 필요 |
 | 8.3 | **프론트 번들 추가 분할** | 🟢 | S | - | 백오피스 분리 후에도 index 514KB(대부분 공용 라이브러리). 고객 페이지 lazy 는 로딩 깜빡임 트레이드오프 |
-| 8.4 | **Testcontainers 로컬 호환** | 🟡 | S | - | 로컬 Docker 29와 비호환이라 외부 PG + `-Dit.datasource.url` 우회 중(CI 는 서비스 컨테이너 PG 사용). Testcontainers 버전 업 검토 |
 | 8.5 | **관측성(메트릭/트레이싱)** | 🟡 | M | - | actuator만 있음. Micrometer/Prometheus, 스케줄러 배치 실행 지표 |
 | 8.6 | **캐싱** | 🟢 | M | - | 인기 상품/카테고리 매 요청 집계 |
 | 8.7 | **API 문서화** | 🟢 | S | - | springdoc(OpenAPI) |
