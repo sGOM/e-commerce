@@ -10,6 +10,7 @@ import type {
   FlashSale,
   PageResponse,
   PopularProduct,
+  ProductSort,
   ProductSummary,
 } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,13 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { cn } from '@/lib/utils'
+
+const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
+  { value: 'LATEST', label: '최신순' },
+  { value: 'PRICE_ASC', label: '낮은 가격순' },
+  { value: 'PRICE_DESC', label: '높은 가격순' },
+  { value: 'RATING_DESC', label: '평점순' },
+]
 
 /** 페이지 번호 목록(첫/마지막/현재±1 + 말줄임). */
 function pageItems(current: number, total: number): (number | 'ellipsis')[] {
@@ -46,9 +54,14 @@ export default function ProductListPage() {
   const [params, setParams] = useSearchParams()
   const keyword = params.get('keyword') ?? ''
   const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : null
+  const minPrice = params.get('minPrice') ? Number(params.get('minPrice')) : null
+  const maxPrice = params.get('maxPrice') ? Number(params.get('maxPrice')) : null
+  const sort = (params.get('sort') as ProductSort | null) ?? 'LATEST'
   const page = Number(params.get('page') ?? '0')
 
   const [input, setInput] = useState(keyword)
+  const [minInput, setMinInput] = useState(minPrice?.toString() ?? '')
+  const [maxInput, setMaxInput] = useState(maxPrice?.toString() ?? '')
   const [categories, setCategories] = useState<Category[]>([])
   const [collections, setCollections] = useState<CollectionSummary[]>([])
   const [flashSales, setFlashSales] = useState<FlashSale[]>([])
@@ -63,8 +76,9 @@ export default function ProductListPage() {
     categoryApi.list().then(setCategories).catch(() => setCategories([]))
   }, [])
 
-  // 인기 상품·기획전은 기본 화면(검색·필터 없을 때)에만 노출
-  const isDefaultView = !keyword && categoryId == null
+  // 인기 상품·기획전은 기본 화면(검색·필터·정렬 변경 없을 때)에만 노출
+  const hasFilter = Boolean(keyword) || categoryId != null || minPrice != null || maxPrice != null
+  const isDefaultView = !hasFilter && sort === 'LATEST'
   useEffect(() => {
     if (isDefaultView) {
       productApi.popular(8).then(setPopular).catch(() => setPopular([]))
@@ -81,40 +95,51 @@ export default function ProductListPage() {
     setLoading(true)
     setError(null)
     productApi
-      .search({ keyword: keyword || undefined, categoryId: categoryId ?? undefined, page })
+      .search({
+        keyword: keyword || undefined,
+        categoryId: categoryId ?? undefined,
+        minPrice: minPrice ?? undefined,
+        maxPrice: maxPrice ?? undefined,
+        sort,
+        page,
+      })
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [keyword, categoryId, page, reloadKey])
+  }, [keyword, categoryId, minPrice, maxPrice, sort, page, reloadKey])
+
+  /** 현재 조건은 유지하고 일부만 바꾼다. 페이지 이동이 아니면 첫 페이지로 돌아간다. */
+  const updateParams = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(params)
+    next.delete('page')
+    for (const [k, v] of Object.entries(patch)) {
+      if (v) next.set(k, v)
+      else next.delete(k)
+    }
+    setParams(next)
+  }
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    const next: Record<string, string> = {}
-    if (input) next.keyword = input
-    if (categoryId != null) next.categoryId = String(categoryId)
-    setParams(next)
+    updateParams({ keyword: input || null })
   }
 
-  const selectCategory = (id: number | null) => {
-    const next: Record<string, string> = {}
-    if (keyword) next.keyword = keyword
-    if (id != null) next.categoryId = String(id)
-    setParams(next)
+  const selectCategory = (id: number | null) =>
+    updateParams({ categoryId: id != null ? String(id) : null })
+
+  const applyPrice = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateParams({ minPrice: minInput || null, maxPrice: maxInput || null })
   }
 
-  const goPage = (p: number) => {
-    const next: Record<string, string> = { page: String(p) }
-    if (keyword) next.keyword = keyword
-    if (categoryId != null) next.categoryId = String(categoryId)
-    setParams(next)
-  }
+  const goPage = (p: number) => updateParams({ page: p > 0 ? String(p) : null })
 
   const resetFilters = () => {
     setInput('')
+    setMinInput('')
+    setMaxInput('')
     setParams({})
   }
-
-  const hasFilter = Boolean(keyword) || categoryId != null
 
   return (
     <div>
@@ -165,6 +190,50 @@ export default function ProductListPage() {
           ))}
         </div>
       )}
+
+      {/* 정렬 · 가격 범위 */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <select
+          aria-label="정렬"
+          value={sort}
+          onChange={(e) => updateParams({ sort: e.target.value === 'LATEST' ? null : e.target.value })}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <form onSubmit={applyPrice} className="flex items-center gap-1">
+          <Input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={minInput}
+            onChange={(e) => setMinInput(e.target.value)}
+            placeholder="최소 가격"
+            aria-label="최소 가격"
+            className="h-9 w-28"
+          />
+          <span aria-hidden className="text-muted-foreground">
+            ~
+          </span>
+          <Input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={maxInput}
+            onChange={(e) => setMaxInput(e.target.value)}
+            placeholder="최대 가격"
+            aria-label="최대 가격"
+            className="h-9 w-28"
+          />
+          <Button type="submit" variant="outline" size="sm">
+            적용
+          </Button>
+        </form>
+      </div>
 
       {/* 타임딜 캐러셀 — 진행 중(ONGOING)만, 카운트다운·진행률 포함 */}
       {isDefaultView && flashSales.length > 0 && (

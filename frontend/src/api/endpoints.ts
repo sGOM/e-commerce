@@ -56,6 +56,7 @@ import type {
   Seller,
   SellerStatus,
   SellerSubOrder,
+  ProductSort,
   Settlement,
   SubOrderStatus,
   User,
@@ -180,6 +181,9 @@ export const productApi = {
     keyword?: string
     categoryId?: number
     sellerId?: number
+    minPrice?: number
+    maxPrice?: number
+    sort?: ProductSort
     page?: number
     size?: number
   }) => {
@@ -187,6 +191,9 @@ export const productApi = {
     if (params.keyword) q.set('keyword', params.keyword)
     if (params.categoryId != null) q.set('categoryId', String(params.categoryId))
     if (params.sellerId != null) q.set('sellerId', String(params.sellerId))
+    if (params.minPrice != null) q.set('minPrice', String(params.minPrice))
+    if (params.maxPrice != null) q.set('maxPrice', String(params.maxPrice))
+    if (params.sort) q.set('sort', params.sort)
     q.set('page', String(params.page ?? 0))
     q.set('size', String(params.size ?? 20))
     return api.get<PageResponse<ProductSummary>>(`/api/products?${q.toString()}`)
