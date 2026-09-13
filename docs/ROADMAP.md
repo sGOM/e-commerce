@@ -14,7 +14,8 @@
 송장 등록(`POST /api/seller/orders/{subOrderId}/ship`), 정산 지급(`PATCH /api/admin/settlements/{id}/pay`),
 인앱 알림함(`/api/me/notifications`), 카테고리 계층 엔티티(`categories.parent_id`),
 CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), 판매자 상품 목록(`GET /api/seller/products`),
-전체 정산 목록(`GET /api/admin/settlements?status=`).
+전체 정산 목록(`GET /api/admin/settlements?status=`), 상품 검색 정렬·가격 범위·하위 카테고리 포함
+(`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`).
 
 ---
 
@@ -35,8 +36,6 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 2.1 | **이미지 업로드/저장** | 🔴 | M | - | `products`에 이미지 컬럼 없음. 리뷰 사진도 URL 직접 입력(`MyReviewsPage` TODO). 스토리지 + 업로드 API 공용화 |
-| 2.2 | **검색 정렬/가격 필터** | 🟡 | S | - | `ProductSearchCondition`은 keyword/categoryId/sellerId뿐, 정렬은 `id desc` 고정 |
-| 2.3 | **하위 카테고리 포함 검색** | 🟡 | S | - | 계층 엔티티는 있으나 검색은 `category.id = ?` 정확 일치 |
 | 2.4 | **상품 Q&A** | 🟢 | M | - | 상품 문의/답변, 판매자 알림 |
 
 ## 3. 회원 / 계정
@@ -97,6 +96,6 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 
 1. **안전망** — 8.2 프론트 테스트 (CI 위에서 회귀를 자동으로 잡기 위해 먼저)
 2. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 → 1.1 게스트 결제
-3. **상품 완성도** — 2.1 이미지 업로드 → 2.2/2.3 검색 개선
+3. **상품 완성도** — 2.1 이미지 업로드
 4. **회원 필수** — 3.2 주소록 → 6.1 이메일 → 3.1 비밀번호 재설정
 5. **정책 확정 후** — 7.1 배송비 모델
