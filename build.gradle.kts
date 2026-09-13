@@ -49,6 +49,9 @@ dependencies {
 	implementation("org.flywaydb:flyway-database-postgresql")
 	runtimeOnly("org.postgresql:postgresql")
 
+	// API 문서 (OpenAPI 3 / Swagger UI) — 2.8.x 가 Boot 3.5 대응(3.x 는 Boot 4)
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
+
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
 	// Test
