@@ -1,16 +1,21 @@
 package com.example.starter.domain.settlement
 
 import com.example.starter.common.response.ApiResponse
+import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.settlement.dto.SettlementPolicyResponse
 import com.example.starter.domain.settlement.dto.SettlementResponse
 import com.example.starter.domain.settlement.dto.UpdateSettlementPolicyRequest
+import com.example.starter.domain.settlement.entity.SettlementStatus
 import jakarta.validation.Valid
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -22,6 +27,14 @@ class AdminSettlementController(
     private val settlementService: SettlementService,
     private val settlementPolicyService: SettlementPolicyService,
 ) {
+
+    /** 전체 정산 목록 — 최신순, `status`(PENDING/PAID) 필터 선택. */
+    @GetMapping
+    fun list(
+        @RequestParam(required = false) status: SettlementStatus?,
+        @PageableDefault(size = 20) pageable: Pageable,
+    ): ApiResponse<PageResponse<SettlementResponse>> =
+        ApiResponse.success(settlementService.getAllSettlements(status, pageable))
 
     /** 미정산 대상을 판매자별로 모아 정산서를 생성한다. */
     @PostMapping

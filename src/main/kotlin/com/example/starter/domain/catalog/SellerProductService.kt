@@ -31,6 +31,12 @@ class SellerProductService(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
 
+    /** 본인 상점 상품 목록 — 공개 검색과 달리 DRAFT/HIDDEN 도 포함한다. */
+    // ponytail: 페이징 없음, 판매자당 상품이 수백 개를 넘으면 Pageable 로 전환
+    fun getMyProducts(userId: Long): List<SellerProductResponse> =
+        productRepository.findBySellerIdOrderByIdDesc(requireNotNull(activeSeller(userId).id))
+            .map { SellerProductResponse.from(it) }
+
     @Transactional
     fun create(userId: Long, request: CreateProductRequest): SellerProductResponse {
         val seller = activeSeller(userId)

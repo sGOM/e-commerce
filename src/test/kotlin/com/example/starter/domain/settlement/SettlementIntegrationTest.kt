@@ -154,6 +154,40 @@ class SettlementIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `관리자는 전체 정산 목록을 상태로 필터링해 조회한다`() {
+        val (_, optionA) = seedSeller("STL-L1", basePrice = 10_000)
+        val (_, optionB) = seedSeller("STL-L2", basePrice = 20_000)
+        val buyer = seedBuyer("stl-buyer-l@example.com")
+        placePaidOrder(buyer, optionA, 1)
+        placePaidOrder(buyer, optionB, 1)
+        val res = mockMvc.post("/api/admin/settlements") {
+            with(user("admin").roles("ADMIN")); with(csrf())
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val paidId = Regex(""""settlementId":(\d+)""").find(res)!!.groupValues[1].toLong()
+        mockMvc.patch("/api/admin/settlements/$paidId/pay") {
+            with(user("admin").roles("ADMIN")); with(csrf())
+        }.andExpect { status { isOk() } }
+
+        mockMvc.get("/api/admin/settlements") {
+            with(user("admin").roles("ADMIN"))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.totalElements") { value(2) }
+            jsonPath("$.data.content[0].storeName") { exists() }
+        }
+        mockMvc.get("/api/admin/settlements?status=PAID") {
+            with(user("admin").roles("ADMIN"))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.totalElements") { value(1) }
+            jsonPath("$.data.content[0].settlementId") { value(paidId) }
+        }
+        mockMvc.get("/api/admin/settlements") {
+            with(user(seedBuyer("stl-not-admin@example.com")))
+        }.andExpect { status { isForbidden() } }
+    }
+
+    @Test
     fun `존재하지 않는 정산을 지급 처리하면 404를 반환한다`() {
         mockMvc.patch("/api/admin/settlements/999999/pay") {
             with(user("admin").roles("ADMIN")); with(csrf())
