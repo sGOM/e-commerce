@@ -62,6 +62,7 @@ import type {
   SettlementStatus,
   SubOrderStatus,
   User,
+  UserAddress,
   WishlistResponse,
 } from './types'
 
@@ -79,6 +80,26 @@ export const authApi = {
 export const meApi = {
   coupons: () => api.get<IssuedCoupon[]>('/api/me/coupons'),
   points: () => api.get<PointSummary>('/api/me/points'),
+}
+
+// ----- 배송지 주소록(회원 전용) -----
+export interface AddressBody {
+  label?: string
+  receiverName: string
+  receiverPhone: string
+  zipcode: string
+  address1: string
+  address2?: string
+  /** 등록 시에만 반영된다. 수정에서 기본 여부는 setDefault 로 바꾼다. */
+  isDefault?: boolean
+}
+
+export const addressApi = {
+  list: () => api.get<UserAddress[]>('/api/me/addresses'),
+  create: (body: AddressBody) => api.post<UserAddress>('/api/me/addresses', body),
+  update: (id: number, body: AddressBody) => api.put<UserAddress>(`/api/me/addresses/${id}`, body),
+  setDefault: (id: number) => api.patch<UserAddress>(`/api/me/addresses/${id}/default`),
+  remove: (id: number) => api.del<void>(`/api/me/addresses/${id}`),
 }
 
 // ----- 유료 멤버십(구독) — 회원 전용, 카드(빌링키) 등록 후 가입 가능 -----

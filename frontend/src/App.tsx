@@ -20,6 +20,7 @@ import MyRestockAlertsPage from './pages/MyRestockAlertsPage'
 import MyMembershipPage from './pages/MyMembershipPage'
 import MyDeliverySubscriptionsPage from './pages/MyDeliverySubscriptionsPage'
 import MyWishlistPage from './pages/MyWishlistPage'
+import MyAddressesPage from './pages/MyAddressesPage'
 import MyLoyaltyTierPage from './pages/MyLoyaltyTierPage'
 import NotificationsPage from './pages/NotificationsPage'
 import OrderDetailPage from './pages/OrderDetailPage'
@@ -139,6 +140,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <MyDeliverySubscriptionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my/addresses"
+              element={
+                <ProtectedRoute>
+                  <MyAddressesPage />
                 </ProtectedRoute>
               }
             />

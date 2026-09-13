@@ -138,6 +138,13 @@ export interface ShippingAddress {
   address2: string | null
 }
 
+/** 회원 배송지 주소록 항목 — GET /api/me/addresses (기본 배송지가 먼저) */
+export interface UserAddress extends ShippingAddress {
+  addressId: number
+  label: string | null
+  isDefault: boolean
+}
+
 export interface Order {
   orderId: number
   orderNumber: string
