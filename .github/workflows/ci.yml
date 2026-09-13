@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    # Testcontainers 는 러너 Docker 버전에 따라 docker-java 호환이 깨질 수 있어,
+    # 서비스 컨테이너 PG 를 띄우고 AbstractIntegrationTest 의 외부 DB 경로(IT_DATASOURCE_*)를 쓴다.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: starter
+          POSTGRES_USER: starter
+          POSTGRES_PASSWORD: starter
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U starter -d starter"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      IT_DATASOURCE_URL: jdbc:postgresql://localhost:5432/starter
+      IT_DATASOURCE_USERNAME: starter
+      IT_DATASOURCE_PASSWORD: starter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew test --console=plain
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: build/reports/tests/test
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
