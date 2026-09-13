@@ -4,9 +4,15 @@ import { adminDeliverySlotApi, type CreateDeliverySlotBody } from '../../api/end
 import { ApiError, formatKRW } from '../../api/client'
 import { deliverySlotTypeLabel } from '../../labels'
 import type { DeliverySlot, DeliverySlotType, PageResponse } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
-const field = 'w-full rounded-lg border px-3 py-2 text-sm'
 const typeFilters: (DeliverySlotType | '')[] = ['', 'DAWN', 'DAYTIME']
+const selectClass =
+  'h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
 /** 관리자 배송 슬롯 관리 — 목록(날짜/유형 필터 + 페이지네이션) + 개설 폼(AC1/AC2). */
 export default function AdminDeliverySlotsPage() {
@@ -37,36 +43,35 @@ export default function AdminDeliverySlotsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <input
+          <Input
             type="date"
+            aria-label="날짜 필터"
             value={date}
             onChange={(e) => {
               setDate(e.target.value)
               setPage(0)
             }}
-            className="rounded-lg border px-3 py-1.5 text-sm"
+            className="w-auto"
           />
           {typeFilters.map((t) => (
-            <button
+            <Button
               key={t || 'all'}
+              type="button"
+              size="sm"
+              variant={type === t ? 'default' : 'outline'}
+              className="rounded-full"
               onClick={() => {
                 setType(t)
                 setPage(0)
               }}
-              className={`rounded-full px-3 py-1 text-sm ${
-                type === t ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-              }`}
             >
               {t ? deliverySlotTypeLabel[t] : '전체'}
-            </button>
+            </Button>
           ))}
         </div>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
+        <Button onClick={() => setShowForm((v) => !v)}>
           {showForm ? '닫기' : '+ 슬롯 개설'}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
@@ -78,39 +83,46 @@ export default function AdminDeliverySlotsPage() {
         />
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : !data || data.content.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">등록된 배송 슬롯이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">등록된 배송 슬롯이 없습니다.</p>
       ) : (
         <>
           <ul className="space-y-2">
             {data.content.map((slot) => (
-              <li key={slot.id} className="flex items-center justify-between gap-2 rounded-xl border bg-white p-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">
-                    {slot.slotDate} {slot.startTime.slice(0, 5)}~{slot.endTime.slice(0, 5)}
-                    <span className="ml-2 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                      {deliverySlotTypeLabel[slot.type]}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    예약 {slot.reservedCount}/{slot.capacity} · 잔여 {slot.remaining} ·{' '}
-                    {slot.extraFee > 0 ? `추가요금 ${formatKRW(slot.extraFee)}` : '추가요금 없음'} ·{' '}
-                    권역 {slot.regionScope ?? '전국'}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    마감 {new Date(slot.cutoffAt).toLocaleString('ko-KR')}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded px-2 py-0.5 text-xs ${
-                    slot.expired ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'
-                  }`}
-                >
-                  {slot.expired ? '마감' : '모집중'}
-                </span>
+              <li key={slot.id}>
+                <Card className="flex-row items-center justify-between gap-2 p-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {slot.slotDate} {slot.startTime.slice(0, 5)}~{slot.endTime.slice(0, 5)}
+                      <span className="ml-2 rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        {deliverySlotTypeLabel[slot.type]}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      예약 {slot.reservedCount}/{slot.capacity} · 잔여 {slot.remaining} ·{' '}
+                      {slot.extraFee > 0 ? `추가요금 ${formatKRW(slot.extraFee)}` : '추가요금 없음'} ·{' '}
+                      권역 {slot.regionScope ?? '전국'}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      마감 {new Date(slot.cutoffAt).toLocaleString('ko-KR')}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      'shrink-0 rounded px-2 py-0.5 text-xs',
+                      slot.expired ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success',
+                    )}
+                  >
+                    {slot.expired ? '마감' : '모집중'}
+                  </span>
+                </Card>
               </li>
             ))}
           </ul>
@@ -121,9 +133,12 @@ export default function AdminDeliverySlotsPage() {
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-                  }`}
+                  className={cn(
+                    'h-8 w-8 rounded text-sm',
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-input bg-background text-muted-foreground',
+                  )}
                 >
                   {i + 1}
                 </button>
@@ -174,94 +189,83 @@ function CreateSlotForm({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border bg-white p-5">
-      <h2 className="font-bold">배송 슬롯 개설</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-xs text-slate-500">
-          날짜
-          <input
-            required
-            type="date"
-            value={slotDate}
-            onChange={(e) => setSlotDate(e.target.value)}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500">
-          유형
-          <select value={type} onChange={(e) => setType(e.target.value as DeliverySlotType)} className={`mt-1 ${field}`}>
-            <option value="DAWN">새벽배송</option>
-            <option value="DAYTIME">주간배송</option>
-          </select>
-        </label>
-        <label className="block text-xs text-slate-500">
-          시작 시각
-          <input
-            required
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500">
-          종료 시각
-          <input
-            required
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500 sm:col-span-2">
-          주문 마감 시각
-          <input
-            required
-            type="datetime-local"
-            value={cutoffAt}
-            onChange={(e) => setCutoffAt(e.target.value)}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500">
-          정원
-          <input
-            required
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value))}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500">
-          추가 배송비(원)
-          <input
-            type="number"
-            min={0}
-            value={extraFee}
-            onChange={(e) => setExtraFee(Number(e.target.value))}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-        <label className="block text-xs text-slate-500 sm:col-span-2">
-          권역(우편번호 접두사, 비우면 전국 공통)
-          <input
-            placeholder="예: 06, 07 (선택)"
-            value={regionScope}
-            onChange={(e) => setRegionScope(e.target.value)}
-            className={`mt-1 ${field}`}
-          />
-        </label>
-      </div>
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <button
-        disabled={submitting}
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-      >
-        {submitting ? '등록 중…' : '슬롯 등록'}
-      </button>
-    </form>
+    <Card>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <h2 className="font-bold">배송 슬롯 개설</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="slot-date" className="text-xs text-muted-foreground">
+                날짜
+              </Label>
+              <Input id="slot-date" required type="date" value={slotDate} onChange={(e) => setSlotDate(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="slot-type" className="text-xs text-muted-foreground">
+                유형
+              </Label>
+              <select
+                id="slot-type"
+                value={type}
+                onChange={(e) => setType(e.target.value as DeliverySlotType)}
+                className={selectClass}
+              >
+                <option value="DAWN">새벽배송</option>
+                <option value="DAYTIME">주간배송</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="slot-start" className="text-xs text-muted-foreground">
+                시작 시각
+              </Label>
+              <Input id="slot-start" required type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="slot-end" className="text-xs text-muted-foreground">
+                종료 시각
+              </Label>
+              <Input id="slot-end" required type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="slot-cutoff" className="text-xs text-muted-foreground">
+                주문 마감 시각
+              </Label>
+              <Input id="slot-cutoff" required type="datetime-local" value={cutoffAt} onChange={(e) => setCutoffAt(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="slot-capacity" className="text-xs text-muted-foreground">
+                정원
+              </Label>
+              <Input id="slot-capacity" required type="number" min={1} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="slot-extra-fee" className="text-xs text-muted-foreground">
+                추가 배송비(원)
+              </Label>
+              <Input id="slot-extra-fee" type="number" min={0} value={extraFee} onChange={(e) => setExtraFee(Number(e.target.value))} />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="slot-region" className="text-xs text-muted-foreground">
+                권역(우편번호 접두사, 비우면 전국 공통)
+              </Label>
+              <Input
+                id="slot-region"
+                placeholder="예: 06, 07 (선택)"
+                value={regionScope}
+                onChange={(e) => setRegionScope(e.target.value)}
+              />
+            </div>
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={submitting}>
+            {submitting ? '등록 중…' : '슬롯 등록'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

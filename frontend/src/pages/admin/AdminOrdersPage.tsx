@@ -3,6 +3,9 @@ import { adminApi } from '../../api/endpoints'
 import { ApiError, formatKRW } from '../../api/client'
 import { orderStatusLabel } from '../../labels'
 import type { OrderStatus, OrderSummary, PageResponse } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 export default function AdminOrdersPage() {
   const [status, setStatus] = useState<OrderStatus | ''>('')
@@ -39,58 +42,65 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(['', 'CREATED', 'PAID', 'CANCELED'] as const).map((s) => (
-          <button
+          <Button
             key={s || 'all'}
+            type="button"
+            size="sm"
+            variant={status === s ? 'default' : 'outline'}
+            className="rounded-full"
             onClick={() => {
               setStatus(s)
               setPage(0)
             }}
-            className={`rounded-full px-3 py-1 text-sm ${
-              status === s ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-            }`}
           >
             {s ? orderStatusLabel[s] : '전체'}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : !data || data.content.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">주문이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">주문이 없습니다.</p>
       ) : (
         <>
           <ul className="space-y-2">
             {data.content.map((o) => (
-              <li
-                key={o.orderId}
-                className="flex items-center justify-between rounded-xl border bg-white p-4"
-              >
-                <div>
-                  <p className="text-sm font-medium">{o.orderNumber}</p>
-                  <p className="text-xs text-slate-400">
-                    {new Date(o.createdAt).toLocaleString('ko-KR')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                    {orderStatusLabel[o.status]}
-                  </span>
-                  <span className="font-semibold text-indigo-600">
-                    {formatKRW(o.payableAmount)}
-                  </span>
-                  {o.status !== 'CANCELED' && (
-                    <button
-                      onClick={() => refund(o.orderId)}
-                      className="rounded border border-red-200 px-3 py-1 text-xs text-red-500 hover:bg-red-50"
-                    >
-                      환불
-                    </button>
-                  )}
-                </div>
+              <li key={o.orderId}>
+                <Card className="flex-row items-center justify-between p-4">
+                  <div>
+                    <p className="text-sm font-medium">{o.orderNumber}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(o.createdAt).toLocaleString('ko-KR')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {orderStatusLabel[o.status]}
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {formatKRW(o.payableAmount)}
+                    </span>
+                    {o.status !== 'CANCELED' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                        onClick={() => refund(o.orderId)}
+                      >
+                        환불
+                      </Button>
+                    )}
+                  </div>
+                </Card>
               </li>
             ))}
           </ul>
@@ -101,9 +111,12 @@ export default function AdminOrdersPage() {
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-                  }`}
+                  className={cn(
+                    'h-8 w-8 rounded text-sm',
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-input bg-background text-muted-foreground',
+                  )}
                 >
                   {i + 1}
                 </button>

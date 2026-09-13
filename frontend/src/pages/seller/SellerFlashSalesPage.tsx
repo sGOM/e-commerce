@@ -5,12 +5,16 @@ import { ApiError, formatKRW } from '../../api/client'
 import { flashSalePhaseLabel } from '../../labels'
 import { useCountdown } from '../../hooks/useCountdown'
 import type { FlashSale, FlashSalePhase, ProductDetail, ProductSummary, Seller } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
 
 const phaseBadgeClass: Record<FlashSalePhase, string> = {
-  SCHEDULED: 'bg-amber-50 text-amber-600',
-  ONGOING: 'bg-green-50 text-green-600',
-  ENDED: 'bg-slate-100 text-slate-400',
-  CANCELED: 'bg-red-50 text-red-500',
+  SCHEDULED: 'bg-warning/10 text-warning',
+  ONGOING: 'bg-success/10 text-success',
+  ENDED: 'bg-muted text-muted-foreground',
+  CANCELED: 'bg-destructive/10 text-destructive',
 }
 
 /** 판매자 타임딜 백오피스 — 내 타임딜 목록 + 등록 폼(옵션/특가/기간/한도수량). 가격 원가/셀러는 서버가 도출. */
@@ -38,17 +42,14 @@ export default function SellerFlashSalesPage() {
     load()
   }, [load])
 
-  if (loading) return <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+  if (loading) return <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
+        <Button onClick={() => setShowForm((v) => !v)}>
           {showForm ? '닫기' : '+ 타임딜 등록'}
-        </button>
+        </Button>
       </div>
 
       {showForm && sellerId != null && (
@@ -61,10 +62,14 @@ export default function SellerFlashSalesPage() {
         />
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       {flashSales.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">등록한 타임딜이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">등록한 타임딜이 없습니다.</p>
       ) : (
         <ul className="space-y-2">
           {flashSales.map((fs) => (
@@ -79,32 +84,36 @@ export default function SellerFlashSalesPage() {
 function FlashSaleRow({ flashSale }: { flashSale: FlashSale }) {
   const { label, ended } = useCountdown(flashSale.endAt)
   return (
-    <li className="rounded-xl border bg-white p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">
-            {flashSale.productName} <span className="text-slate-400">{flashSale.optionName}</span>
-          </p>
-          <p className="mt-0.5 text-xs text-slate-400">
-            {formatKRW(flashSale.salePrice)}
-            <span className="ml-1 line-through">{formatKRW(flashSale.originalPrice)}</span>
-            {' · '}
-            {flashSale.soldQuantity}/{flashSale.limitQuantity}개 판매
-          </p>
-          <p className="mt-0.5 text-xs text-slate-400">
-            {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~{' '}
-            {new Date(flashSale.endAt).toLocaleString('ko-KR')}
-            {flashSale.phase === 'ONGOING' && !ended && (
-              <span className="ml-1 font-medium text-indigo-600">· 남은 시간 {label}</span>
-            )}
-          </p>
-        </div>
-        <span
-          className={`shrink-0 rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
-        >
-          {flashSalePhaseLabel[flashSale.phase]}
-        </span>
-      </div>
+    <li>
+      <Card>
+        <CardContent>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">
+                {flashSale.productName} <span className="text-muted-foreground">{flashSale.optionName}</span>
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {formatKRW(flashSale.salePrice)}
+                <span className="ml-1 line-through">{formatKRW(flashSale.originalPrice)}</span>
+                {' · '}
+                {flashSale.soldQuantity}/{flashSale.limitQuantity}개 판매
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~{' '}
+                {new Date(flashSale.endAt).toLocaleString('ko-KR')}
+                {flashSale.phase === 'ONGOING' && !ended && (
+                  <span className="ml-1 font-medium text-primary">· 남은 시간 {label}</span>
+                )}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
+            >
+              {flashSalePhaseLabel[flashSale.phase]}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
     </li>
   )
 }
@@ -168,103 +177,121 @@ function CreateFlashSaleForm({
     }
   }
 
-  const field = 'w-full rounded-lg border px-3 py-2 text-sm'
+  const selectClass =
+    'h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border bg-white p-5">
-      <h2 className="font-bold">타임딜 등록</h2>
+    <Card>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <h2 className="font-bold">타임딜 등록</h2>
 
-      <div className="space-y-1">
-        <label className="block text-xs text-slate-500">대상 상품</label>
-        <select
-          required
-          value={productId}
-          onChange={(e) => setProductId(e.target.value ? Number(e.target.value) : '')}
-          className={field}
-        >
-          <option value="">상품 선택</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="space-y-1">
+            <Label htmlFor="fs-product" className="text-xs text-muted-foreground">
+              대상 상품
+            </Label>
+            <select
+              id="fs-product"
+              required
+              value={productId}
+              onChange={(e) => setProductId(e.target.value ? Number(e.target.value) : '')}
+              className={selectClass}
+            >
+              <option value="">상품 선택</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {productDetail && (
-        <div className="space-y-1">
-          <label className="block text-xs text-slate-500">대상 옵션</label>
-          <select
-            required
-            value={optionId}
-            onChange={(e) => setOptionId(e.target.value ? Number(e.target.value) : '')}
-            className={field}
-          >
-            {productDetail.options.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name} · 정가 {formatKRW(o.price)} (재고 {o.availableStock})
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+          {productDetail && (
+            <div className="space-y-1">
+              <Label htmlFor="fs-option" className="text-xs text-muted-foreground">
+                대상 옵션
+              </Label>
+              <select
+                id="fs-option"
+                required
+                value={optionId}
+                onChange={(e) => setOptionId(e.target.value ? Number(e.target.value) : '')}
+                className={selectClass}
+              >
+                {productDetail.options.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name} · 정가 {formatKRW(o.price)} (재고 {o.availableStock})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-      <div className="space-y-1">
-        <label className="block text-xs text-slate-500">
-          특가(원){selectedOption && ` — 정가 ${formatKRW(selectedOption.price)}보다 낮아야 합니다`}
-        </label>
-        <input
-          required
-          type="number"
-          min={0}
-          value={salePrice}
-          onChange={(e) => setSalePrice(Number(e.target.value))}
-          className={field}
-        />
-      </div>
+          <div className="space-y-1">
+            <Label htmlFor="fs-price" className="text-xs text-muted-foreground">
+              특가(원){selectedOption && ` — 정가 ${formatKRW(selectedOption.price)}보다 낮아야 합니다`}
+            </Label>
+            <Input
+              id="fs-price"
+              required
+              type="number"
+              min={0}
+              value={salePrice}
+              onChange={(e) => setSalePrice(Number(e.target.value))}
+            />
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label className="block text-xs text-slate-500">시작 시각</label>
-          <input
-            required
-            type="datetime-local"
-            value={startAt}
-            onChange={(e) => setStartAt(e.target.value)}
-            className={field}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="block text-xs text-slate-500">종료 시각</label>
-          <input
-            required
-            type="datetime-local"
-            value={endAt}
-            onChange={(e) => setEndAt(e.target.value)}
-            className={field}
-          />
-        </div>
-      </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="fs-start" className="text-xs text-muted-foreground">
+                시작 시각
+              </Label>
+              <Input
+                id="fs-start"
+                required
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="fs-end" className="text-xs text-muted-foreground">
+                종료 시각
+              </Label>
+              <Input
+                id="fs-end"
+                required
+                type="datetime-local"
+                value={endAt}
+                onChange={(e) => setEndAt(e.target.value)}
+              />
+            </div>
+          </div>
 
-      <div className="space-y-1">
-        <label className="block text-xs text-slate-500">한도 수량</label>
-        <input
-          required
-          type="number"
-          min={1}
-          value={limitQuantity}
-          onChange={(e) => setLimitQuantity(Number(e.target.value))}
-          className={field}
-        />
-      </div>
+          <div className="space-y-1">
+            <Label htmlFor="fs-limit" className="text-xs text-muted-foreground">
+              한도 수량
+            </Label>
+            <Input
+              id="fs-limit"
+              required
+              type="number"
+              min={1}
+              value={limitQuantity}
+              onChange={(e) => setLimitQuantity(Number(e.target.value))}
+            />
+          </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <button
-        disabled={submitting || optionId === ''}
-        className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-      >
-        {submitting ? '등록 중…' : '타임딜 등록'}
-      </button>
-    </form>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={submitting || optionId === ''} className="w-full">
+            {submitting ? '등록 중…' : '타임딜 등록'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

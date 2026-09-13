@@ -10,8 +10,10 @@ import type {
   CollectionStatus,
   ProductSummary,
 } from '../../api/types'
-
-const field = 'w-full rounded-lg border px-3 py-2 text-sm'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
 
 /** ISO(Instant) 문자열 -> <input type="datetime-local"> value (로컬 타임존 기준). */
 function toDatetimeLocal(iso: string): string {
@@ -71,67 +73,79 @@ function MetaForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border bg-white p-5">
-      <h2 className="font-bold">기획전 정보</h2>
-      <input
-        required
-        placeholder="제목"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className={field}
-      />
-      <input
-        placeholder="부제(선택)"
-        value={subtitle}
-        onChange={(e) => setSubtitle(e.target.value)}
-        className={field}
-      />
-      <input
-        placeholder="배너 이미지 URL(선택)"
-        value={bannerImageUrl}
-        onChange={(e) => setBannerImageUrl(e.target.value)}
-        className={field}
-      />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-xs text-slate-500">
-          노출 시작
-          <input
+    <Card>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <h2 className="font-bold">기획전 정보</h2>
+          <Input
             required
-            type="datetime-local"
-            value={startAt}
-            onChange={(e) => setStartAt(e.target.value)}
-            className={`mt-1 ${field}`}
+            placeholder="제목"
+            aria-label="제목"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
-        </label>
-        <label className="block text-xs text-slate-500">
-          노출 종료
-          <input
-            required
-            type="datetime-local"
-            value={endAt}
-            onChange={(e) => setEndAt(e.target.value)}
-            className={`mt-1 ${field}`}
+          <Input
+            placeholder="부제(선택)"
+            aria-label="부제"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
           />
-        </label>
-      </div>
-      <label className="block text-xs text-slate-500">
-        노출 순서(작을수록 먼저 노출)
-        <input
-          type="number"
-          min={0}
-          value={displayOrder}
-          onChange={(e) => setDisplayOrder(Number(e.target.value))}
-          className={`mt-1 w-32 ${field}`}
-        />
-      </label>
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <button
-        disabled={saving}
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-      >
-        {saving ? '저장 중…' : collection ? '수정 저장' : '등록'}
-      </button>
-    </form>
+          <Input
+            placeholder="배너 이미지 URL(선택)"
+            aria-label="배너 이미지 URL"
+            value={bannerImageUrl}
+            onChange={(e) => setBannerImageUrl(e.target.value)}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="collection-start" className="text-xs text-muted-foreground">
+                노출 시작
+              </Label>
+              <Input
+                id="collection-start"
+                required
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="collection-end" className="text-xs text-muted-foreground">
+                노출 종료
+              </Label>
+              <Input
+                id="collection-end"
+                required
+                type="datetime-local"
+                value={endAt}
+                onChange={(e) => setEndAt(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="collection-order" className="text-xs text-muted-foreground">
+              노출 순서(작을수록 먼저 노출)
+            </Label>
+            <Input
+              id="collection-order"
+              type="number"
+              min={0}
+              value={displayOrder}
+              onChange={(e) => setDisplayOrder(Number(e.target.value))}
+              className="w-32"
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={saving}>
+            {saving ? '저장 중…' : collection ? '수정 저장' : '등록'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -162,29 +176,28 @@ function StatusPanel({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-white p-4">
-      <span className="text-sm text-slate-500">현재 상태</span>
-      <span className="rounded bg-slate-100 px-2 py-0.5 text-sm font-semibold text-slate-700">
+    <Card className="flex-row items-center gap-3 p-4">
+      <span className="text-sm text-muted-foreground">현재 상태</span>
+      <span className="rounded bg-muted px-2 py-0.5 text-sm font-semibold text-foreground">
         {collectionStatusLabel[collection.status]}
       </span>
       {nexts.length === 0 ? (
-        <span className="text-xs text-slate-400">더 이상 전이할 상태가 없습니다.</span>
+        <span className="text-xs text-muted-foreground">더 이상 전이할 상태가 없습니다.</span>
       ) : (
         <div className="ml-auto flex gap-2">
           {nexts.map((n) => (
-            <button
-              key={n}
-              disabled={changing}
-              onClick={() => change(n)}
-              className="rounded border px-3 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-            >
+            <Button key={n} type="button" variant="outline" size="sm" disabled={changing} onClick={() => change(n)}>
               {collectionStatusLabel[n]}(으)로 전환
-            </button>
+            </Button>
           ))}
         </div>
       )}
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </div>
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </Card>
   )
 }
 
@@ -267,111 +280,113 @@ function ProductAssignmentPanel({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border bg-white p-5">
-      <h2 className="font-bold">상품 편성</h2>
+    <Card>
+      <CardContent className="space-y-3">
+        <h2 className="font-bold">상품 편성</h2>
 
-      <div className="flex gap-2">
-        <input
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              search()
-            }
-          }}
-          placeholder="상품명으로 검색"
-          className={field}
-        />
-        <button
-          type="button"
-          onClick={search}
-          disabled={searching}
-          className="shrink-0 rounded-lg border px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-        >
-          {searching ? '검색 중…' : '검색'}
-        </button>
-      </div>
+        <div className="flex gap-2">
+          <Input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                search()
+              }
+            }}
+            placeholder="상품명으로 검색"
+            aria-label="상품명으로 검색"
+          />
+          <Button type="button" variant="outline" disabled={searching} onClick={search} className="shrink-0">
+            {searching ? '검색 중…' : '검색'}
+          </Button>
+        </div>
 
-      {results.length > 0 && (
-        <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border p-2">
-          {results.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="truncate">
-                {p.name} <span className="text-xs text-slate-400">· {formatKRW(p.basePrice)}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => add(p)}
-                className="shrink-0 rounded border px-2 py-0.5 text-xs text-indigo-600 hover:bg-indigo-50"
-              >
-                추가
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <p className="mb-1 text-xs text-slate-500">
-          편성된 상품 {items.length}개 (노출 순서, 위/아래로 조정)
-        </p>
-        {items.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">편성된 상품이 없습니다.</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {items.map((it, i) => (
-              <li
-                key={it.product.id}
-                className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
-              >
-                <span className="min-w-0 truncate">
-                  <span className="mr-2 text-xs text-slate-400">#{i + 1}</span>
-                  {it.product.name}
+        {results.length > 0 && (
+          <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+            {results.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="truncate">
+                  {p.name} <span className="text-xs text-muted-foreground">· {formatKRW(p.basePrice)}</span>
                 </span>
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label="위로 이동"
-                    disabled={i === 0}
-                    onClick={() => move(i, -1)}
-                    className="rounded border px-2 py-0.5 text-xs disabled:opacity-30"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="아래로 이동"
-                    disabled={i === items.length - 1}
-                    onClick={() => move(i, 1)}
-                    className="rounded border px-2 py-0.5 text-xs disabled:opacity-30"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => remove(it.product.id)}
-                    className="rounded border border-red-200 px-2 py-0.5 text-xs text-red-500 hover:bg-red-50"
-                  >
-                    삭제
-                  </button>
-                </div>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto shrink-0 p-0 text-xs"
+                  onClick={() => add(p)}
+                >
+                  추가
+                </Button>
               </li>
             ))}
           </ul>
         )}
-      </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <button
-        type="button"
-        disabled={saving || !dirty}
-        onClick={save}
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-      >
-        {saving ? '저장 중…' : '편성 저장'}
-      </button>
-    </div>
+        <div>
+          <p className="mb-1 text-xs text-muted-foreground">
+            편성된 상품 {items.length}개 (노출 순서, 위/아래로 조정)
+          </p>
+          {items.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">편성된 상품이 없습니다.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {items.map((it, i) => (
+                <li
+                  key={it.product.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 truncate">
+                    <span className="mr-2 text-xs text-muted-foreground">#{i + 1}</span>
+                    {it.product.name}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="위로 이동"
+                      disabled={i === 0}
+                      onClick={() => move(i, -1)}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="아래로 이동"
+                      disabled={i === items.length - 1}
+                      onClick={() => move(i, 1)}
+                    >
+                      ↓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={() => remove(it.product.id)}
+                    >
+                      삭제
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <Button type="button" disabled={saving || !dirty} onClick={save}>
+          {saving ? '저장 중…' : '편성 저장'}
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -394,15 +409,17 @@ export default function AdminCollectionEditPage() {
 
   return (
     <div className="space-y-4">
-      <Link to="/admin/collections" className="text-sm text-slate-500 hover:underline">
+      <Link to="/admin/collections" className="text-sm text-muted-foreground hover:underline">
         ← 기획전 목록
       </Link>
       <h1 className="text-lg font-bold">{isNew ? '기획전 등록' : '기획전 관리'}</h1>
 
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : error ? (
-        <p className="text-sm text-red-500">{error}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       ) : (
         <>
           {collection && <StatusPanel collection={collection} onChanged={setCollection} />}

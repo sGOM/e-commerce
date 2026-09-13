@@ -6,6 +6,8 @@ import { ApiError } from '../api/client'
 import { giftClaimStatusLabel } from '../labels'
 import OrderView from '../components/OrderView'
 import type { GiftClaim, Order } from '../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 /** 선물 링크 공유/상태 카드 — 구매자(본인)의 선물 주문 상세에서만 노출된다. */
 function GiftStatusCard({
@@ -49,61 +51,57 @@ function GiftStatusCard({
   }
 
   return (
-    <div className="rounded-xl border border-pink-200 bg-pink-50/50 p-5">
-      <h2 className="mb-3 font-bold text-pink-700">🎁 선물 링크</h2>
+    <div className="rounded-xl border border-pink-200 bg-pink-50/50 p-5 dark:border-pink-900 dark:bg-pink-950/20">
+      <h2 className="mb-3 font-bold text-pink-700 dark:text-pink-300">🎁 선물 링크</h2>
 
       {shareToken && (
-        <div className="mb-4 space-y-2 rounded-lg border border-pink-200 bg-white p-3">
-          <p className="text-sm font-medium text-slate-700">공유 링크가 발급되었어요. 수령자에게 전달하세요.</p>
+        <div className="mb-4 space-y-2 rounded-lg border border-pink-200 bg-card p-3 dark:border-pink-900">
+          <p className="text-sm font-medium text-foreground">공유 링크가 발급되었어요. 수령자에게 전달하세요.</p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <input
+            <Input
               readOnly
               value={shareUrl(shareToken)}
               onFocus={(e) => e.currentTarget.select()}
-              className="w-full rounded-lg border px-3 py-2 text-xs text-slate-600 sm:flex-1"
+              className="text-xs sm:flex-1"
             />
-            <button
+            <Button
               type="button"
               onClick={() => copyLink(shareToken)}
-              className="shrink-0 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700"
+              className="shrink-0 bg-pink-600 text-white hover:bg-pink-700"
             >
               링크 복사
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-400">링크 상태 확인 중…</p>
+        <p className="text-sm text-muted-foreground">링크 상태 확인 중…</p>
       ) : error ? (
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       ) : claim ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-500">상태</span>
+            <span className="text-muted-foreground">상태</span>
             <span
               className={`rounded px-2 py-0.5 text-xs font-semibold ${
                 claim.status === 'CLAIMED'
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-success/10 text-success'
                   : claim.status === 'PENDING'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-slate-100 text-slate-500'
+                    ? 'bg-warning/10 text-warning'
+                    : 'bg-muted text-muted-foreground'
               }`}
             >
               {giftClaimStatusLabel[claim.status]}
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             만료 기한: {new Date(claim.expiresAt).toLocaleString('ko-KR')}
             {claim.claimedAt && ` · 수락 완료: ${new Date(claim.claimedAt).toLocaleString('ko-KR')}`}
           </p>
-          <button
-            type="button"
-            onClick={load}
-            className="rounded-lg border px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white"
-          >
+          <Button type="button" variant="outline" size="sm" onClick={load}>
             상태 새로고침
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>
@@ -162,8 +160,8 @@ export default function OrderDetailPage() {
     }
   }
 
-  if (loading) return <p className="py-20 text-center text-slate-400">불러오는 중…</p>
-  if (error && !order) return <p className="py-20 text-center text-red-500">{error}</p>
+  if (loading) return <p className="py-20 text-center text-sm text-muted-foreground">불러오는 중…</p>
+  if (error && !order) return <p className="py-20 text-center text-sm text-destructive">{error}</p>
   if (!order) return null
 
   const cancelable =
@@ -173,7 +171,7 @@ export default function OrderDetailPage() {
   return (
     <div className="space-y-6">
       {location.state?.justPaid && (
-        <div className="rounded-xl bg-green-50 p-4 text-center text-sm text-green-700">
+        <div className="rounded-xl bg-success/10 p-4 text-center text-sm text-success">
           🎉 결제가 완료되었습니다!
         </div>
       )}
@@ -188,15 +186,21 @@ export default function OrderDetailPage() {
         confirmingSubOrderId={confirmingSubOrderId}
       />
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {cancelable && (
-        <button
+        <Button
+          type="button"
+          variant="outline"
           onClick={cancel}
           disabled={canceling}
-          className="w-full rounded-xl border border-red-200 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 disabled:opacity-50"
+          className="h-12 w-full border-destructive/30 text-destructive hover:bg-destructive/10"
         >
           {canceling ? '취소 중…' : order.isGift ? '선물 주문 취소' : '주문 취소'}
-        </button>
+        </Button>
       )}
     </div>
   )

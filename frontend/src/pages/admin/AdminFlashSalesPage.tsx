@@ -4,6 +4,9 @@ import { ApiError, formatKRW } from '../../api/client'
 import { flashSalePhaseLabel } from '../../labels'
 import { useCountdown } from '../../hooks/useCountdown'
 import type { FlashSale, FlashSalePhase, FlashSaleStatus, PageResponse } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 const statusFilters: (FlashSaleStatus | '')[] = ['', 'ACTIVE', 'CANCELED']
 const statusFilterLabel: Record<FlashSaleStatus | '', string> = {
@@ -13,10 +16,10 @@ const statusFilterLabel: Record<FlashSaleStatus | '', string> = {
 }
 
 const phaseBadgeClass: Record<FlashSalePhase, string> = {
-  SCHEDULED: 'bg-amber-50 text-amber-600',
-  ONGOING: 'bg-green-50 text-green-600',
-  ENDED: 'bg-slate-100 text-slate-400',
-  CANCELED: 'bg-red-50 text-red-500',
+  SCHEDULED: 'bg-warning/10 text-warning',
+  ONGOING: 'bg-success/10 text-success',
+  ENDED: 'bg-muted text-muted-foreground',
+  CANCELED: 'bg-destructive/10 text-destructive',
 }
 
 /** 관리자 타임딜 편성 — 검색(행정 상태별) + 강제 종료. 실시간 진행 단계(phase)는 목록에서 함께 노출. */
@@ -61,26 +64,31 @@ export default function AdminFlashSalesPage() {
     <div className="space-y-4">
       <div className="flex gap-2">
         {statusFilters.map((s) => (
-          <button
+          <Button
             key={s || 'all'}
+            type="button"
+            size="sm"
+            variant={status === s ? 'default' : 'outline'}
+            className="rounded-full"
             onClick={() => {
               setStatus(s)
               setPage(0)
             }}
-            className={`rounded-full px-3 py-1 text-sm ${
-              status === s ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-            }`}
           >
             {statusFilterLabel[s]}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : !data || data.content.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">등록된 타임딜이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">등록된 타임딜이 없습니다.</p>
       ) : (
         <>
           <ul className="space-y-2">
@@ -100,9 +108,12 @@ export default function AdminFlashSalesPage() {
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-                  }`}
+                  className={cn(
+                    'h-8 w-8 rounded text-sm',
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-input bg-background text-muted-foreground',
+                  )}
                 >
                   {i + 1}
                 </button>
@@ -128,41 +139,46 @@ function FlashSaleRow({
   const cancelable = flashSale.phase === 'SCHEDULED' || flashSale.phase === 'ONGOING'
 
   return (
-    <li className="flex items-center justify-between gap-2 rounded-xl border bg-white p-4">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">
-          {flashSale.productName} <span className="text-slate-400">{flashSale.optionName}</span>
-        </p>
-        <p className="mt-0.5 truncate text-xs text-slate-400">
-          {flashSale.storeName} · {formatKRW(flashSale.salePrice)}
-          <span className="ml-1 line-through">{formatKRW(flashSale.originalPrice)}</span>
-          {' · '}
-          {flashSale.soldQuantity}/{flashSale.limitQuantity}개 판매
-        </p>
-        <p className="mt-0.5 text-xs text-slate-400">
-          {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~{' '}
-          {new Date(flashSale.endAt).toLocaleString('ko-KR')}
-          {flashSale.phase === 'ONGOING' && !ended && (
-            <span className="ml-1 font-medium text-indigo-600">· 남은 시간 {label}</span>
-          )}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-3">
-        <span
-          className={`rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
-        >
-          {flashSalePhaseLabel[flashSale.phase]}
-        </span>
-        {cancelable && (
-          <button
-            onClick={onCancel}
-            disabled={canceling}
-            className="rounded border border-red-200 px-3 py-1 text-xs text-red-500 hover:bg-red-50 disabled:opacity-50"
+    <li>
+      <Card className="flex-row items-center justify-between gap-2 p-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">
+            {flashSale.productName} <span className="text-muted-foreground">{flashSale.optionName}</span>
+          </p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {flashSale.storeName} · {formatKRW(flashSale.salePrice)}
+            <span className="ml-1 line-through">{formatKRW(flashSale.originalPrice)}</span>
+            {' · '}
+            {flashSale.soldQuantity}/{flashSale.limitQuantity}개 판매
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~{' '}
+            {new Date(flashSale.endAt).toLocaleString('ko-KR')}
+            {flashSale.phase === 'ONGOING' && !ended && (
+              <span className="ml-1 font-medium text-primary">· 남은 시간 {label}</span>
+            )}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <span
+            className={`rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
           >
-            {canceling ? '처리 중…' : '강제 종료'}
-          </button>
-        )}
-      </div>
+            {flashSalePhaseLabel[flashSale.phase]}
+          </span>
+          {cancelable && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={canceling}
+              onClick={onCancel}
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              {canceling ? '처리 중…' : '강제 종료'}
+            </Button>
+          )}
+        </div>
+      </Card>
     </li>
   )
 }

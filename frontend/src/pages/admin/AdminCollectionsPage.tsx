@@ -4,13 +4,16 @@ import { adminCollectionApi } from '../../api/endpoints'
 import { ApiError } from '../../api/client'
 import { collectionStatusLabel } from '../../labels'
 import type { CollectionStatus, CollectionSummary, PageResponse } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 const statusFilters: (CollectionStatus | '')[] = ['', 'DRAFT', 'PUBLISHED', 'ENDED']
 
 const statusBadgeClass: Record<CollectionStatus, string> = {
-  DRAFT: 'bg-slate-100 text-slate-600',
-  PUBLISHED: 'bg-green-50 text-green-600',
-  ENDED: 'bg-slate-100 text-slate-400',
+  DRAFT: 'bg-muted text-muted-foreground',
+  PUBLISHED: 'bg-success/10 text-success',
+  ENDED: 'bg-muted text-muted-foreground',
 }
 
 export default function AdminCollectionsPage() {
@@ -40,53 +43,57 @@ export default function AdminCollectionsPage() {
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           {statusFilters.map((s) => (
-            <button
+            <Button
               key={s || 'all'}
+              type="button"
+              size="sm"
+              variant={status === s ? 'default' : 'outline'}
+              className="rounded-full"
               onClick={() => {
                 setStatus(s)
                 setPage(0)
               }}
-              className={`rounded-full px-3 py-1 text-sm ${
-                status === s ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-              }`}
             >
               {s ? collectionStatusLabel[s] : '전체'}
-            </button>
+            </Button>
           ))}
         </div>
-        <Link
-          to="/admin/collections/new"
-          className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          + 기획전 등록
-        </Link>
+        <Button asChild size="sm">
+          <Link to="/admin/collections/new">+ 기획전 등록</Link>
+        </Button>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : !data || data.content.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">등록된 기획전이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">등록된 기획전이 없습니다.</p>
       ) : (
         <>
           <ul className="space-y-2">
             {data.content.map((c) => (
-              <li key={c.id} className="rounded-xl border bg-white p-4">
-                <Link to={`/admin/collections/${c.id}`} className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{c.title}</p>
-                    <p className="mt-0.5 truncate text-xs text-slate-400">
-                      {new Date(c.startAt).toLocaleDateString('ko-KR')} ~{' '}
-                      {new Date(c.endAt).toLocaleDateString('ko-KR')} · 순서 {c.displayOrder} · 상품{' '}
-                      {c.productCount}개
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded px-2 py-0.5 text-xs ${statusBadgeClass[c.status]}`}
-                  >
-                    {collectionStatusLabel[c.status]}
-                  </span>
-                </Link>
+              <li key={c.id}>
+                <Card className="py-0">
+                  <Link to={`/admin/collections/${c.id}`} className="flex items-center justify-between gap-2 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{c.title}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {new Date(c.startAt).toLocaleDateString('ko-KR')} ~{' '}
+                        {new Date(c.endAt).toLocaleDateString('ko-KR')} · 순서 {c.displayOrder} · 상품{' '}
+                        {c.productCount}개
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded px-2 py-0.5 text-xs ${statusBadgeClass[c.status]}`}
+                    >
+                      {collectionStatusLabel[c.status]}
+                    </span>
+                  </Link>
+                </Card>
               </li>
             ))}
           </ul>
@@ -97,9 +104,12 @@ export default function AdminCollectionsPage() {
                 <button
                   key={i}
                   onClick={() => setPage(i)}
-                  className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-                  }`}
+                  className={cn(
+                    'h-8 w-8 rounded text-sm',
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-input bg-background text-muted-foreground',
+                  )}
                 >
                   {i + 1}
                 </button>

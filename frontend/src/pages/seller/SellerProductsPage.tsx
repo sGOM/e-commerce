@@ -4,6 +4,10 @@ import { productApi, sellerApi, type CreateOptionBody } from '../../api/endpoint
 import { ApiError, formatKRW } from '../../api/client'
 import { productStatusLabel } from '../../labels'
 import type { ProductDetail, ProductSummary, Seller } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function SellerProductsPage() {
   const store = useOutletContext<Seller | null>()
@@ -32,17 +36,14 @@ export default function SellerProductsPage() {
     load()
   }, [load])
 
-  if (loading) return <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+  if (loading) return <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
+        <Button onClick={() => setShowForm((v) => !v)}>
           {showForm ? '닫기' : '+ 상품 등록'}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
@@ -54,29 +55,39 @@ export default function SellerProductsPage() {
         />
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
 
       {products.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">등록한 상품이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">등록한 상품이 없습니다.</p>
       ) : (
         <ul className="space-y-2">
           {products.map((p) => (
-            <li key={p.id} className="rounded-xl border bg-white p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{p.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {formatKRW(p.basePrice)} · {productStatusLabel[p.status]}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setExpanded(expanded === p.id ? null : p.id)}
-                  className="text-sm text-indigo-600"
-                >
-                  {expanded === p.id ? '닫기' : '재고 관리'}
-                </button>
-              </div>
-              {expanded === p.id && <StockManager productId={p.id} />}
+            <li key={p.id}>
+              <Card>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatKRW(p.basePrice)} · {productStatusLabel[p.status]}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto p-0 text-sm"
+                      onClick={() => setExpanded(expanded === p.id ? null : p.id)}
+                    >
+                      {expanded === p.id ? '닫기' : '재고 관리'}
+                    </Button>
+                  </div>
+                  {expanded === p.id && <StockManager productId={p.id} />}
+                </CardContent>
+              </Card>
             </li>
           ))}
         </ul>
@@ -108,14 +119,14 @@ function StockManager({ productId }: { productId: number }) {
     }
   }
 
-  if (!detail) return <p className="mt-3 text-xs text-slate-400">옵션 불러오는 중…</p>
+  if (!detail) return <p className="mt-3 text-xs text-muted-foreground">옵션 불러오는 중…</p>
 
   return (
-    <div className="mt-3 space-y-2 border-t pt-3">
+    <div className="mt-3 space-y-2 border-t border-border pt-3">
       {detail.options.map((o) => (
         <StockRow key={o.id} option={o} onSave={adjust} />
       ))}
-      {msg && <p className="text-xs text-slate-500">{msg}</p>}
+      {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
     </div>
   )
 }
@@ -132,21 +143,19 @@ function StockRow({
     <div className="flex items-center justify-between gap-2 text-sm">
       <span className="flex-1">
         {option.name}{' '}
-        <span className="text-slate-400">{formatKRW(option.price)} · 가용 {option.availableStock}</span>
+        <span className="text-muted-foreground">{formatKRW(option.price)} · 가용 {option.availableStock}</span>
       </span>
-      <input
+      <Input
         type="number"
         min={0}
         value={qty}
         onChange={(e) => setQty(Math.max(0, Number(e.target.value)))}
-        className="w-20 rounded border px-2 py-1 text-sm"
+        className="w-20"
+        aria-label={`${option.name} 재고 수량`}
       />
-      <button
-        onClick={() => onSave(option.id, qty)}
-        className="rounded border px-3 py-1 text-xs text-slate-600 hover:bg-slate-50"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={() => onSave(option.id, qty)}>
         저장
-      </button>
+      </Button>
     </div>
   )
 }
@@ -191,48 +200,64 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
     }
   }
 
-  const field = 'rounded-lg border px-3 py-2 text-sm'
-
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border bg-white p-5">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <input required placeholder="상품명" value={name} onChange={(e) => setName(e.target.value)} className={field} />
-        <input required type="number" min={0} placeholder="기본가" value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} className={field} />
-      </div>
-      <textarea placeholder="설명 (선택)" value={description} onChange={(e) => setDescription(e.target.value)} className={`${field} w-full`} rows={2} />
-      <select value={status} onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'ON_SALE')} className={field}>
-        <option value="ON_SALE">판매중</option>
-        <option value="DRAFT">준비중</option>
-      </select>
-
-      <label className="flex items-center gap-2 text-sm text-slate-600">
-        <input
-          type="checkbox"
-          checked={dawnDeliveryEligible}
-          onChange={(e) => setDawnDeliveryEligible(e.target.checked)}
-        />
-        새벽배송 가능 상품
-      </label>
-
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-slate-500">옵션</p>
-        {options.map((o, i) => (
-          <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <input required placeholder="옵션명" value={o.name} onChange={(e) => setOpt(i, { name: e.target.value })} className={field} />
-            <input required placeholder="SKU" value={o.sku} onChange={(e) => setOpt(i, { sku: e.target.value })} className={field} />
-            <input type="number" min={0} placeholder="추가금" value={o.additionalPrice} onChange={(e) => setOpt(i, { additionalPrice: Number(e.target.value) })} className={field} />
-            <input type="number" min={0} placeholder="재고" value={o.stockQuantity} onChange={(e) => setOpt(i, { stockQuantity: Number(e.target.value) })} className={field} />
+    <Card>
+      <CardContent>
+        <form onSubmit={submit} className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input required placeholder="상품명" aria-label="상품명" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input required type="number" min={0} placeholder="기본가" aria-label="기본가" value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} />
           </div>
-        ))}
-        <button type="button" onClick={() => setOptions((o) => [...o, emptyOption()])} className="text-xs text-indigo-600">
-          + 옵션 추가
-        </button>
-      </div>
+          <Textarea placeholder="설명 (선택)" aria-label="설명" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'ON_SALE')}
+            aria-label="판매 상태"
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <option value="ON_SALE">판매중</option>
+            <option value="DRAFT">준비중</option>
+          </select>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <button disabled={submitting} className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300">
-        {submitting ? '등록 중…' : '상품 등록'}
-      </button>
-    </form>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={dawnDeliveryEligible}
+              onChange={(e) => setDawnDeliveryEligible(e.target.checked)}
+            />
+            새벽배송 가능 상품
+          </label>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">옵션</p>
+            {options.map((o, i) => (
+              <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Input required placeholder="옵션명" aria-label="옵션명" value={o.name} onChange={(e) => setOpt(i, { name: e.target.value })} />
+                <Input required placeholder="SKU" aria-label="SKU" value={o.sku} onChange={(e) => setOpt(i, { sku: e.target.value })} />
+                <Input type="number" min={0} placeholder="추가금" aria-label="추가금" value={o.additionalPrice} onChange={(e) => setOpt(i, { additionalPrice: Number(e.target.value) })} />
+                <Input type="number" min={0} placeholder="재고" aria-label="재고" value={o.stockQuantity} onChange={(e) => setOpt(i, { stockQuantity: Number(e.target.value) })} />
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-xs"
+              onClick={() => setOptions((o) => [...o, emptyOption()])}
+            >
+              + 옵션 추가
+            </Button>
+          </div>
+
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting ? '등록 중…' : '상품 등록'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

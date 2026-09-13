@@ -14,6 +14,12 @@ import { useAuth } from '../auth/AuthContext'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
 import { deliverySlotTypeLabel } from '../labels'
 import type { Cart, CartItem, DeliverySlot, IssuedCoupon, Membership } from '../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 /** 쿠폰 할인 미리보기(서버 calculateDiscount 와 동일 규칙). 최종 금액은 서버가 재계산한다. */
 function couponDiscount(coupon: IssuedCoupon, amount: number): number {
@@ -258,87 +264,87 @@ export default function CheckoutPage() {
     }
   }
 
-  const field = 'w-full rounded-lg border px-3 py-2 text-sm'
-
   return (
     <form onSubmit={submit} className="grid gap-6 md:grid-cols-3">
       <div className="space-y-6 md:col-span-2">
-        <section className="rounded-xl border bg-white p-5">
+        <Card className="p-5">
           <h2 className="mb-3 font-bold">
-            주문자 정보 {isGuest && <span className="text-sm font-normal text-slate-400">(비회원)</span>}
+            주문자 정보 {isGuest && <span className="text-sm font-normal text-muted-foreground">(비회원)</span>}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            <input required placeholder="이름" value={form.ordererName} onChange={set('ordererName')} className={field} />
-            <input required placeholder="연락처" value={form.ordererPhone} onChange={set('ordererPhone')} className={field} />
-            <input required type="email" placeholder="이메일" value={form.ordererEmail} onChange={set('ordererEmail')} className={`${field} sm:col-span-2`} />
+            <Input required placeholder="이름" aria-label="이름" value={form.ordererName} onChange={set('ordererName')} />
+            <Input required placeholder="연락처" aria-label="연락처" value={form.ordererPhone} onChange={set('ordererPhone')} />
+            <Input required type="email" placeholder="이메일" aria-label="이메일" value={form.ordererEmail} onChange={set('ordererEmail')} className="sm:col-span-2" />
           </div>
-        </section>
+        </Card>
 
         {!isGuest && (
-          <section className="rounded-xl border bg-white p-5">
+          <Card className="p-5">
             <label className="flex cursor-pointer items-center justify-between gap-3">
               <span>
                 <span className="font-bold">🎁 선물하기</span>
-                <span className="mt-0.5 block text-xs text-slate-400">
+                <span className="mt-0.5 block text-xs text-muted-foreground">
                   배송지 없이 결제하고, 수령자가 링크로 직접 배송지를 입력하게 할 수 있어요. 새벽배송
                   슬롯은 선물 주문과 함께 선택할 수 없습니다.
                 </span>
               </span>
               <input
                 type="checkbox"
+                aria-label="선물하기"
                 className="size-5 shrink-0"
                 checked={isGift}
                 onChange={(e) => setIsGift(e.target.checked)}
               />
             </label>
             {isGift && (
-              <div className="mt-4 border-t pt-4">
-                <label className="mb-1 block text-xs font-medium text-slate-500">
+              <div className="mt-4 border-t border-border pt-4">
+                <Label htmlFor="giftMessage" className="mb-1 text-xs font-medium text-muted-foreground">
                   선물 메시지 (선택)
-                </label>
-                <textarea
+                </Label>
+                <Textarea
+                  id="giftMessage"
                   maxLength={1000}
                   placeholder="받는 분께 전할 메시지를 남겨보세요."
                   value={giftMessage}
                   onChange={(e) => setGiftMessage(e.target.value)}
-                  className={`${field} min-h-24 resize-none`}
+                  className="min-h-24 resize-none"
                 />
               </div>
             )}
-          </section>
+          </Card>
         )}
 
         {isGift ? (
-          <section className="rounded-xl border bg-white p-5">
+          <Card className="p-5">
             <h2 className="mb-2 font-bold">배송지</h2>
-            <p className="rounded-lg bg-pink-50 p-3 text-sm text-pink-700">
+            <p className="rounded-lg bg-pink-50 p-3 text-sm text-pink-700 dark:bg-pink-950/30 dark:text-pink-300">
               선물 주문은 배송지 입력을 생략합니다. 결제 완료 후 발급되는 공유 링크를 수령자에게
               전달하면, 수령자가 직접 배송지를 입력해 배송이 시작됩니다.
             </p>
-          </section>
+          </Card>
         ) : (
-          <section className="rounded-xl border bg-white p-5">
+          <Card className="p-5">
             <h2 className="mb-3 font-bold">배송지</h2>
             <div className="grid gap-3 sm:grid-cols-2">
-              <input required placeholder="받는 분" value={form.receiverName} onChange={set('receiverName')} className={field} />
-              <input required placeholder="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} className={field} />
-              <input required placeholder="우편번호" value={form.zipcode} onChange={set('zipcode')} className={field} />
-              <input required placeholder="기본 주소" value={form.address1} onChange={set('address1')} className={field} />
-              <input placeholder="상세 주소 (선택)" value={form.address2} onChange={set('address2')} className={`${field} sm:col-span-2`} />
+              <Input required placeholder="받는 분" aria-label="받는 분" value={form.receiverName} onChange={set('receiverName')} />
+              <Input required placeholder="받는 분 연락처" aria-label="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} />
+              <Input required placeholder="우편번호" aria-label="우편번호" value={form.zipcode} onChange={set('zipcode')} />
+              <Input required placeholder="기본 주소" aria-label="기본 주소" value={form.address1} onChange={set('address1')} />
+              <Input placeholder="상세 주소 (선택)" aria-label="상세 주소 (선택)" value={form.address2} onChange={set('address2')} className="sm:col-span-2" />
             </div>
-          </section>
+          </Card>
         )}
 
         {eligibleGroups.length > 0 && (
-          <section className="rounded-xl border bg-white p-5">
+          <Card className="p-5">
             <h2 className="mb-1 font-bold">배송 슬롯 선택 (새벽배송)</h2>
-            <p className="mb-3 text-xs text-slate-400">
+            <p className="mb-3 text-xs text-muted-foreground">
               새벽배송 가능 상품이 포함된 판매자별로 원하는 배송 시간대를 선택하세요. 선택하지 않으면
               일반배송으로 진행됩니다.
             </p>
 
             {!form.zipcode.trim() ? (
-              <p className="rounded-lg bg-slate-50 py-6 text-center text-sm text-slate-400">
+              <p className="rounded-lg bg-muted py-6 text-center text-sm text-muted-foreground">
                 배송지 우편번호를 입력하면 예약 가능한 슬롯을 보여드려요.
               </p>
             ) : (
@@ -349,18 +355,21 @@ export default function CheckoutPage() {
                       key={d.value}
                       type="button"
                       onClick={() => setSlotDate(d.value)}
-                      className={`rounded-full px-3 py-1 text-sm ${
-                        slotDate === d.value ? 'bg-indigo-600 text-white' : 'border bg-white text-slate-600'
-                      }`}
+                      className={cn(
+                        'rounded-full px-3 py-1 text-sm',
+                        slotDate === d.value
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-input bg-background text-muted-foreground',
+                      )}
                     >
                       {d.label}
                     </button>
                   ))}
                 </div>
 
-                {slotsError && <p className="mb-3 text-sm text-red-500">{slotsError}</p>}
+                {slotsError && <p className="mb-3 text-sm text-destructive">{slotsError}</p>}
                 {slotsLoading ? (
-                  <p className="py-6 text-center text-sm text-slate-400">슬롯 조회 중…</p>
+                  <p className="py-6 text-center text-sm text-muted-foreground">슬롯 조회 중…</p>
                 ) : (
                   <div className="space-y-5">
                     {eligibleGroups.map((group) => (
@@ -376,15 +385,15 @@ export default function CheckoutPage() {
                 )}
               </>
             )}
-          </section>
+          </Card>
         )}
       </div>
 
-      <div className="h-fit space-y-4 rounded-xl border bg-white p-5">
+      <Card className="h-fit space-y-4 p-5 lg:sticky lg:top-20">
         <h2 className="font-bold">결제 요약</h2>
 
         {membership?.benefitActive && (
-          <p className="rounded-lg bg-indigo-50 p-2.5 text-xs text-indigo-600">
+          <p className="rounded-lg bg-primary/10 p-2.5 text-xs text-primary">
             멤버십 혜택 적용 중
             {membership.benefits.freeShipping && ' · 무료배송 적용됨'}
             {membership.benefits.pointEarnMultiplierBp > 10_000 &&
@@ -393,13 +402,16 @@ export default function CheckoutPage() {
         )}
 
         {!isGuest && cart && (
-          <div className="space-y-3 border-b pb-4">
+          <div className="space-y-3 border-b border-border pb-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">쿠폰</label>
+              <Label htmlFor="coupon-select" className="mb-1 text-xs font-medium text-muted-foreground">
+                쿠폰
+              </Label>
               <select
+                id="coupon-select"
                 value={couponId ?? ''}
                 onChange={(e) => setCouponId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <option value="">선택 안 함</option>
                 {coupons.map((c) => {
@@ -417,48 +429,49 @@ export default function CheckoutPage() {
                 })}
               </select>
               {coupons.length === 0 && (
-                <p className="mt-1 text-xs text-slate-400">보유한 쿠폰이 없습니다.</p>
+                <p className="mt-1 text-xs text-muted-foreground">보유한 쿠폰이 없습니다.</p>
               )}
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">
+              <Label htmlFor="point-input" className="mb-1 text-xs font-medium text-muted-foreground">
                 포인트 사용 (보유 {formatKRW(pointBalance)})
-              </label>
+              </Label>
               <div className="flex gap-2">
-                <input
+                <Input
+                  id="point-input"
                   type="number"
                   min={0}
                   max={maxPoint}
                   value={pointInput}
                   onChange={(e) => setPointInput(Math.max(0, Number(e.target.value)))}
-                  className="w-full rounded-lg border px-3 py-2 text-sm"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setPointInput(maxPoint)}
-                  className="shrink-0 rounded-lg border px-3 text-xs text-slate-600 hover:bg-slate-50"
+                  className="shrink-0"
                 >
                   전액
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         )}
 
         {cart && (
-          <div className="space-y-1 text-sm text-slate-600">
+          <div className="space-y-1 text-sm text-muted-foreground">
             <div className="flex justify-between">
               <span>상품 {cart.totalQuantity}개</span>
               <span>{formatKRW(subtotal)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-red-500">
+              <div className="flex justify-between text-destructive">
                 <span>쿠폰 할인</span>
                 <span>-{formatKRW(discount)}</span>
               </div>
             )}
             {pointToUse > 0 && (
-              <div className="flex justify-between text-red-500">
+              <div className="flex justify-between text-destructive">
                 <span>포인트 사용</span>
                 <span>-{formatKRW(pointToUse)}</span>
               </div>
@@ -469,26 +482,26 @@ export default function CheckoutPage() {
                 <span>+{formatKRW(deliveryFeePreview)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t pt-2 font-bold text-slate-900">
+            <div className="flex justify-between border-t border-border pt-2 font-bold text-foreground">
               <span>{isGuest ? '주문 금액' : '결제 금액'}</span>
-              <span className="text-indigo-600">{formatKRW(payable)}</span>
+              <span className="text-primary">{formatKRW(payable)}</span>
             </div>
           </div>
         )}
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting || !cart}
-          className="mt-5 w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-        >
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        <Button type="submit" disabled={submitting || !cart} className="mt-5 h-12 w-full text-base">
           {submitting ? '처리 중…' : isGuest ? '비회원 주문하기' : '결제하기 (Mock PG)'}
-        </button>
-        <p className="mt-2 text-center text-xs text-slate-400">
+        </Button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           {isGuest
             ? '주문 후 주문번호와 연락처로 조회할 수 있습니다.'
             : '데모 결제는 외부 PG 없이 즉시 승인됩니다.'}
         </p>
-      </div>
+      </Card>
     </form>
   )
 }
@@ -511,7 +524,7 @@ function SellerSlotPicker({
     return (
       <div>
         <p className="mb-2 text-sm font-semibold">{group.storeName}</p>
-        <p className="rounded-lg bg-slate-50 py-4 text-center text-xs text-slate-400">
+        <p className="rounded-lg bg-muted py-4 text-center text-xs text-muted-foreground">
           선택한 날짜에 예약 가능한 슬롯이 없습니다. 일반배송으로 진행됩니다.
         </p>
       </div>
@@ -523,9 +536,10 @@ function SellerSlotPicker({
       <p className="mb-2 text-sm font-semibold">{group.storeName}</p>
       <div className="space-y-2">
         <label
-          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-            selectedSlotId === null ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200'
-          }`}
+          className={cn(
+            'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm',
+            selectedSlotId === null ? 'border-primary bg-primary/10' : 'border-border',
+          )}
         >
           <input
             type="radio"
@@ -549,13 +563,14 @@ function SellerSlotPicker({
           return (
             <label
               key={slot.id}
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+              className={cn(
+                'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm',
                 disabled
-                  ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
+                  ? 'cursor-not-allowed border-border bg-muted text-muted-foreground/60'
                   : selectedSlotId === slot.id
-                    ? 'cursor-pointer border-indigo-500 bg-indigo-50'
-                    : 'cursor-pointer border-slate-200'
-              }`}
+                    ? 'cursor-pointer border-primary bg-primary/10'
+                    : 'cursor-pointer border-border',
+              )}
             >
               <input
                 type="radio"
@@ -569,11 +584,11 @@ function SellerSlotPicker({
                   {deliverySlotTypeLabel[slot.type]} · {slot.startTime.slice(0, 5)}~
                   {slot.endTime.slice(0, 5)}
                 </span>
-                <span className="ml-1 text-xs text-slate-400">
+                <span className="ml-1 text-xs text-muted-foreground">
                   {slot.extraFee > 0 ? `+${formatKRW(slot.extraFee)}` : '배송비 무료'} · 잔여{' '}
                   {slot.remaining}/{slot.capacity}
                 </span>
-                <span className="block text-xs text-slate-400">
+                <span className="block text-xs text-muted-foreground">
                   {disabled
                     ? slot.expired
                       ? '주문 마감되었습니다'

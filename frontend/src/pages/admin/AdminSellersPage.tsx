@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { adminApi } from '../../api/endpoints'
 import { ApiError } from '../../api/client'
 import type { Seller, SellerStatus } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 const statusLabel: Record<SellerStatus, string> = {
   PENDING: '심사대기',
@@ -42,58 +44,56 @@ export default function AdminSellersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(['PENDING', 'ACTIVE', 'SUSPENDED', ''] as const).map((s) => (
-          <button
+          <Button
             key={s || 'all'}
+            type="button"
+            size="sm"
+            variant={filter === s ? 'default' : 'outline'}
+            className="rounded-full"
             onClick={() => setFilter(s)}
-            className={`rounded-full px-3 py-1 text-sm ${
-              filter === s ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border'
-            }`}
           >
             {s ? statusLabel[s] : '전체'}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {loading ? (
-        <p className="py-10 text-center text-slate-400">불러오는 중…</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
       ) : sellers.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">해당 상태의 셀러가 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">해당 상태의 셀러가 없습니다.</p>
       ) : (
         <ul className="space-y-2">
           {sellers.map((s) => (
-            <li
-              key={s.sellerId}
-              className="flex items-center justify-between rounded-xl border bg-white p-4"
-            >
-              <div>
-                <p className="text-sm font-medium">{s.storeName}</p>
-                <p className="text-xs text-slate-400">
-                  {s.description || '소개 없음'} · userId {s.userId}
-                </p>
-              </div>
-              {s.status === 'PENDING' ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => review(s.sellerId, true)}
-                    className="rounded bg-indigo-600 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-700"
-                  >
-                    승인
-                  </button>
-                  <button
-                    onClick={() => review(s.sellerId, false)}
-                    className="rounded border px-3 py-1 text-sm text-slate-600 hover:bg-slate-50"
-                  >
-                    거절
-                  </button>
+            <li key={s.sellerId}>
+              <Card className="flex-row items-center justify-between p-4">
+                <div>
+                  <p className="text-sm font-medium">{s.storeName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.description || '소개 없음'} · userId {s.userId}
+                  </p>
                 </div>
-              ) : (
-                <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                  {statusLabel[s.status]}
-                </span>
-              )}
+                {s.status === 'PENDING' ? (
+                  <div className="flex gap-2">
+                    <Button type="button" size="sm" onClick={() => review(s.sellerId, true)}>
+                      승인
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => review(s.sellerId, false)}>
+                      거절
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {statusLabel[s.status]}
+                  </span>
+                )}
+              </Card>
             </li>
           ))}
         </ul>

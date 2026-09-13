@@ -3,6 +3,9 @@ import { sellerApi } from '../../api/endpoints'
 import { ApiError, formatKRW } from '../../api/client'
 import { subOrderStatusLabel } from '../../labels'
 import type { SellerSubOrder } from '../../api/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<SellerSubOrder[]>([])
@@ -24,13 +27,13 @@ export default function SellerOrdersPage() {
     load()
   }, [load])
 
-  if (loading) return <p className="py-10 text-center text-slate-400">불러오는 중…</p>
-  if (error) return <p className="py-10 text-center text-red-500">{error}</p>
+  if (loading) return <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
+  if (error) return <p className="py-10 text-center text-sm text-destructive">{error}</p>
 
   return (
     <div className="space-y-3">
       {orders.length === 0 ? (
-        <p className="py-10 text-center text-slate-400">판매 주문이 없습니다.</p>
+        <p className="py-10 text-center text-sm text-muted-foreground">판매 주문이 없습니다.</p>
       ) : (
         orders.map((o) => <SellerOrderCard key={o.subOrderId} order={o} onShipped={load} />)
       )}
@@ -67,53 +70,58 @@ function SellerOrderCard({
   }
 
   return (
-    <div className="rounded-xl border bg-white p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-medium">{order.orderNumber}</p>
-        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-          {subOrderStatusLabel[order.status]}
-        </span>
-      </div>
-      <ul className="mb-2 space-y-1 text-sm text-slate-600">
-        {order.items.map((it, i) => (
-          <li key={i} className="flex justify-between">
-            <span>
-              {it.productName} <span className="text-slate-400">{it.optionName} · {it.quantity}개</span>
-            </span>
-            <span>{formatKRW(it.lineTotal)}</span>
-          </li>
-        ))}
-      </ul>
+    <Card>
+      <CardContent>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-medium">{order.orderNumber}</p>
+          <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            {subOrderStatusLabel[order.status]}
+          </span>
+        </div>
+        <ul className="mb-2 space-y-1 text-sm text-muted-foreground">
+          {order.items.map((it, i) => (
+            <li key={i} className="flex justify-between">
+              <span>
+                {it.productName} <span className="text-muted-foreground">{it.optionName} · {it.quantity}개</span>
+              </span>
+              <span>{formatKRW(it.lineTotal)}</span>
+            </li>
+          ))}
+        </ul>
 
-      {order.shipment ? (
-        <p className="text-xs text-slate-500">
-          🚚 {order.shipment.courier} · {order.shipment.trackingNumber}
-        </p>
-      ) : shippable ? (
-        <form onSubmit={ship} className="flex flex-wrap items-center gap-2 border-t pt-3">
-          <input
-            required
-            placeholder="택배사"
-            value={courier}
-            onChange={(e) => setCourier(e.target.value)}
-            className="w-28 rounded border px-2 py-1 text-sm"
-          />
-          <input
-            required
-            placeholder="송장번호"
-            value={tracking}
-            onChange={(e) => setTracking(e.target.value)}
-            className="flex-1 rounded border px-2 py-1 text-sm"
-          />
-          <button
-            disabled={submitting}
-            className="rounded bg-indigo-600 px-3 py-1 text-sm font-semibold text-white hover:bg-indigo-700 disabled:bg-slate-300"
-          >
-            발송
-          </button>
-          {error && <p className="w-full text-xs text-red-500">{error}</p>}
-        </form>
-      ) : null}
-    </div>
+        {order.shipment ? (
+          <p className="text-xs text-muted-foreground">
+            🚚 {order.shipment.courier} · {order.shipment.trackingNumber}
+          </p>
+        ) : shippable ? (
+          <form onSubmit={ship} className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <Input
+              required
+              placeholder="택배사"
+              aria-label="택배사"
+              value={courier}
+              onChange={(e) => setCourier(e.target.value)}
+              className="w-28"
+            />
+            <Input
+              required
+              placeholder="송장번호"
+              aria-label="송장번호"
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="submit" size="sm" disabled={submitting}>
+              발송
+            </Button>
+            {error && (
+              <p role="alert" className="w-full text-xs text-destructive">
+                {error}
+              </p>
+            )}
+          </form>
+        ) : null}
+      </CardContent>
+    </Card>
   )
 }

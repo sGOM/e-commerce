@@ -8,7 +8,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation()
 
   if (loading) {
-    return <div className="py-20 text-center text-slate-400">불러오는 중…</div>
+    return <div className="py-20 text-center text-sm text-muted-foreground">불러오는 중…</div>
   }
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />

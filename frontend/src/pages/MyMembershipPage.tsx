@@ -115,7 +115,7 @@ function MembershipSummary({
         </div>
 
         {membership.status === 'CANCELED' && (
-          <p className="rounded-lg bg-amber-50 p-3 text-amber-700">
+          <p className="rounded-lg bg-warning/10 p-3 text-warning">
             해지가 예약되었습니다. {new Date(membership.nextBillingAt).toLocaleDateString('ko-KR')}까지는 혜택이 유지되고,
             이후 자동으로 만료됩니다.
           </p>
