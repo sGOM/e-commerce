@@ -20,6 +20,13 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+  data:
+    web:
+      sort:
+        # `sort` 는 도메인 정렬 enum(ProductSort, ReviewSort) 파라미터로 쓴다. 기본값 그대로면 Pageable 이
+        # sort=LATEST 를 엔티티 속성 정렬로 해석해 ORDER BY 에 덧붙여 500 이 난다.
+        sort-parameter: pageSort
+
 server:
   port: 8080
   servlet:

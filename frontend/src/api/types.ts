@@ -17,6 +17,7 @@ export interface PageResponse<T> {
 }
 
 export type ProductStatus = 'DRAFT' | 'ON_SALE' | 'SOLD_OUT' | 'HIDDEN'
+export type ProductSort = 'LATEST' | 'PRICE_ASC' | 'PRICE_DESC' | 'RATING_DESC'
 
 export interface ProductSummary {
   id: number

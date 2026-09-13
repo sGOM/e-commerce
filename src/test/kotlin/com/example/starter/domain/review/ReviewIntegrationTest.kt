@@ -232,7 +232,8 @@ class ReviewIntegrationTest : AbstractIntegrationTest() {
         val product = productRepository.findById(productId).get()
         assertEquals(0, product.reviewCount)
 
-        mockMvc.get("/api/products/$productId/reviews") {
+        // 프론트는 항상 sort=LATEST|RATING_DESC 를 보낸다 — Pageable 정렬 파라미터와 충돌하지 않아야 한다.
+        mockMvc.get("/api/products/$productId/reviews?sort=RATING_DESC") {
         }.andExpect {
             status { isOk() }
             jsonPath("$.data.content.length()") { value(0) }
