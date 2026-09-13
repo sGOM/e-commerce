@@ -91,11 +91,8 @@ class AuthController(
         httpResponse: HttpServletResponse,
     ): ApiResponse<UserResponse> {
         val principal = authentication.principal
-        val userId = when (principal) {
-            is CustomUserDetails -> principal.userId
-            is CustomOAuth2User -> principal.userId
-            else -> throw BusinessException(ErrorCode.USER_NOT_FOUND)
-        }
+        val userId = (principal as? CustomUserDetails)?.userId // 소셜 로그인 주체도 CustomUserDetails
+            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
         val user = userRepository.findWithRolesById(userId)
             ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
