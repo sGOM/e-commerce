@@ -56,7 +56,9 @@ import type {
   Seller,
   SellerStatus,
   SellerSubOrder,
+  SellerProduct,
   Settlement,
+  SettlementStatus,
   SubOrderStatus,
   User,
   WishlistResponse,
@@ -275,6 +277,7 @@ export const sellerApi = {
   apply: (storeName: string, description?: string) =>
     api.post<Seller>('/api/seller/apply', { storeName, description }),
   myStore: () => api.get<Seller>('/api/seller/store'),
+  myProducts: () => api.get<SellerProduct[]>('/api/seller/products'),
   createProduct: (body: CreateProductBody) =>
     api.post<unknown>('/api/seller/products', body),
   adjustStock: (productId: number, optionId: number, quantity: number) =>
@@ -332,6 +335,12 @@ export const adminApi = {
   createCoupon: (body: CreateCouponBody) => api.post<Coupon>('/api/admin/coupons', body),
   createCategory: (name: string, parentId?: number | null) =>
     api.post<Category>('/api/admin/categories', { name, parentId }),
+  listSettlements: (params: { status?: SettlementStatus; page?: number }) => {
+    const q = new URLSearchParams()
+    if (params.status) q.set('status', params.status)
+    q.set('page', String(params.page ?? 0))
+    return api.get<PageResponse<Settlement>>(`/api/admin/settlements?${q.toString()}`)
+  },
   generateSettlements: () => api.post<Settlement[]>('/api/admin/settlements'),
   paySettlement: (settlementId: number) =>
     api.patch<Settlement>(`/api/admin/settlements/${settlementId}/pay`),

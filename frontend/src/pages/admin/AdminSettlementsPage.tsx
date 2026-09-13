@@ -1,15 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { adminApi } from '../../api/endpoints'
 import { ApiError, formatKRW } from '../../api/client'
-import type { Settlement } from '../../api/types'
+import type { Settlement, SettlementStatus } from '../../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 
+const STATUS_FILTERS: { value: SettlementStatus | ''; label: string }[] = [
+  { value: '', label: '전체' },
+  { value: 'PENDING', label: '지급대기' },
+  { value: 'PAID', label: '지급완료' },
+]
+
 export default function AdminSettlementsPage() {
   const [rateBp, setRateBp] = useState<number | ''>('')
   const [savedRate, setSavedRate] = useState<number | null>(null)
-  const [generated, setGenerated] = useState<Settlement[] | null>(null)
+  const [settlements, setSettlements] = useState<Settlement[]>([])
+  const [status, setStatus] = useState<SettlementStatus | ''>('')
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -23,6 +32,20 @@ export default function AdminSettlementsPage() {
       })
       .catch((e) => setError(e.message))
   }, [])
+
+  const loadList = useCallback(async () => {
+    try {
+      const res = await adminApi.listSettlements({ status: status || undefined, page })
+      setSettlements(res.content)
+      setTotalPages(res.totalPages)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : '정산 목록 조회 실패')
+    }
+  }, [status, page])
+
+  useEffect(() => {
+    loadList()
+  }, [loadList])
 
   const saveRate = async () => {
     if (rateBp === '') return
@@ -43,8 +66,10 @@ export default function AdminSettlementsPage() {
     setMsg(null)
     try {
       const list = await adminApi.generateSettlements()
-      setGenerated(list)
-      setMsg(`정산서 ${list.length}건을 생성했습니다.`)
+      setMsg(
+        list.length > 0 ? `정산서 ${list.length}건을 생성했습니다.` : '정산할 미정산 주문이 없습니다.',
+      )
+      await loadList()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : '정산 생성 실패')
     } finally {
@@ -55,10 +80,8 @@ export default function AdminSettlementsPage() {
   const pay = async (id: number) => {
     setError(null)
     try {
-      const updated = await adminApi.paySettlement(id)
-      setGenerated((list) =>
-        (list ?? []).map((s) => (s.settlementId === id ? updated : s)),
-      )
+      await adminApi.paySettlement(id)
+      await loadList()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : '지급 실패')
     }
@@ -91,11 +114,29 @@ export default function AdminSettlementsPage() {
 
       <Card>
         <CardContent>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-bold">정산 생성</h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-bold">정산 목록</h2>
             <Button type="button" disabled={busy} onClick={generate}>
               {busy ? '생성 중…' : '미정산분 정산 생성'}
             </Button>
+          </div>
+
+          <div className="mb-3 flex gap-2" role="group" aria-label="정산 상태 필터">
+            {STATUS_FILTERS.map((f) => (
+              <Button
+                key={f.value}
+                type="button"
+                size="sm"
+                variant={status === f.value ? 'default' : 'outline'}
+                aria-pressed={status === f.value}
+                onClick={() => {
+                  setStatus(f.value)
+                  setPage(0)
+                }}
+              >
+                {f.label}
+              </Button>
+            ))}
           </div>
 
           {error && (
@@ -105,9 +146,11 @@ export default function AdminSettlementsPage() {
           )}
           {msg && <p className="text-sm text-success">{msg}</p>}
 
-          {generated && generated.length > 0 && (
+          {settlements.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">정산 내역이 없습니다.</p>
+          ) : (
             <ul className="mt-3 space-y-2">
-              {generated.map((s) => (
+              {settlements.map((s) => (
                 <li
                   key={s.settlementId}
                   className="flex items-center justify-between rounded-lg border border-border p-3 text-sm"
@@ -116,7 +159,7 @@ export default function AdminSettlementsPage() {
                     <p className="font-medium">{s.storeName}</p>
                     <p className="text-xs text-muted-foreground">
                       판매 {formatKRW(s.salesAmount)} · 수수료 {formatKRW(s.commissionAmount)} ·{' '}
-                      {s.settledCount}건
+                      {s.settledCount}건 · {new Date(s.createdAt).toLocaleDateString('ko-KR')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -137,8 +180,31 @@ export default function AdminSettlementsPage() {
               ))}
             </ul>
           )}
-          {generated && generated.length === 0 && (
-            <p className="mt-3 text-sm text-muted-foreground">정산할 미정산 주문이 없습니다.</p>
+
+          {totalPages > 1 && (
+            <div className="mt-3 flex items-center justify-center gap-3 text-sm">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                이전
+              </Button>
+              <span>
+                {page + 1} / {totalPages}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                다음
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

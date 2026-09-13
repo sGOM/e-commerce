@@ -18,6 +18,10 @@ interface ProductRepository : JpaRepository<Product, Long>, KotlinJdslJpqlExecut
     @EntityGraph(attributePaths = ["seller", "category", "options", "options.inventory"])
     fun findWithDetailById(id: Long): Optional<Product>
 
+    /** 판매자 본인 상품 전체(상태 무관) — 옵션·재고 함께 로딩 */
+    @EntityGraph(attributePaths = ["category", "options", "options.inventory"])
+    fun findBySellerIdOrderByIdDesc(sellerId: Long): List<Product>
+
     /**
      * 인기 상품 집계 — 결제 완료 이후(취소 제외) 하위 주문의 판매 수량을 상품 단위로 합산해
      * 많이 팔린 순으로 (product_id, 판매수량) 을 반환한다. 노출 상태 필터는 서비스에서 적용한다.
