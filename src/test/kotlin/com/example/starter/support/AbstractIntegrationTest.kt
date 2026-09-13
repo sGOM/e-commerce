@@ -12,9 +12,8 @@ import org.testcontainers.containers.PostgreSQLContainer
  * 기본적으로 **PostgreSQL 컨테이너를 싱글톤으로 한 번만** 기동해 전체 테스트가 공유한다
  * (H2 대신 실제 PostgreSQL → 운영 환경 일치). 컨테이너는 Ryuk 가 JVM 종료 시 정리한다.
  *
- * 단, 일부 환경(예: Docker Desktop 과 docker-java 비호환)에서는 Testcontainers 가
- * Docker 데몬에 접속하지 못한다. 이때는 외부에서 이미 띄운 PostgreSQL 을 가리키도록
- * 시스템 프로퍼티/환경변수로 우회할 수 있다:
+ * Docker 를 쓸 수 없는 환경이나 CI(서비스 컨테이너 PG 사용)에서는 외부에서 이미 띄운 PostgreSQL 을
+ * 가리키도록 시스템 프로퍼티/환경변수로 지정할 수 있다(지정 시 컨테이너를 띄우지 않음):
  *
  *   -Dit.datasource.url=jdbc:postgresql://localhost:5433/starter
  *   (또는 환경변수 IT_DATASOURCE_URL / IT_DATASOURCE_USERNAME / IT_DATASOURCE_PASSWORD)

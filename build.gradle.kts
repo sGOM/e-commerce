@@ -19,15 +19,9 @@ repositories {
 	mavenCentral()
 }
 
-// Docker 29(API 1.54) 호환: Testcontainers 1.21.x 가 번들하는 docker-java 3.4.2 는
-// Docker 29 의 /info 응답에 400 을 받는다. docker-java 만 3.7.1 로 끌어올린다(3.x 내 API 호환).
-configurations.all {
-	resolutionStrategy.eachDependency {
-		if (requested.group == "com.github.docker-java") {
-			useVersion("3.7.1")
-		}
-	}
-}
+// Docker Engine 29 호환: Boot 3.5.3 BOM 의 Testcontainers 1.21.2 는 Docker 29 에 접속하지 못한다
+// ("Could not find a valid Docker environment"). 1.21.4 에서 해결돼 버전만 올린다.
+extra["testcontainers.version"] = "1.21.4"
 
 val kotlinJdslVersion = "3.5.4"
 val springMockkVersion = "4.0.2"
