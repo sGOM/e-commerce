@@ -28,6 +28,8 @@
 > `restock`, `promotion`(컬렉션), `flashsale`, `delivery`(권역/슬롯), `membership`(유료 구독),
 > `subscription`(정기배송), 선물하기 프론트 `GiftClaimPage` 등). 후속 브레인스토밍은
 > [wishlist-price-alert.md](./wishlist-price-alert.md) §0 을 참고.
+>
+> 아직 코드에 없는 결제·계정·운영 과제 백로그는 [../ROADMAP.md](../ROADMAP.md) 에서 관리한다.
 
 ## 다른 서브에이전트를 위한 안내
 
