@@ -304,7 +304,18 @@ export interface CreateProductBody {
 }
 
 // ----- 판매자 백오피스 -----
+export interface SellerDashboard {
+  from: string
+  to: string
+  orderCount: number
+  salesAmount: number
+  unsettledAmount: number
+  pendingPayoutAmount: number
+}
+
 export const sellerApi = {
+  dashboard: (from: string, to: string) =>
+    api.get<SellerDashboard>(`/api/seller/dashboard?from=${from}&to=${to}`),
   apply: (storeName: string, description?: string) =>
     api.post<Seller>('/api/seller/apply', { storeName, description }),
   myStore: () => api.get<Seller>('/api/seller/store'),

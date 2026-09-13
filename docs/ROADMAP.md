@@ -21,7 +21,8 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요),
 카테고리 수정/삭제(`PUT·DELETE /api/admin/categories/{id}`, 순환 상위 차단, 하위·상품 있으면 삭제 거부),
 장바구니·체크아웃 화면 테스트(Testing Library — 재고 부족 차단, 수량 갱신, 기본 배송지·쿠폰 미리보기, 비회원 주문),
-API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로필에서는 비활성).
+API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로필에서는 비활성),
+판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액).
 
 ---
 
@@ -55,7 +56,6 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 4.2 | **판매자 매출 대시보드** | 🟡 | M | - | 기간별 매출/주문 수/정산 예정액 |
 | 4.3 | **재고 일괄 관리 / 저재고 알림** | 🟢 | M | - | CSV 업로드, 임계치 알림(인앱 알림함 재사용) |
 
 ## 5. 관리자 백오피스
