@@ -97,6 +97,9 @@ class SecurityConfig(
                 authorize("/oauth2/**", permitAll)
                 authorize("/login/oauth2/**", permitAll)
                 authorize("/error", permitAll)
+                // API 문서(개발용, prod 프로필에서는 springdoc 자체를 끈다)
+                authorize("/v3/api-docs/**", permitAll)
+                authorize("/swagger-ui/**", permitAll)
                 // 재입고 알림 신청/취소는 회원 전용(AC3) — 아래 /api/products/** permitAll 보다 먼저 매칭되어야 한다
                 authorize("/api/products/options/*/restock-alerts", authenticated)
                 // 상품 탐색은 공개(게스트 허용). 조회 전용이므로 전체 허용(쓰기 경로는 /api/seller, /api/admin)
