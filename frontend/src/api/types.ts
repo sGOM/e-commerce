@@ -263,6 +263,27 @@ export interface Category {
   sortOrder: number
 }
 
+export interface SellerOption {
+  optionId: number
+  name: string
+  sku: string
+  additionalPrice: number
+  quantity: number
+  reserved: number
+  available: number
+}
+
+/** 판매자 본인 상품(DRAFT/HIDDEN 포함) — GET /api/seller/products */
+export interface SellerProduct {
+  productId: number
+  name: string
+  basePrice: number
+  status: ProductStatus
+  categoryId: number | null
+  dawnDeliveryEligible: boolean
+  options: SellerOption[]
+}
+
 export type SettlementStatus = 'PENDING' | 'PAID'
 
 export interface Settlement {

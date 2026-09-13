@@ -1,36 +1,29 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { productApi, sellerApi, type CreateOptionBody } from '../../api/endpoints'
+import { sellerApi, type CreateOptionBody } from '../../api/endpoints'
 import { ApiError, formatKRW } from '../../api/client'
 import { productStatusLabel } from '../../labels'
-import type { ProductDetail, ProductSummary, Seller } from '../../api/types'
+import type { SellerOption, SellerProduct } from '../../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function SellerProductsPage() {
-  const store = useOutletContext<Seller | null>()
-  const sellerId = store?.sellerId
-
-  const [products, setProducts] = useState<ProductSummary[]>([])
+  const [products, setProducts] = useState<SellerProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
 
   const load = useCallback(async () => {
-    if (sellerId == null) return
-    setLoading(true)
     try {
-      const page = await productApi.search({ sellerId, size: 100 })
-      setProducts(page.content)
+      setProducts(await sellerApi.myProducts())
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setLoading(false)
     }
-  }, [sellerId])
+  }, [])
 
   useEffect(() => {
     load()
@@ -66,7 +59,7 @@ export default function SellerProductsPage() {
       ) : (
         <ul className="space-y-2">
           {products.map((p) => (
-            <li key={p.id}>
+            <li key={p.productId}>
               <Card>
                 <CardContent>
                   <div className="flex items-center justify-between">
@@ -80,12 +73,12 @@ export default function SellerProductsPage() {
                       type="button"
                       variant="link"
                       className="h-auto p-0 text-sm"
-                      onClick={() => setExpanded(expanded === p.id ? null : p.id)}
+                      onClick={() => setExpanded(expanded === p.productId ? null : p.productId)}
                     >
-                      {expanded === p.id ? '닫기' : '재고 관리'}
+                      {expanded === p.productId ? '닫기' : '재고 관리'}
                     </Button>
                   </div>
-                  {expanded === p.id && <StockManager productId={p.id} />}
+                  {expanded === p.productId && <StockManager product={p} onChanged={load} />}
                 </CardContent>
               </Card>
             </li>
@@ -96,35 +89,25 @@ export default function SellerProductsPage() {
   )
 }
 
-/** 상품 상세를 불러와 옵션별 재고를 절대값으로 조정한다. */
-function StockManager({ productId }: { productId: number }) {
-  const [detail, setDetail] = useState<ProductDetail | null>(null)
+/** 옵션별 재고(총수량)를 절대값으로 조정한다. 예약분보다 적게는 서버가 거절한다. */
+function StockManager({ product, onChanged }: { product: SellerProduct; onChanged: () => void }) {
   const [msg, setMsg] = useState<string | null>(null)
-
-  const load = useCallback(() => {
-    productApi.detail(productId).then(setDetail)
-  }, [productId])
-  useEffect(() => {
-    load()
-  }, [load])
 
   const adjust = async (optionId: number, quantity: number) => {
     setMsg(null)
     try {
-      await sellerApi.adjustStock(productId, optionId, quantity)
+      await sellerApi.adjustStock(product.productId, optionId, quantity)
       setMsg('재고를 변경했습니다.')
-      load()
+      onChanged()
     } catch (e) {
       setMsg(e instanceof ApiError ? e.message : '변경 실패')
     }
   }
 
-  if (!detail) return <p className="mt-3 text-xs text-muted-foreground">옵션 불러오는 중…</p>
-
   return (
     <div className="mt-3 space-y-2 border-t border-border pt-3">
-      {detail.options.map((o) => (
-        <StockRow key={o.id} option={o} onSave={adjust} />
+      {product.options.map((o) => (
+        <StockRow key={o.optionId} option={o} price={product.basePrice + o.additionalPrice} onSave={adjust} />
       ))}
       {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
     </div>
@@ -133,17 +116,21 @@ function StockManager({ productId }: { productId: number }) {
 
 function StockRow({
   option,
+  price,
   onSave,
 }: {
-  option: { id: number; name: string; price: number; availableStock: number }
+  option: SellerOption
+  price: number
   onSave: (optionId: number, quantity: number) => void
 }) {
-  const [qty, setQty] = useState(option.availableStock)
+  const [qty, setQty] = useState(option.quantity)
   return (
     <div className="flex items-center justify-between gap-2 text-sm">
       <span className="flex-1">
         {option.name}{' '}
-        <span className="text-muted-foreground">{formatKRW(option.price)} · 가용 {option.availableStock}</span>
+        <span className="text-muted-foreground">
+          {formatKRW(price)} · 총 {option.quantity} · 예약 {option.reserved} · 가용 {option.available}
+        </span>
       </span>
       <Input
         type="number"
@@ -153,7 +140,7 @@ function StockRow({
         className="w-20"
         aria-label={`${option.name} 재고 수량`}
       />
-      <Button type="button" variant="outline" size="sm" onClick={() => onSave(option.id, qty)}>
+      <Button type="button" variant="outline" size="sm" onClick={() => onSave(option.optionId, qty)}>
         저장
       </Button>
     </div>
