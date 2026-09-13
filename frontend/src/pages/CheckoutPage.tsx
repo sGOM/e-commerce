@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  addressApi,
   cartApi,
   deliverySlotApi,
   meApi,
@@ -13,7 +14,7 @@ import { ApiError, formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
 import { deliverySlotTypeLabel } from '../labels'
-import type { Cart, CartItem, DeliverySlot, IssuedCoupon, Membership } from '../api/types'
+import type { Cart, CartItem, DeliverySlot, IssuedCoupon, Membership, UserAddress } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,6 +37,17 @@ function couponDiscount(coupon: IssuedCoupon, amount: number): number {
 function toDateStr(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/** 주소록 항목 → 체크아웃 배송지 폼 필드. */
+function addressFields(a: UserAddress) {
+  return {
+    receiverName: a.receiverName,
+    receiverPhone: a.receiverPhone,
+    zipcode: a.zipcode,
+    address1: a.address1,
+    address2: a.address2 ?? '',
+  }
 }
 
 interface SellerGroup {
@@ -78,6 +90,8 @@ export default function CheckoutPage() {
   const [pointInput, setPointInput] = useState(0)
   // 멤버십 혜택 인라인 안내(무료배송/포인트 우대) — 미가입/조회 실패 시 조용히 무시한다.
   const [membership, setMembership] = useState<Membership | null>(null)
+  // 회원 전용: 배송지 주소록
+  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([])
 
   // 배송 슬롯(새벽배송/시간대 지정)
   const [slotDate, setSlotDate] = useState(() => toDateStr(new Date(Date.now() + 86400000))) // 기본값: 내일
@@ -120,6 +134,15 @@ export default function CheckoutPage() {
           setPointBalance(pts.balance)
           // 미가입(404)은 정상 상태이므로 조용히 무시한다.
           membershipApi.my().then(setMembership).catch(() => setMembership(null))
+          // 기본 배송지가 있으면 폼을 미리 채운다. 조회 실패 시 수동 입력으로 진행한다.
+          addressApi
+            .list()
+            .then((list) => {
+              setSavedAddresses(list)
+              const preferred = list.find((a) => a.isDefault)
+              if (preferred) setForm((f) => ({ ...f, ...addressFields(preferred) }))
+            })
+            .catch(() => setSavedAddresses([]))
         }
       } catch (e) {
         setError((e as Error).message)
@@ -324,7 +347,30 @@ export default function CheckoutPage() {
           </Card>
         ) : (
           <Card className="p-5">
-            <h2 className="mb-3 font-bold">배송지</h2>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-bold">배송지</h2>
+              {savedAddresses.length > 0 && (
+                <select
+                  aria-label="저장된 배송지 불러오기"
+                  defaultValue=""
+                  onChange={(e) => {
+                    const picked = savedAddresses.find((a) => a.addressId === Number(e.target.value))
+                    if (picked) setForm((f) => ({ ...f, ...addressFields(picked) }))
+                  }}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="" disabled>
+                    저장된 배송지 불러오기
+                  </option>
+                  {savedAddresses.map((a) => (
+                    <option key={a.addressId} value={a.addressId}>
+                      {a.label ?? a.receiverName}
+                      {a.isDefault ? ' (기본)' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input required placeholder="받는 분" aria-label="받는 분" value={form.receiverName} onChange={set('receiverName')} />
               <Input required placeholder="받는 분 연락처" aria-label="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} />

@@ -16,7 +16,8 @@
 CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), 판매자 상품 목록(`GET /api/seller/products`),
 전체 정산 목록(`GET /api/admin/settlements?status=`), 상품 검색 정렬·가격 범위·하위 카테고리 포함
 (`GET /api/products?sort=&minPrice=&maxPrice=&categoryId=`), 판매자·관리자 라우트 lazy 분할(index 640→514KB),
-프론트 테스트 기반(Vitest + happy-dom, CI `npm test`), 판매자 승인 즉시 권한 반영(`GET /api/auth/me` 가 세션 권한 갱신).
+프론트 테스트 기반(Vitest + happy-dom, CI `npm test`), 판매자 승인 즉시 권한 반영(`GET /api/auth/me` 가 세션 권한 갱신), 배송지 주소록(`/api/me/addresses`, 체크아웃 불러오기),
+프론트 의존성 취약점 0건(`npm audit fix`).
 
 ---
 
@@ -44,7 +45,6 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 3.1 | **비밀번호 변경 / 재설정** | 🔴 | S | 6.1(재설정 메일) | `/api/auth`는 signup/login/logout/me뿐 |
-| 3.2 | **배송지 주소록** | 🔴 | M | - | 주문마다 `ShippingAddress` 직접 입력. 다중 배송지/기본 배송지 |
 | 3.3 | **회원 탈퇴 / 개인정보 처리** | 🟡 | M | - | soft delete/익명화 정책, 멤버십·정기배송 해지 연쇄 |
 
 ## 4. 판매자 백오피스
@@ -89,14 +89,13 @@ CI(`.github/workflows/ci.yml` — 백엔드 테스트 + 프론트 lint/build), �
 | 8.6 | **캐싱** | 🟢 | M | - | 인기 상품/카테고리 매 요청 집계 |
 | 8.7 | **API 문서화** | 🟢 | S | - | springdoc(OpenAPI) |
 | 8.8 | **검색 인프라** | 🟢 | L | - | ILIKE → pg_trgm/전문검색 |
-| 8.9 | **프론트 의존성 취약점** | 🟡 | S | - | `npm audit` 15건(high 10: react-router, postcss, undici 등 기존 의존성). `npm audit fix` 후 빌드·테스트 확인 |
 
 ---
 
 ## 추천 진행 순서
 
-1. **안전망** — 8.9 의존성 취약점 → 8.2 화면 테스트 확장
+1. **안전망** — 8.2 화면 테스트 확장
 2. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 → 1.1 게스트 결제
 3. **상품 완성도** — 2.1 이미지 업로드
-4. **회원 필수** — 3.2 주소록 → 6.1 이메일 → 3.1 비밀번호 재설정
+4. **회원 필수** — 6.1 이메일 → 3.1 비밀번호 재설정
 5. **정책 확정 후** — 7.1 배송비 모델

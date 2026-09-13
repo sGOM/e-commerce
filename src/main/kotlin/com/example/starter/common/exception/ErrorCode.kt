@@ -144,4 +144,8 @@ enum class ErrorCode(
     WISHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "WISHLIST-001", "위시리스트 항목을 찾을 수 없습니다."),
     WISHLIST_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISHLIST-002", "이미 위시리스트에 담은 상품입니다."),
     WISHLIST_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "WISHLIST-003", "위시리스트에 담을 수 있는 최대 개수를 초과했습니다."),
+
+    // 배송지 주소록 (ADDRESS)
+    ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "ADDRESS-001", "배송지를 찾을 수 없습니다."),
+    ADDRESS_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "ADDRESS-002", "등록할 수 있는 배송지 개수를 초과했습니다."),
 }
