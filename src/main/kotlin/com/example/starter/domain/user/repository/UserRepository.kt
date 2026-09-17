@@ -14,6 +14,9 @@ interface UserRepository : JpaRepository<User, Long>, KotlinJdslJpqlExecutor {
 
     fun existsByEmail(email: String): Boolean
 
+    /** 관리자 대시보드 — [from, to) 가입자 수 */
+    fun countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(from: java.time.Instant, to: java.time.Instant): Long
+
     /** 로그인용 — 역할과 권한까지 한 번에 로딩 (N+1 방지) */
     @EntityGraph(attributePaths = ["roles", "roles.permissions"])
     fun findWithRolesByEmail(email: String): User?

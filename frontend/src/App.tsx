@@ -36,6 +36,7 @@ const SellerOrdersPage = lazy(() => import('./pages/seller/SellerOrdersPage'))
 const SellerSettlementsPage = lazy(() => import('./pages/seller/SellerSettlementsPage'))
 const SellerFlashSalesPage = lazy(() => import('./pages/seller/SellerFlashSalesPage'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const AdminSellersPage = lazy(() => import('./pages/admin/AdminSellersPage'))
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
 const AdminCouponsPage = lazy(() => import('./pages/admin/AdminCouponsPage'))
@@ -204,7 +205,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminSellersPage />} />
+              <Route index element={<AdminDashboardPage />} />
               <Route path="sellers" element={<AdminSellersPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
               <Route path="coupons" element={<AdminCouponsPage />} />

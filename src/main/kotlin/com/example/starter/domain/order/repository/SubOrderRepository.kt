@@ -52,6 +52,26 @@ interface SubOrderRepository : JpaRepository<SubOrder, Long> {
         @Param("statuses") statuses: Collection<SubOrderStatus>,
     ): Long
 
+    /**
+     * 관리자 대시보드 — [from, to) 의 한국 시간 일자별 주문 수(주문 단위 중복 제거)와 판매액.
+     * 결과 행: [일자(java.sql.Date), 주문 수, 판매액]. 주문이 없는 날은 행이 없다.
+     */
+    @Query(
+        value = """
+        select cast(s.created_at at time zone 'Asia/Seoul' as date) as day,
+               count(distinct s.order_id), coalesce(sum(s.subtotal), 0)
+        from sub_orders s
+        where s.status in (:statuses) and s.created_at >= :from and s.created_at < :to
+        group by day order by day
+        """,
+        nativeQuery = true,
+    )
+    fun dailySales(
+        @Param("statuses") statuses: Collection<String>,
+        @Param("from") from: Instant,
+        @Param("to") to: Instant,
+    ): List<Array<Any>>
+
     interface SalesSummary {
         val orderCount: Long
         val salesAmount: Long
