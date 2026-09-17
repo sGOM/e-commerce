@@ -190,4 +190,58 @@ class GuestOrderIntegrationTest : AbstractIntegrationTest() {
             status { isBadRequest() }
         }
     }
+
+    private fun payGuest(orderNumber: String, phone: String) = mockMvc.post("/api/payments/guest") {
+        with(csrf())
+        contentType = MediaType.APPLICATION_JSON
+        content = """{"orderNumber":"$orderNumber","ordererPhone":"$phone"}"""
+    }
+
+    @Test
+    fun `비회원이 주문번호와 연락처로 결제하면 주문이 결제완료가 되고 재요청은 같은 결제를 돌려준다`() {
+        val optionId = seedOption("GUEST-PAY-1", stock = 10)
+        val orderNumber = placeGuestOrder(optionId, "010-5555-6666")
+
+        val first = payGuest(orderNumber, "010-5555-6666").andExpect {
+            status { isOk() }
+            jsonPath("$.data.status") { value("PAID") }
+            jsonPath("$.data.amount") { value(10_000) }
+        }.andReturn().response.contentAsString
+        val paymentId = Regex(""""paymentId":(\d+)""").find(first)!!.groupValues[1].toInt()
+
+        payGuest(orderNumber, "010-5555-6666").andExpect {
+            status { isOk() }
+            jsonPath("$.data.paymentId") { value(paymentId) }
+        }
+        mockMvc.post("/api/orders/guest/lookup") {
+            with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"orderNumber":"$orderNumber","ordererPhone":"010-5555-6666"}"""
+        }.andExpect {
+            jsonPath("$.data.status") { value("PAID") }
+        }
+    }
+
+    @Test
+    fun `연락처가 다르거나 회원 계정에 연결된 주문은 비회원 결제로 결제할 수 없다`() {
+        val optionId = seedOption("GUEST-PAY-2", stock = 10)
+        val orderNumber = placeGuestOrder(optionId, "010-1212-3434")
+
+        payGuest(orderNumber, "010-0000-0000").andExpect {
+            status { isNotFound() }
+            jsonPath("$.code") { value("ORDER-001") }
+        }
+
+        val member = CustomUserDetails(userRepository.save(User(email = "pay-claimed@e.com", password = "{noop}x", name = "회원")))
+        mockMvc.post("/api/orders/claim") {
+            with(user(member)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"orderNumber":"$orderNumber","ordererPhone":"010-1212-3434"}"""
+        }.andExpect { status { isOk() } }
+
+        payGuest(orderNumber, "010-1212-3434").andExpect {
+            status { isNotFound() }
+            jsonPath("$.code") { value("ORDER-001") }
+        }
+    }
 }

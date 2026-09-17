@@ -125,6 +125,7 @@ class SecurityConfig(
                 // 게스트 주문 생성/조회 — 비회원 허용(조회는 주문번호+연락처로 검증)
                 authorize("/api/orders/guest", permitAll)
                 authorize("/api/orders/guest/lookup", permitAll)
+                authorize("/api/payments/guest", permitAll)
                 // 선물 수령자 플로우 — 비회원 허용(토큰이 유일한 인가 수단, `docs/planning/gift-order.md` §4)
                 authorize("/api/gift/**", permitAll)
                 // 업로드 이미지 조회는 공개(상품/리뷰 이미지). 업로드 자체는 아래 anyRequest 로 회원 전용

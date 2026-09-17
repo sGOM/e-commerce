@@ -2,6 +2,7 @@ package com.example.starter.domain.payment
 
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
+import com.example.starter.domain.order.entity.Order
 import com.example.starter.domain.order.entity.OrderStatus
 import com.example.starter.domain.order.entity.SubOrderStatus
 import com.example.starter.domain.order.repository.OrderRepository
@@ -31,9 +32,24 @@ class PaymentService(
 ) {
 
     @Transactional
-    fun pay(userId: Long, orderId: Long, paymentKey: String? = null): PaymentResponse {
-        val order = orderRepository.findByIdAndUserId(orderId, userId)
-            .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
+    fun pay(userId: Long, orderId: Long, paymentKey: String? = null): PaymentResponse =
+        pay(orderRepository.findByIdAndUserId(orderId, userId).orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }, paymentKey)
+
+    /**
+     * 비회원 결제 — 주문번호 + 주문 시 연락처로 본인 확인. 회원 계정에 연결(claim)된 주문은 회원 결제만 허용하며,
+     * 존재 여부를 흘리지 않도록 불일치와 같은 404 로 응답한다.
+     */
+    @Transactional
+    fun payGuest(orderNumber: String, ordererPhone: String, paymentKey: String? = null): PaymentResponse =
+        pay(
+            orderRepository.findByOrderNumberAndOrdererPhone(orderNumber, ordererPhone)
+                .filter { it.userId == null }
+                .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) },
+            paymentKey,
+        )
+
+    private fun pay(order: Order, paymentKey: String?): PaymentResponse {
+        val orderId = requireNotNull(order.id)
 
         // 멱등: 이미 결제 완료면 재승인 없이 기존 결과 반환(중복 결제 방지)
         val existing = paymentRepository.findByOrderId(orderId).orElse(null)

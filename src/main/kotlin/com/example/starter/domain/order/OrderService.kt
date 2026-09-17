@@ -190,8 +190,7 @@ class OrderService(
 
     /** 게스트 주문 조회 — 주문번호 + 주문 시 연락처 일치 검증. */
     fun lookupGuestOrder(request: GuestOrderLookupRequest): OrderResponse {
-        val order = orderRepository.findByOrderNumber(request.orderNumber!!)
-            .filter { it.ordererPhone == request.ordererPhone }
+        val order = orderRepository.findByOrderNumberAndOrdererPhone(request.orderNumber!!, request.ordererPhone!!)
             .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
         return OrderResponse.from(order)
     }
@@ -202,8 +201,7 @@ class OrderService(
      */
     @Transactional
     fun claimGuestOrder(userId: Long, request: ClaimGuestOrderRequest): OrderResponse {
-        val order = orderRepository.findByOrderNumber(request.orderNumber!!)
-            .filter { it.ordererPhone == request.ordererPhone }
+        val order = orderRepository.findByOrderNumberAndOrdererPhone(request.orderNumber!!, request.ordererPhone!!)
             .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
         if (order.userId != null) {
             throw BusinessException(ErrorCode.ORDER_ALREADY_CLAIMED)

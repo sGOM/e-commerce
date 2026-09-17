@@ -27,6 +27,7 @@ export default function GuestOrderLookupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [claiming, setClaiming] = useState(false)
+  const [paying, setPaying] = useState(false)
   const justOrdered = location.state?.justOrdered ?? false
 
   const lookup = async (num: string, ph: string) => {
@@ -53,6 +54,21 @@ export default function GuestOrderLookupPage() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     lookup(orderNumber, phone)
+  }
+
+  // 결제 전(CREATED) 주문은 여기서 결제할 수 있다(주문 직후 결제 실패 시 재시도 경로).
+  const pay = async () => {
+    if (!order) return
+    setPaying(true)
+    setError(null)
+    try {
+      await orderApi.payGuest(order.orderNumber, phone)
+      await lookup(order.orderNumber, phone)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : '결제에 실패했습니다.')
+    } finally {
+      setPaying(false)
+    }
   }
 
   // 로그인 상태면 이 게스트 주문을 내 계정에 연결할 수 있다.
@@ -117,6 +133,11 @@ export default function GuestOrderLookupPage() {
       {order && (
         <>
           <OrderView order={order} />
+          {order.status === 'CREATED' && (
+            <Button onClick={pay} disabled={paying} className="mt-6 h-11 w-full">
+              {paying ? '결제 중…' : '결제하기 (Mock PG)'}
+            </Button>
+          )}
           {user && (
             <Button
               variant="outline"

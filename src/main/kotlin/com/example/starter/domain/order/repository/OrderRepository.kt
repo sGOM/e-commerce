@@ -20,6 +20,9 @@ interface OrderRepository : JpaRepository<Order, Long>, KotlinJdslJpqlExecutor {
     /** 게스트 주문 조회(주문번호 + 연락처 검증과 함께 사용) */
     fun findByOrderNumber(orderNumber: String): Optional<Order>
 
+    /** 주문번호 + 주문 시 연락처가 모두 일치하는 주문(게스트 조회/연결/결제의 본인 확인) */
+    fun findByOrderNumberAndOrdererPhone(orderNumber: String, ordererPhone: String): Optional<Order>
+
     /**
      * 순구매액(실결제액, 취소/환불 제외) 집계 — 로열티 등급 재계산 배치용
      * (`LoyaltyTierBatchService`). [com.example.starter.domain.catalog.repository.ProductRepository.findPopularProductRows]

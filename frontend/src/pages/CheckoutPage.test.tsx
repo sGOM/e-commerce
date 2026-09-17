@@ -14,7 +14,7 @@ vi.mock('../api/endpoints', () => ({
   deliverySlotApi: { list: vi.fn() },
   meApi: { coupons: vi.fn(), points: vi.fn() },
   membershipApi: { my: vi.fn() },
-  orderApi: { create: vi.fn(), createGuest: vi.fn(), pay: vi.fn() },
+  orderApi: { create: vi.fn(), createGuest: vi.fn(), pay: vi.fn(), payGuest: vi.fn() },
 }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 
@@ -116,11 +116,12 @@ describe('CheckoutPage', () => {
     expect(screen.getByText('18,000원')).toBeTruthy()
   })
 
-  it('비회원 주문은 주문 생성 후 장바구니를 비우고 주문 조회로 이동한다', async () => {
+  it('비회원 주문은 주문 생성·결제 후 장바구니를 비우고 주문 조회로 이동한다', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: null } as never)
     addGuestItem(1, 2)
     vi.mocked(cartApi.guestPreview).mockResolvedValue(cart)
     vi.mocked(orderApi.createGuest).mockResolvedValue({ orderNumber: 'ORD-1' } as never)
+    vi.mocked(orderApi.payGuest).mockResolvedValue({ status: 'PAID' } as never)
     renderPage()
     await screen.findByText('상품 2개')
 
@@ -132,7 +133,7 @@ describe('CheckoutPage', () => {
     fill('받는 분 연락처', '010-3333-4444')
     fill('우편번호', '12345')
     fill('기본 주소', '서울 1')
-    fireEvent.click(screen.getByRole('button', { name: '비회원 주문하기' }))
+    fireEvent.click(screen.getByRole('button', { name: '비회원 결제하기 (Mock PG)' }))
 
     expect(await screen.findByText('주문 조회 화면')).toBeTruthy()
     expect(orderApi.createGuest).toHaveBeenCalledWith(
@@ -142,6 +143,7 @@ describe('CheckoutPage', () => {
         shippingAddress: expect.objectContaining({ zipcode: '12345', address2: undefined }),
       }),
     )
+    expect(orderApi.payGuest).toHaveBeenCalledWith('ORD-1', '010-1111-2222')
     expect(readGuestCart()).toEqual([])
   })
 })

@@ -245,7 +245,8 @@ export default function CheckoutPage() {
     const deliverySlotSelections = buildDeliverySlotSelections()
     try {
       if (isGuest) {
-        // 비회원: 주문 생성(CREATED)까지. 결제는 회원 전용이므로 주문번호로 조회 안내.
+        // 비회원: 주문 생성 → 주문번호+연락처로 즉시 결제(Mock PG) → 주문 조회 화면.
+        // 결제가 실패해도 주문은 남으므로 조회 화면의 결제하기로 재시도한다.
         // 게스트 주문은 선물하기를 지원하지 않는다(구매자는 회원 전용, `docs/planning/gift-order.md` §4).
         const order = await orderApi.createGuest({
           ordererName: form.ordererName,
@@ -256,6 +257,7 @@ export default function CheckoutPage() {
           deliverySlotSelections,
         })
         clearGuestCart()
+        await orderApi.payGuest(order.orderNumber, form.ordererPhone).catch(() => undefined)
         navigate('/orders/lookup', {
           state: {
             orderNumber: order.orderNumber,
@@ -529,7 +531,7 @@ export default function CheckoutPage() {
               </div>
             )}
             <div className="flex justify-between border-t border-border pt-2 font-bold text-foreground">
-              <span>{isGuest ? '주문 금액' : '결제 금액'}</span>
+              <span>결제 금액</span>
               <span className="text-primary">{formatKRW(payable)}</span>
             </div>
           </div>
@@ -540,11 +542,11 @@ export default function CheckoutPage() {
           </p>
         )}
         <Button type="submit" disabled={submitting || !cart} className="mt-5 h-12 w-full text-base">
-          {submitting ? '처리 중…' : isGuest ? '비회원 주문하기' : '결제하기 (Mock PG)'}
+          {submitting ? '처리 중…' : isGuest ? '비회원 결제하기 (Mock PG)' : '결제하기 (Mock PG)'}
         </Button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {isGuest
-            ? '주문 후 주문번호와 연락처로 조회할 수 있습니다.'
+            ? '데모 결제는 즉시 승인되며, 주문번호와 연락처로 조회할 수 있습니다.'
             : '데모 결제는 외부 PG 없이 즉시 승인됩니다.'}
         </p>
       </Card>
