@@ -6,6 +6,7 @@ import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.cart.entity.Cart
 import com.example.starter.domain.cart.repository.CartRepository
 import com.example.starter.domain.catalog.entity.ProductOption
+import com.example.starter.domain.catalog.event.InventoryReservedEvent
 import com.example.starter.domain.catalog.repository.InventoryRepository
 import com.example.starter.domain.catalog.repository.ProductOptionRepository
 import com.example.starter.domain.coupon.CouponService
@@ -35,6 +36,7 @@ import com.example.starter.domain.order.repository.SubOrderRepository
 import com.example.starter.domain.payment.repository.PaymentRepository
 import com.example.starter.domain.seller.entity.Seller
 import org.springframework.data.domain.Pageable
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -65,6 +67,7 @@ class OrderService(
     private val deliveryRegionRepository: DeliveryRegionRepository,
     private val membershipBenefitService: MembershipBenefitService,
     private val giftClaimService: GiftClaimService,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     /** 주문 조립에 필요한 항목 스냅샷(옵션 LAZY 접근을 한곳에서 끝낸다). */
@@ -245,6 +248,7 @@ class OrderService(
                     "'${line.productName}' 의 재고가 부족합니다.",
                 )
             }
+            eventPublisher.publishEvent(InventoryReservedEvent(line.optionId, line.quantity))
             if (line.flashSaleId != null && flashSaleRepository.reserve(line.flashSaleId, line.quantity, now) == 0) {
                 throw BusinessException(
                     ErrorCode.FLASH_SALE_SOLD_OUT,

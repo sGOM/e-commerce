@@ -566,6 +566,7 @@ export type NotificationType =
   | 'GIFT'
   | 'PRICE_DROP'
   | 'CART_REMINDER'
+  | 'LOW_STOCK'
   | string
 
 export interface AppNotification {

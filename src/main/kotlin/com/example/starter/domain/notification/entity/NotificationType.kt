@@ -22,4 +22,7 @@ enum class NotificationType {
 
     /** 장바구니에 담긴 채 일정 시간 결제하지 않아 발송하는 이탈 리마인드(자동 쿠폰 발급 없음) */
     CART_REMINDER,
+
+    /** 주문 예약으로 옵션 가용재고가 임계치 이하로 내려감(판매자 대상, ROADMAP 4.3) */
+    LOW_STOCK,
 }
