@@ -27,7 +27,8 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드),
 관리자 대시보드(`GET /api/admin/dashboard?from=&to=` — GMV·주문 수·신규 가입, 일별 추이),
 Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 실행 지표, 운영은 내부 포트 `MANAGEMENT_PORT` 분리),
-저재고 알림(주문 예약으로 가용재고가 `inventory.low-stock-threshold`(기본 5) 이하로 내려가면 판매자 인앱 알림 `LOW_STOCK`).
+저재고 알림(주문 예약으로 가용재고가 `inventory.low-stock-threshold`(기본 5) 이하로 내려가면 판매자 인앱 알림 `LOW_STOCK`),
+게스트 결제(`POST /api/payments/guest` — 주문번호+연락처 확인, 체크아웃 즉시 결제·조회 화면 재시도).
 
 ---
 
@@ -37,7 +38,6 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 1.1 | **게스트 결제 엔드포인트** | 🔴 | M | - | `/api/payments/{orderId}`가 회원 전용이라 게스트 주문은 `CREATED`에서 멈춘다. 주문번호+연락처 검증 기반 결제 경로 필요 |
 | 1.2 | **Toss 결제위젯 프론트 연동** | 🔴 | M | - | 백엔드 `TossPaymentGateway.approve`(금액 위변조 검증)는 완료. 프론트에 위젯 SDK + `paymentKey` 전달 흐름 없음 |
 | 1.3 | **PG 결제 취소 API 연동** | 🔴 | M | 1.2 | `PaymentGateway`에 `approve`만 있다. 취소/부분환불 시 내부 상태만 바뀌고 PG 취소(`/v1/payments/{paymentKey}/cancel`)는 호출되지 않음 |
 | 1.4 | **결제 Webhook 수신** | 🟡 | M | 1.2 | Toss 비동기 상태 변경(취소/가상계좌 입금) 수신 + 검증 |
@@ -91,7 +91,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 ## 추천 진행 순서
 
-1. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 → 1.1 게스트 결제
+1. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 (Toss 테스트 키 필요)
 2. **상품 완성도** — 업로드 저장소를 S3/영속 볼륨으로 교체(운영 배포 전)
 3. **회원 필수** — 6.1 이메일 → 3.1 비밀번호 재설정
 4. **정책 확정 후** — 7.1 배송비 모델
