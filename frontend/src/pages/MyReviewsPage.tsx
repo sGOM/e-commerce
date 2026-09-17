@@ -9,8 +9,8 @@ import type { PageResponse, Review, ReviewableOrderItem } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import ImageUploadButton from '../components/ImageUploadButton'
 import {
   Sheet,
   SheetClose,
@@ -27,8 +27,7 @@ type FormTarget =
   | { mode: 'create'; orderItemId: number; productName: string; optionName: string }
   | { mode: 'edit'; review: Review }
 
-/** 리뷰 작성/수정 공용 폼(Sheet). 이미지는 업로드 API가 아직 없어 URL 직접 입력으로 대체한다.
- *  TODO: 실제 파일 업로드 API가 생기면 드롭존 + 업로드로 교체. */
+/** 리뷰 작성/수정 공용 폼(Sheet). 사진은 `/api/uploads` 로 올린 URL 을 저장한다. */
 function ReviewFormSheet({
   target,
   onClose,
@@ -72,7 +71,7 @@ function ReviewFormSheet({
     if (!target || !valid) return
     setSubmitting(true)
     setError(null)
-    const imageUrls = images.map((v) => v.trim()).filter(Boolean)
+    const imageUrls = images
     try {
       if (target.mode === 'create') {
         await reviewApi.create({ orderItemId: target.orderItemId, rating, content, imageUrls })
@@ -125,45 +124,28 @@ function ReviewFormSheet({
             <div className="flex items-center justify-between">
               <Label>사진 (선택, 최대 {MAX_IMAGES}장)</Label>
               {images.length < MAX_IMAGES && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setImages((v) => [...v, ''])}
-                >
-                  사진 URL 추가
-                </Button>
+                <ImageUploadButton label="사진 추가" onUploaded={(url) => setImages((v) => [...v, url])} />
               )}
             </div>
-            {images.map((url, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Input
-                  value={url}
-                  onChange={(e) =>
-                    setImages((v) => v.map((u, idx) => (idx === i ? e.target.value : u)))
-                  }
-                  placeholder="이미지 URL (https://...)"
-                  aria-label={`리뷰 사진 ${i + 1} URL`}
-                />
-                {url && (
-                  <img
-                    src={url}
-                    alt={`미리보기 ${i + 1}`}
-                    className="size-8 shrink-0 rounded object-cover"
-                    onError={(e) => (e.currentTarget.style.visibility = 'hidden')}
-                  />
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="사진 URL 삭제"
-                  onClick={() => setImages((v) => v.filter((_, idx) => idx !== i))}
-                >
-                  <X className="size-4" />
-                </Button>
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {images.map((url, i) => (
+                  <div key={url + i} className="relative">
+                    <img src={url} alt={`리뷰 사진 ${i + 1}`} className="size-16 rounded-md object-cover" />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      aria-label={`리뷰 사진 ${i + 1} 삭제`}
+                      className="absolute -right-2 -top-2 size-6 rounded-full"
+                      onClick={() => setImages((v) => v.filter((_, idx) => idx !== i))}
+                    >
+                      <X className="size-3" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}

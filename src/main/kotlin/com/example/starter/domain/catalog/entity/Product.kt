@@ -52,6 +52,10 @@ class Product(
     // Seller 엔티티에 계약 플래그를 추가하고 상품 등록 시 상속시키는 방식으로 후속 확장 가능.
     @Column(name = "dawn_delivery_eligible", nullable = false)
     var dawnDeliveryEligible: Boolean = false,
+
+    /** 대표 이미지 URL(`/api/uploads/...` 또는 외부 URL). */
+    @Column(name = "image_url", length = 500)
+    var imageUrl: String? = null,
 ) : BaseTimeEntity() {
 
     @Id

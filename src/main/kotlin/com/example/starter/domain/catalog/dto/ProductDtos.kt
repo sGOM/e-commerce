@@ -32,6 +32,7 @@ data class ProductSummaryResponse(
     val avgRating: BigDecimal,
     val reviewCount: Int,
     val dawnDeliveryEligible: Boolean,
+    val imageUrl: String?,
 ) {
     companion object {
         fun from(product: Product) = ProductSummaryResponse(
@@ -46,6 +47,7 @@ data class ProductSummaryResponse(
             avgRating = product.avgRating,
             reviewCount = product.reviewCount,
             dawnDeliveryEligible = product.dawnDeliveryEligible,
+            imageUrl = product.imageUrl,
         )
     }
 }
@@ -64,6 +66,7 @@ data class PopularProductResponse(
     val reviewCount: Int,
     val soldQuantity: Long,
     val dawnDeliveryEligible: Boolean,
+    val imageUrl: String?,
 ) {
     companion object {
         fun from(product: Product, soldQuantity: Long) = PopularProductResponse(
@@ -79,6 +82,7 @@ data class PopularProductResponse(
             reviewCount = product.reviewCount,
             soldQuantity = soldQuantity,
             dawnDeliveryEligible = product.dawnDeliveryEligible,
+            imageUrl = product.imageUrl,
         )
     }
 }
@@ -99,6 +103,7 @@ data class ProductDetailResponse(
     val options: List<ProductOptionResponse>,
     val createdAt: Instant,
     val dawnDeliveryEligible: Boolean,
+    val imageUrl: String?,
 ) {
     companion object {
         fun from(product: Product) = ProductDetailResponse(
@@ -116,6 +121,7 @@ data class ProductDetailResponse(
             options = product.options.map { ProductOptionResponse.from(product, it) },
             createdAt = product.createdAt,
             dawnDeliveryEligible = product.dawnDeliveryEligible,
+            imageUrl = product.imageUrl,
         )
     }
 }

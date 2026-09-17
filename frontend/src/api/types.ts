@@ -31,6 +31,7 @@ export interface ProductSummary {
   avgRating: number
   reviewCount: number
   dawnDeliveryEligible: boolean
+  imageUrl: string | null
 }
 
 export interface ProductOption {
@@ -54,6 +55,7 @@ export interface PopularProduct {
   avgRating: number
   reviewCount: number
   dawnDeliveryEligible: boolean
+  imageUrl: string | null
 }
 
 export interface ProductDetail {
@@ -71,6 +73,7 @@ export interface ProductDetail {
   avgRating: number
   reviewCount: number
   dawnDeliveryEligible: boolean
+  imageUrl: string | null
 }
 
 export interface CartItem {
@@ -289,6 +292,7 @@ export interface SellerProduct {
   status: ProductStatus
   categoryId: number | null
   dawnDeliveryEligible: boolean
+  imageUrl: string | null
   options: SellerOption[]
 }
 

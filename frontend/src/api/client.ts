@@ -25,7 +25,8 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const headers: Record<string, string> = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const isForm = body instanceof FormData // multipart 경계는 브라우저가 Content-Type 에 채운다
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (MUTATING.has(method)) {
     const token = readCsrfToken()
     if (token) headers['X-XSRF-TOKEN'] = token
@@ -35,7 +36,7 @@ async function request<T>(
     method,
     headers,
     credentials: 'include', // 세션 쿠키 포함
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
 
   // 본문이 없을 수 있는 응답(예: 204) 방어

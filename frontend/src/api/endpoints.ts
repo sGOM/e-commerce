@@ -304,7 +304,17 @@ export interface CreateProductBody {
   description?: string
   status: 'DRAFT' | 'ON_SALE' | 'SOLD_OUT' | 'HIDDEN'
   dawnDeliveryEligible?: boolean
+  imageUrl?: string
   options: CreateOptionBody[]
+}
+
+// ----- 이미지 업로드 -----
+export const uploadApi = {
+  image: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<{ url: string }>('/api/uploads', form)
+  },
 }
 
 // ----- 판매자 백오피스 -----

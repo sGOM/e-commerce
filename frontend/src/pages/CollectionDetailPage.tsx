@@ -95,6 +95,7 @@ export default function CollectionDetailPage() {
               storeName={product.storeName}
               avgRating={product.avgRating}
               reviewCount={product.reviewCount}
+              imageUrl={product.imageUrl}
             />
           ))}
         </div>
