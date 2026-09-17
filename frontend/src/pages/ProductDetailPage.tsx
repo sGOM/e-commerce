@@ -196,8 +196,12 @@ export default function ProductDetailPage() {
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <div className="flex aspect-square items-center justify-center rounded-xl bg-muted text-6xl">
-        🛍️
+      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-6xl">
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
+        ) : (
+          '🛍️'
+        )}
       </div>
 
       <div>

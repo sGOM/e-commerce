@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
+import ImageUploadButton from '../../components/ImageUploadButton'
 
 export default function SellerProductsPage() {
   const [products, setProducts] = useState<SellerProduct[]>([])
@@ -160,6 +161,7 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<'DRAFT' | 'ON_SALE'>('ON_SALE')
   const [dawnDeliveryEligible, setDawnDeliveryEligible] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [options, setOptions] = useState<CreateOptionBody[]>([emptyOption()])
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -178,6 +180,7 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
         description: description || undefined,
         status,
         dawnDeliveryEligible,
+        imageUrl: imageUrl ?? undefined,
         options,
       })
       onCreated()
@@ -214,6 +217,11 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
             />
             새벽배송 가능 상품
           </label>
+
+          <div className="flex items-center gap-3">
+            {imageUrl && <img src={imageUrl} alt="대표 이미지 미리보기" className="size-16 rounded-md object-cover" />}
+            <ImageUploadButton label={imageUrl ? '대표 이미지 변경' : '대표 이미지 업로드'} onUploaded={setImageUrl} />
+          </div>
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">옵션</p>

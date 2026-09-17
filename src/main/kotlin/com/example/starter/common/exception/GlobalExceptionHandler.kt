@@ -11,6 +11,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 /**
  * 전역 예외 처리. 모든 예외를 [ApiResponse] 표준 형태로 변환한다.
@@ -63,6 +64,12 @@ class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleMethodNotSupported(e: HttpRequestMethodNotSupportedException): ResponseEntity<ApiResponse<Unit>> {
         return respond(ErrorCode.METHOD_NOT_ALLOWED)
+    }
+
+    /** 업로드 크기 초과(`spring.servlet.multipart.max-file-size`) */
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSize(e: MaxUploadSizeExceededException): ResponseEntity<ApiResponse<Unit>> {
+        return respond(ErrorCode.INVALID_INPUT, "파일은 5MB 이하만 업로드할 수 있습니다.")
     }
 
     /**

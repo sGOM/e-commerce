@@ -27,6 +27,15 @@ spring:
         # sort=LATEST 를 엔티티 속성 정렬로 해석해 ORDER BY 에 덧붙여 500 이 난다.
         sort-parameter: pageSort
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+# 업로드 이미지 저장 디렉터리(로컬 디스크). 운영은 영속 볼륨 경로로 지정한다: UPLOAD_DIR=/data/uploads
+upload:
+  dir: ${UPLOAD_DIR:uploads}
+
 server:
   port: 8080
   servlet:

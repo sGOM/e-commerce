@@ -308,6 +308,7 @@ export default function ProductListPage() {
                 badge={`${p.soldQuantity.toLocaleString('ko-KR')}개 판매`}
                 avgRating={p.avgRating}
                 reviewCount={p.reviewCount}
+                imageUrl={p.imageUrl}
               />
             ))}
           </div>
@@ -367,6 +368,7 @@ export default function ProductListPage() {
                   storeName={p.storeName}
                   avgRating={p.avgRating}
                   reviewCount={p.reviewCount}
+                imageUrl={p.imageUrl}
                 />
               ))}
             </div>

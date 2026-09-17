@@ -16,6 +16,7 @@ interface Props {
   badge?: string // 예: "32개 판매"
   avgRating?: number
   reviewCount?: number
+  imageUrl?: string | null
 }
 
 /** 상태 배지: 부록 A 색 매핑(품절=destructive, 준비중/숨김=secondary). */
@@ -39,14 +40,19 @@ export default function ProductCard({
   badge,
   avgRating,
   reviewCount,
+  imageUrl,
 }: Props) {
   return (
     <Link
       to={`/products/${id}`}
       className="group relative flex flex-col rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <div className="relative mb-3 flex aspect-square items-center justify-center rounded-md bg-muted text-4xl">
-        🛍️
+      <div className="relative mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted text-4xl">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" loading="lazy" className="size-full object-cover" />
+        ) : (
+          '🛍️'
+        )}
         <StatusBadge status={status} />
         {badge && (
           <Badge variant="secondary" className="absolute left-2 top-2">

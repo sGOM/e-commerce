@@ -23,7 +23,8 @@ Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요),
 장바구니·체크아웃 화면 테스트(Testing Library — 재고 부족 차단, 수량 갱신, 기본 배송지·쿠폰 미리보기, 비회원 주문),
 API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로필에서는 비활성),
 판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액),
-관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`).
+관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`),
+이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드).
 
 ---
 
@@ -43,7 +44,6 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 2.1 | **이미지 업로드/저장** | 🔴 | M | - | `products`에 이미지 컬럼 없음. 리뷰 사진도 URL 직접 입력(`MyReviewsPage` TODO). 스토리지 + 업로드 API 공용화 |
 | 2.4 | **상품 Q&A** | 🟢 | M | - | 상품 문의/답변, 판매자 알림 |
 
 ## 3. 회원 / 계정
@@ -96,6 +96,6 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 ## 추천 진행 순서
 
 1. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 → 1.1 게스트 결제
-2. **상품 완성도** — 2.1 이미지 업로드
+2. **상품 완성도** — 업로드 저장소를 S3/영속 볼륨으로 교체(운영 배포 전)
 3. **회원 필수** — 6.1 이메일 → 3.1 비밀번호 재설정
 4. **정책 확정 후** — 7.1 배송비 모델

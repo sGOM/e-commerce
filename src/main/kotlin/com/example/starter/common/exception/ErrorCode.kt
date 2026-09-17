@@ -150,4 +150,8 @@ enum class ErrorCode(
     // 배송지 주소록 (ADDRESS)
     ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "ADDRESS-001", "배송지를 찾을 수 없습니다."),
     ADDRESS_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "ADDRESS-002", "등록할 수 있는 배송지 개수를 초과했습니다."),
+
+    // 파일 업로드 (UPLOAD)
+    UNSUPPORTED_IMAGE(HttpStatus.BAD_REQUEST, "UPLOAD-001", "JPEG, PNG, GIF, WEBP 이미지만 업로드할 수 있습니다."),
+    UPLOAD_NOT_FOUND(HttpStatus.NOT_FOUND, "UPLOAD-002", "파일을 찾을 수 없습니다."),
 }

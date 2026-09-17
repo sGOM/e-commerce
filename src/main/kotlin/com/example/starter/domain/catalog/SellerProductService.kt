@@ -48,6 +48,7 @@ class SellerProductService(
             description = request.description,
             status = request.status,
             dawnDeliveryEligible = request.dawnDeliveryEligible,
+            imageUrl = request.imageUrl,
         )
         request.options.forEach { o ->
             val option = ProductOption(name = o.name!!, sku = o.sku!!, additionalPrice = o.additionalPrice)
@@ -74,6 +75,7 @@ class SellerProductService(
         product.status = request.status!!
         product.category = findCategory(request.categoryId)
         product.dawnDeliveryEligible = request.dawnDeliveryEligible
+        product.imageUrl = request.imageUrl
         if (product.basePrice != oldPrice) {
             eventPublisher.publishEvent(ProductPriceChangedEvent(requireNotNull(product.id), oldPrice, product.basePrice))
         }

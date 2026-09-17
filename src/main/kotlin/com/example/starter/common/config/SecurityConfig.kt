@@ -23,6 +23,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -124,6 +125,8 @@ class SecurityConfig(
                 authorize("/api/orders/guest/lookup", permitAll)
                 // 선물 수령자 플로우 — 비회원 허용(토큰이 유일한 인가 수단, `docs/planning/gift-order.md` §4)
                 authorize("/api/gift/**", permitAll)
+                // 업로드 이미지 조회는 공개(상품/리뷰 이미지). 업로드 자체는 아래 anyRequest 로 회원 전용
+                authorize(HttpMethod.GET, "/api/uploads/*", permitAll)
                 authorize("/api/admin/**", hasRole("ADMIN"))
                 // 입점 신청은 ROLE_SELLER 가 아직 없는 일반 회원이 수행한다(나머지 셀러 API보다 먼저 매칭)
                 authorize("/api/seller/apply", authenticated)
