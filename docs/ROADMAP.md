@@ -26,7 +26,8 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`),
 이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드),
 관리자 대시보드(`GET /api/admin/dashboard?from=&to=` — GMV·주문 수·신규 가입, 일별 추이),
-Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 실행 지표, 운영은 내부 포트 `MANAGEMENT_PORT` 분리).
+Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 실행 지표, 운영은 내부 포트 `MANAGEMENT_PORT` 분리),
+저재고 알림(주문 예약으로 가용재고가 `inventory.low-stock-threshold`(기본 5) 이하로 내려가면 판매자 인앱 알림 `LOW_STOCK`).
 
 ---
 
@@ -59,7 +60,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 4.3 | **재고 일괄 관리 / 저재고 알림** | 🟢 | M | - | CSV 업로드, 임계치 알림(인앱 알림함 재사용) |
+| 4.3 | **재고 CSV 일괄 수정** | 🟢 | S | - | 저재고 알림은 완료. 옵션 수가 많은 판매자용 CSV 업로드 |
 
 ## 6. 알림 / 메시징
 
