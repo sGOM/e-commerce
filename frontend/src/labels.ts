@@ -6,6 +6,7 @@ import type {
   DeliverySubscriptionStatus,
   FlashSalePhase,
   GiftClaimStatus,
+  UserStatus,
   LoyaltyTier,
   MembershipStatus,
   NotificationType,
@@ -126,4 +127,11 @@ export const notificationTypeIcon: Partial<Record<NotificationType, string>> = {
   GIFT: '🎁',
   PRICE_DROP: '💰',
   CART_REMINDER: '🛒',
+}
+
+export const userStatusLabel: Record<UserStatus, string> = {
+  ACTIVE: '정상',
+  LOCKED: '잠김',
+  DORMANT: '휴면',
+  WITHDRAWN: '탈퇴',
 }

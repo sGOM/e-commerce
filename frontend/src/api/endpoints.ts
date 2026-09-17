@@ -3,6 +3,8 @@ import type {
   AdminDeliverySubscription,
   AdminLoyaltyTierResponse,
   AdminMembership,
+  AdminUser,
+  AuditLog,
   AppNotification,
   Cart,
   CartReminderBatchResult,
@@ -42,6 +44,7 @@ import type {
   OrderStatus,
   OrderSummary,
   PageResponse,
+  PointPolicy,
   Payment,
   PointSummary,
   PopularProduct,
@@ -63,6 +66,7 @@ import type {
   SubOrderStatus,
   User,
   UserAddress,
+  UserStatus,
   WishlistResponse,
 } from './types'
 
@@ -674,4 +678,38 @@ export const adminDeliveryRegionApi = {
   update: (id: number, dawnDeliveryAvailable: boolean) =>
     api.patch<DeliveryRegion>(`/api/admin/delivery-regions/${id}`, { dawnDeliveryAvailable }),
   remove: (id: number) => api.del<void>(`/api/admin/delivery-regions/${id}`),
+}
+
+// ----- 관리자 회원 관리 -----
+export const adminUserApi = {
+  search: (params: { keyword?: string; status?: UserStatus; page?: number }) => {
+    const q = new URLSearchParams()
+    if (params.keyword) q.set('keyword', params.keyword)
+    if (params.status) q.set('status', params.status)
+    q.set('page', String(params.page ?? 0))
+    return api.get<PageResponse<AdminUser>>(`/api/admin/users?${q.toString()}`)
+  },
+  changeStatus: (id: number, status: UserStatus) =>
+    api.patch<AdminUser>(`/api/admin/users/${id}/status`, { status }),
+  grantRole: (id: number, role: string) => api.post<AdminUser>(`/api/admin/users/${id}/roles`, { role }),
+  revokeRole: (id: number, role: string) => api.del<AdminUser>(`/api/admin/users/${id}/roles/${role}`),
+}
+
+// ----- 관리자 감사 로그 -----
+export const adminAuditLogApi = {
+  search: (params: { userId?: number; method?: string; uriKeyword?: string; page?: number }) => {
+    const q = new URLSearchParams()
+    if (params.userId != null) q.set('userId', String(params.userId))
+    if (params.method) q.set('method', params.method)
+    if (params.uriKeyword) q.set('uriKeyword', params.uriKeyword)
+    q.set('page', String(params.page ?? 0))
+    return api.get<PageResponse<AuditLog>>(`/api/admin/audit-logs?${q.toString()}`)
+  },
+}
+
+// ----- 관리자 포인트 정책/만료 -----
+export const adminPointApi = {
+  getPolicy: () => api.get<PointPolicy>('/api/admin/point-policy'),
+  updatePolicy: (body: Partial<PointPolicy>) => api.patch<PointPolicy>('/api/admin/point-policy', body),
+  expire: () => api.post<{ expiredTotal: number }>('/api/admin/points/expire'),
 }

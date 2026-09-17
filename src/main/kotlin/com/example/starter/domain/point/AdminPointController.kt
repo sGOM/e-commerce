@@ -2,6 +2,7 @@ package com.example.starter.domain.point
 
 import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.point.dto.PointExpireResponse
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/api/admin/points")
+@PreAuthorize("hasRole('ADMIN')")
 class AdminPointController(
     private val pointService: PointService,
 ) {
