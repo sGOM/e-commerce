@@ -1,9 +1,11 @@
 package com.example.starter.domain.payment
 
 import com.example.starter.common.response.ApiResponse
+import com.example.starter.domain.payment.dto.GuestPayRequest
 import com.example.starter.domain.payment.dto.PayRequest
 import com.example.starter.domain.payment.dto.PaymentResponse
 import com.example.starter.security.userdetails.CustomUserDetails
+import jakarta.validation.Valid
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -12,13 +14,20 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * 결제 API (인증 필요). 본인 주문에 대해서만 결제할 수 있다. 게스트 결제는 추후 단계.
+ * 결제 API. 회원은 본인 주문(`/{orderId}`), 비회원은 주문번호 + 연락처 확인(`/guest`, 공개 경로)으로 결제한다.
  */
 @RestController
 @RequestMapping("/api/payments")
 class PaymentController(
     private val paymentService: PaymentService,
 ) {
+
+    @PostMapping("/guest")
+    fun payGuest(@RequestBody @Valid request: GuestPayRequest): ApiResponse<PaymentResponse> =
+        ApiResponse.success(
+            paymentService.payGuest(request.orderNumber!!, request.ordererPhone!!, request.paymentKey),
+            "결제가 완료되었습니다.",
+        )
 
     @PostMapping("/{orderId}")
     fun pay(

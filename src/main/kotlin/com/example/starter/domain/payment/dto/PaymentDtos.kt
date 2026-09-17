@@ -2,6 +2,7 @@ package com.example.starter.domain.payment.dto
 
 import com.example.starter.domain.payment.entity.Payment
 import com.example.starter.domain.payment.entity.PaymentStatus
+import jakarta.validation.constraints.NotBlank
 import java.time.Instant
 
 /**
@@ -9,6 +10,13 @@ import java.time.Instant
  * Mock PG 는 이 값을 무시한다. 본문 없이 호출하면 paymentKey = null.
  */
 data class PayRequest(
+    val paymentKey: String? = null,
+)
+
+/** 비회원 결제 요청 — 주문번호 + 주문 시 연락처로 본인 확인 */
+data class GuestPayRequest(
+    @field:NotBlank val orderNumber: String?,
+    @field:NotBlank val ordererPhone: String?,
     val paymentKey: String? = null,
 )
 

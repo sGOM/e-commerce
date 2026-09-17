@@ -567,6 +567,8 @@ export const orderApi = {
   detail: (orderId: number) => api.get<Order>(`/api/orders/${orderId}`),
   cancel: (orderId: number) => api.post<Order>(`/api/orders/${orderId}/cancel`),
   pay: (orderId: number) => api.post<Payment>(`/api/payments/${orderId}`),
+  payGuest: (orderNumber: string, ordererPhone: string) =>
+    api.post<Payment>('/api/payments/guest', { orderNumber, ordererPhone }),
   // 하위 주문(판매자 단위) 수령 확인(구매확정). SHIPPED → DELIVERED. 이후 해당 항목에 리뷰를 쓸 수 있다.
   confirmDelivery: (subOrderId: number) =>
     api.post<Order>(`/api/orders/sub-orders/${subOrderId}/confirm-delivery`),
