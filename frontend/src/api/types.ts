@@ -678,3 +678,32 @@ export interface GiftExpiryBatchResult {
   expiredCount: number
   erroredCount: number
 }
+
+// ----- 관리자 회원/감사 로그/포인트 정책 -----
+export type UserStatus = 'ACTIVE' | 'LOCKED' | 'DORMANT' | 'WITHDRAWN'
+
+export interface AdminUser {
+  id: number
+  email: string
+  name: string
+  status: UserStatus
+  roles: string[]
+  createdAt: string
+}
+
+export interface AuditLog {
+  id: number
+  userId: number | null
+  method: string
+  uri: string
+  ip: string | null
+  statusCode: number
+  durationMs: number
+  payload: string | null
+  createdAt: string
+}
+
+export interface PointPolicy {
+  earnRateBp: number
+  expiryDays: number
+}

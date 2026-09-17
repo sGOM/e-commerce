@@ -62,6 +62,15 @@ export default function AdminLayout() {
         <NavLink to="/admin/loyalty-tiers" className={tab}>
           로열티 등급
         </NavLink>
+        <NavLink to="/admin/users" className={tab}>
+          회원
+        </NavLink>
+        <NavLink to="/admin/points" className={tab}>
+          포인트
+        </NavLink>
+        <NavLink to="/admin/audit-logs" className={tab}>
+          감사 로그
+        </NavLink>
       </nav>
       <Outlet />
     </div>

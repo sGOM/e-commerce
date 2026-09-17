@@ -1,6 +1,6 @@
 # 추가 구현 로드맵 (Backlog)
 
-> 최종 갱신: 2026-09-14 — main 코드와 대조해 **완료 항목은 제거하고 남은 작업만** 남겼다.
+> 최종 갱신: 2026-09-17 — main 코드와 대조해 **완료 항목은 제거하고 남은 작업만** 남겼다.
 > 기능 기획("무엇을·왜")은 [`docs/planning/`](./planning/README.md), 이 문서는 **아직 코드에 없는 것**의 백로그다.
 
 - 우선순위: 🔴 높음 · 🟡 중간 · 🟢 낮음
@@ -22,7 +22,8 @@ Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요),
 카테고리 수정/삭제(`PUT·DELETE /api/admin/categories/{id}`, 순환 상위 차단, 하위·상품 있으면 삭제 거부),
 장바구니·체크아웃 화면 테스트(Testing Library — 재고 부족 차단, 수량 갱신, 기본 배송지·쿠폰 미리보기, 비회원 주문),
 API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로필에서는 비활성),
-판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액).
+판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액),
+관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`).
 
 ---
 

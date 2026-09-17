@@ -54,6 +54,9 @@ const AdminDeliverySubscriptionDetailPage = lazy(
 )
 const AdminGiftClaimsPage = lazy(() => import('./pages/admin/AdminGiftClaimsPage'))
 const AdminLoyaltyTiersPage = lazy(() => import('./pages/admin/AdminLoyaltyTiersPage'))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
+const AdminPointsPage = lazy(() => import('./pages/admin/AdminPointsPage'))
+const AdminAuditLogsPage = lazy(() => import('./pages/admin/AdminAuditLogsPage'))
 
 export default function App() {
   return (
@@ -219,6 +222,9 @@ export default function App() {
               <Route path="delivery-subscriptions/:id" element={<AdminDeliverySubscriptionDetailPage />} />
               <Route path="gift-claims" element={<AdminGiftClaimsPage />} />
               <Route path="loyalty-tiers" element={<AdminLoyaltyTiersPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="points" element={<AdminPointsPage />} />
+              <Route path="audit-logs" element={<AdminAuditLogsPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
