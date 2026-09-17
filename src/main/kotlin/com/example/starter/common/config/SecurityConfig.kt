@@ -95,6 +95,8 @@ class SecurityConfig(
                 authorize("/api/auth/signup", permitAll)
                 authorize("/api/auth/login", permitAll)
                 authorize("/actuator/health", permitAll)
+                // 메트릭 스크레이프(무인증). 운영은 management 포트를 분리해 외부에 노출하지 않는다(application-prod.yml)
+                authorize("/actuator/prometheus", permitAll)
                 authorize("/oauth2/**", permitAll)
                 authorize("/login/oauth2/**", permitAll)
                 authorize("/error", permitAll)

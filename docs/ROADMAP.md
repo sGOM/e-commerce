@@ -25,7 +25,8 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액),
 관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`),
 이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드),
-관리자 대시보드(`GET /api/admin/dashboard?from=&to=` — GMV·주문 수·신규 가입, 일별 추이).
+관리자 대시보드(`GET /api/admin/dashboard?from=&to=` — GMV·주문 수·신규 가입, 일별 추이),
+Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 실행 지표, 운영은 내부 포트 `MANAGEMENT_PORT` 분리).
 
 ---
 
@@ -82,7 +83,6 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 8.3 | **프론트 번들 추가 분할** | 🟢 | S | - | 백오피스 분리 후에도 index 514KB(대부분 공용 라이브러리). 고객 페이지 lazy 는 로딩 깜빡임 트레이드오프 |
-| 8.5 | **관측성(메트릭/트레이싱)** | 🟡 | M | - | actuator만 있음. Micrometer/Prometheus, 스케줄러 배치 실행 지표 |
 | 8.6 | **캐싱** | 🟢 | M | - | 인기 상품/카테고리 매 요청 집계 |
 | 8.8 | **검색 인프라** | 🟢 | L | - | ILIKE → pg_trgm/전문검색 |
 

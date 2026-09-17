@@ -14,6 +14,11 @@ server:
         # 운영은 HTTPS 전제 — 보안 쿠키 강제
         secure: true
 
+# 액추에이터(헬스·프로메테우스)는 내부 포트로 분리 — 8080 에는 노출되지 않는다. 8081 은 외부에 publish 하지 않는다
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+
 # API 문서는 개발용 — 운영에서는 엔드포인트 목록이 공개되지 않도록 끈다
 springdoc:
   api-docs:
