@@ -350,6 +350,8 @@ export const sellerApi = {
   myProducts: () => api.get<SellerProduct[]>('/api/seller/products'),
   createProduct: (body: CreateProductBody) =>
     api.post<unknown>('/api/seller/products', body),
+  bulkStock: (items: { sku: string; quantity: number }[]) =>
+    api.patch<{ updated: number }>('/api/seller/products/stock', { items }),
   adjustStock: (productId: number, optionId: number, quantity: number) =>
     api.patch<unknown>(`/api/seller/products/${productId}/stock`, { optionId, quantity }),
   listOrders: (status?: SubOrderStatus) =>

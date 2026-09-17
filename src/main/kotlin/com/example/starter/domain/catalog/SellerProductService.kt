@@ -2,6 +2,8 @@ package com.example.starter.domain.catalog
 
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
+import com.example.starter.domain.catalog.dto.BulkStockRequest
+import com.example.starter.domain.catalog.dto.BulkStockResponse
 import com.example.starter.domain.catalog.dto.CreateProductRequest
 import com.example.starter.domain.catalog.dto.SellerProductResponse
 import com.example.starter.domain.catalog.dto.UpdateProductRequest
@@ -12,6 +14,7 @@ import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.event.InventoryRestockedEvent
 import com.example.starter.domain.catalog.event.ProductPriceChangedEvent
 import com.example.starter.domain.catalog.repository.CategoryRepository
+import com.example.starter.domain.catalog.repository.ProductOptionRepository
 import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.seller.entity.Seller
 import com.example.starter.domain.seller.repository.SellerRepository
@@ -28,6 +31,7 @@ class SellerProductService(
     private val sellerRepository: SellerRepository,
     private val productRepository: ProductRepository,
     private val categoryRepository: CategoryRepository,
+    private val productOptionRepository: ProductOptionRepository,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
 
@@ -96,20 +100,43 @@ class SellerProductService(
         val product = ownedProduct(userId, productId)
         val option = product.options.firstOrNull { it.id == optionId }
             ?: throw BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)
+        setStock(option, quantity)
+        return SellerProductResponse.from(product)
+    }
+
+    /**
+     * SKU 목록으로 여러 옵션 재고를 한 번에 절대값 설정한다(ROADMAP 4.3 CSV 일괄 수정).
+     * 모르는 SKU·남의 SKU·예약분 미만 수량이 하나라도 있으면 전부 거절한다(부분 반영 없음).
+     */
+    @Transactional
+    fun bulkAdjustStock(userId: Long, request: BulkStockRequest): BulkStockResponse {
+        val seller = activeSeller(userId)
+        val quantities = request.items.associate { it.sku!!.trim() to it.quantity!! }
+        val options = productOptionRepository.findBySkuIn(quantities.keys)
+            .filter { it.product.seller.id == seller.id }
+            .associateBy { it.sku }
+        val unknown = quantities.keys - options.keys
+        if (unknown.isNotEmpty()) {
+            throw BusinessException(ErrorCode.INVALID_INPUT, "등록되지 않은 SKU: ${unknown.joinToString(", ")}")
+        }
+        quantities.forEach { (sku, quantity) -> setStock(options.getValue(sku), quantity) }
+        return BulkStockResponse(quantities.size)
+    }
+
+    private fun setStock(option: ProductOption, quantity: Int) {
         val inventory = option.inventory
             ?: throw BusinessException(ErrorCode.PRODUCT_OPTION_NOT_FOUND)
         if (quantity < inventory.reserved) {
             throw BusinessException(
                 ErrorCode.INVALID_INPUT,
-                "이미 예약된 ${inventory.reserved}개보다 적은 수량으로 설정할 수 없습니다.",
+                "'${option.sku}' 은(는) 이미 예약된 ${inventory.reserved}개보다 적은 수량으로 설정할 수 없습니다.",
             )
         }
         val wasSoldOut = inventory.available <= 0
         inventory.quantity = quantity
         if (wasSoldOut && inventory.available > 0) {
-            eventPublisher.publishEvent(InventoryRestockedEvent(optionId))
+            eventPublisher.publishEvent(InventoryRestockedEvent(requireNotNull(option.id)))
         }
-        return SellerProductResponse.from(product)
     }
 
     private fun findCategory(categoryId: Long?): Category? =

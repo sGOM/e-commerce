@@ -48,6 +48,19 @@ data class AdjustStockRequest(
     @field:NotNull @field:PositiveOrZero val quantity: Int?,
 )
 
+/** 재고 일괄 수정 요청 항목 — SKU 의 재고를 절대값으로 설정 */
+data class BulkStockItem(
+    @field:NotBlank val sku: String?,
+    @field:NotNull @field:PositiveOrZero val quantity: Int?,
+)
+
+/** 재고 일괄 수정 요청(CSV 업로드를 클라이언트가 파싱해 전달) */
+data class BulkStockRequest(
+    @field:Valid @field:NotEmpty @field:Size(max = 1000) val items: List<BulkStockItem> = emptyList(),
+)
+
+data class BulkStockResponse(val updated: Int)
+
 /** 판매자용 옵션 응답(재고 상세 포함) */
 data class SellerOptionResponse(
     val optionId: Long,

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import ImageUploadButton from '../../components/ImageUploadButton'
+import { parseStockCsv } from '@/lib/stockCsv'
 
 export default function SellerProductsPage() {
   const [products, setProducts] = useState<SellerProduct[]>([])
@@ -34,7 +35,8 @@ export default function SellerProductsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <StockCsvUpload onUploaded={load} />
         <Button onClick={() => setShowForm((v) => !v)}>
           {showForm ? '닫기' : '+ 상품 등록'}
         </Button>
@@ -144,6 +146,57 @@ function StockRow({
       <Button type="button" variant="outline" size="sm" onClick={() => onSave(option.optionId, qty)}>
         저장
       </Button>
+    </div>
+  )
+}
+
+/** CSV(`sku,quantity`)로 여러 옵션 재고를 한 번에 설정한다. 잘못된 SKU 가 하나라도 있으면 서버가 전부 거절한다. */
+function StockCsvUpload({ onUploaded }: { onUploaded: () => void }) {
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    setMessage(null)
+    setError(null)
+    try {
+      const { updated } = await sellerApi.bulkStock(parseStockCsv(await file.text()))
+      setMessage(`${updated}개 옵션의 재고를 수정했습니다.`)
+      onUploaded()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : (err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <label
+        htmlFor="stock-csv"
+        className="cursor-pointer text-sm text-muted-foreground underline underline-offset-4"
+      >
+        {busy ? '재고 반영 중…' : '재고 CSV 업로드 (sku,quantity)'}
+      </label>
+      <input
+        id="stock-csv"
+        type="file"
+        accept=".csv,text/csv"
+        aria-label="재고 CSV 업로드"
+        className="sr-only"
+        disabled={busy}
+        onChange={upload}
+      />
+      {message && <p className="text-xs text-success">{message}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
