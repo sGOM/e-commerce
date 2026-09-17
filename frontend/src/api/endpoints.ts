@@ -317,6 +317,20 @@ export const uploadApi = {
   },
 }
 
+// ----- 관리자 대시보드 -----
+export interface AdminDashboard {
+  from: string
+  to: string
+  orderCount: number
+  gmv: number
+  newUserCount: number
+  daily: { date: string; orderCount: number; gmv: number }[]
+}
+
+export const adminDashboardApi = {
+  get: (from: string, to: string) => api.get<AdminDashboard>(`/api/admin/dashboard?from=${from}&to=${to}`),
+}
+
 // ----- 판매자 백오피스 -----
 export interface SellerDashboard {
   from: string

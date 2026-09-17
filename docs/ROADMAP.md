@@ -24,7 +24,8 @@ Testcontainers 로컬 Docker 29 호환(1.21.4, 외부 PG 우회 불필요),
 API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로필에서는 비활성),
 판매자 매출 대시보드(`GET /api/seller/dashboard?from=&to=` — 기간 주문 수·매출, 미정산 판매액, 지급 대기액),
 관리자 회원·포인트·감사 로그 화면(`/admin/users` 상태·역할 관리, `/admin/points` 적립 정책·만료 실행, `/admin/audit-logs`),
-이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드).
+이미지 업로드(`POST /api/uploads` 시그니처 검증·로컬 디스크 저장, 상품 대표 이미지 `products.image_url`, 리뷰 사진 업로드),
+관리자 대시보드(`GET /api/admin/dashboard?from=&to=` — GMV·주문 수·신규 가입, 일별 추이).
 
 ---
 
@@ -58,12 +59,6 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 4.3 | **재고 일괄 관리 / 저재고 알림** | 🟢 | M | - | CSV 업로드, 임계치 알림(인앱 알림함 재사용) |
-
-## 5. 관리자 백오피스
-
-| # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
-|---|------|:------:|:----:|------|------|
-| 5.3 | **대시보드 / 통계** | 🟢 | M | - | GMV, 신규 가입, 주문 추이 |
 
 ## 6. 알림 / 메시징
 

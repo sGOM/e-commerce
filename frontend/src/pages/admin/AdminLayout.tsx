@@ -23,6 +23,9 @@ export default function AdminLayout() {
     <div>
       <h1 className="mb-2 text-xl font-bold">관리자 센터</h1>
       <nav className="mb-6 flex flex-wrap gap-6 border-b border-border">
+        <NavLink to="/admin" end className={tab}>
+          대시보드
+        </NavLink>
         <NavLink to="/admin/sellers" className={tab}>
           셀러 심사
         </NavLink>
