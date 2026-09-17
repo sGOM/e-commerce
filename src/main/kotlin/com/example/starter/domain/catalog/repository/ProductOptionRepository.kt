@@ -18,4 +18,8 @@ interface ProductOptionRepository : JpaRepository<ProductOption, Long> {
     /** 옵션 + 상품 + 판매자를 함께 로딩(배치) — 타임딜 응답에 상품명/상점명을 노출할 때 사용 */
     @EntityGraph(attributePaths = ["product", "product.seller"])
     fun findWithProductAndSellerByIdIn(ids: Collection<Long>): List<ProductOption>
+
+    /** SKU 로 옵션 + 상품 + 판매자 + 재고 로딩(배치) — 판매자 재고 일괄 수정용 */
+    @EntityGraph(attributePaths = ["product", "product.seller", "inventory"])
+    fun findBySkuIn(skus: Collection<String>): List<ProductOption>
 }

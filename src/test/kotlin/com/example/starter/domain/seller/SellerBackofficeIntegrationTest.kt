@@ -173,4 +173,52 @@ class SellerBackofficeIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.code") { value("CATALOG-001") }
         }
     }
+
+    private fun createProduct(seller: CustomUserDetails, sku: String, stock: Int) {
+        mockMvc.post("/api/seller/products") {
+            with(user(seller)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"name":"상품-$sku","basePrice":1000,"status":"ON_SALE","options":[{"name":"기본","sku":"$sku","additionalPrice":0,"stockQuantity":$stock}]}"""
+        }.andExpect { status { isOk() } }
+    }
+
+    private fun bulkStock(seller: CustomUserDetails, items: String) = mockMvc.patch("/api/seller/products/stock") {
+        with(user(seller)); with(csrf())
+        contentType = MediaType.APPLICATION_JSON
+        content = """{"items":$items}"""
+    }
+
+    @Test
+    fun `판매자는 SKU 목록으로 여러 옵션 재고를 한 번에 설정한다`() {
+        val seller = seedSeller("bulk-seller@example.com")
+        createProduct(seller, "BULK-A", 1)
+        createProduct(seller, "BULK-B", 2)
+
+        bulkStock(seller, """[{"sku":"BULK-A","quantity":30},{"sku":"BULK-B","quantity":0}]""").andExpect {
+            status { isOk() }
+            jsonPath("$.data.updated") { value(2) }
+        }
+        mockMvc.get("/api/seller/products") { with(user(seller)) }.andExpect {
+            jsonPath("$.data[?(@.name == '상품-BULK-A')].options[0].quantity") { value(30) }
+            jsonPath("$.data[?(@.name == '상품-BULK-B')].options[0].quantity") { value(0) }
+        }
+    }
+
+    @Test
+    fun `모르는 SKU 나 남의 SKU 가 하나라도 있으면 아무것도 바꾸지 않는다`() {
+        val seller = seedSeller("bulk-seller2@example.com")
+        val other = seedSeller("bulk-other@example.com")
+        createProduct(seller, "BULK-C", 5)
+        createProduct(other, "BULK-OTHER", 5)
+
+        bulkStock(seller, """[{"sku":"BULK-C","quantity":9},{"sku":"BULK-OTHER","quantity":1},{"sku":"NOPE","quantity":1}]""").andExpect {
+            status { isBadRequest() }
+            jsonPath("$.code") { value("COMMON-002") }
+            jsonPath("$.message") { value(org.hamcrest.Matchers.containsString("BULK-OTHER")) }
+            jsonPath("$.message") { value(org.hamcrest.Matchers.containsString("NOPE")) }
+        }
+        mockMvc.get("/api/seller/products") { with(user(seller)) }.andExpect {
+            jsonPath("$.data[0].options[0].quantity") { value(5) }
+        }
+    }
 }

@@ -2,6 +2,8 @@ package com.example.starter.domain.catalog
 
 import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.catalog.dto.AdjustStockRequest
+import com.example.starter.domain.catalog.dto.BulkStockRequest
+import com.example.starter.domain.catalog.dto.BulkStockResponse
 import com.example.starter.domain.catalog.dto.CreateProductRequest
 import com.example.starter.domain.catalog.dto.SellerProductResponse
 import com.example.starter.domain.catalog.dto.UpdateProductRequest
@@ -44,6 +46,13 @@ class SellerProductController(
         @RequestBody @Valid request: UpdateProductRequest,
     ): ApiResponse<SellerProductResponse> =
         ApiResponse.success(sellerProductService.update(principal.userId, productId, request), "상품을 수정했습니다.")
+
+    @PatchMapping("/stock")
+    fun bulkAdjustStock(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @RequestBody @Valid request: BulkStockRequest,
+    ): ApiResponse<BulkStockResponse> =
+        ApiResponse.success(sellerProductService.bulkAdjustStock(principal.userId, request), "재고를 일괄 수정했습니다.")
 
     @PatchMapping("/{productId}/stock")
     fun adjustStock(
