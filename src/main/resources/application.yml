@@ -32,6 +32,12 @@ spring:
       max-file-size: 5MB
       max-request-size: 6MB
 
+# 알림 메일(ROADMAP 6.1). spring.mail.host 가 비어 있으면 실제 발송 대신 로그로 남긴다(LoggingEmailSender).
+# 운영에서 켜려면 MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD 와 notification.email.from 을 지정한다.
+notification:
+  email:
+    from: ${MAIL_FROM:no-reply@example.com}
+
 # 업로드 이미지 저장 디렉터리(로컬 디스크). 운영은 영속 볼륨 경로로 지정한다: UPLOAD_DIR=/data/uploads
 upload:
   dir: ${UPLOAD_DIR:uploads}

@@ -7,6 +7,15 @@ spring:
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:20}
 
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
 server:
   servlet:
     session:
