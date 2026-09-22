@@ -81,6 +81,11 @@ export const authApi = {
   /** 소셜 전용 계정(비밀번호 미설정)은 currentPassword 없이 설정할 수 있다. */
   changePassword: (newPassword: string, currentPassword?: string) =>
     api.patch<void>('/api/auth/password', { currentPassword, newPassword }),
+  /** 분실 재설정 - 응답은 가입 여부를 알려주지 않는다. */
+  requestPasswordReset: (email: string) =>
+    api.post<void>('/api/auth/password-reset/request', { email }),
+  confirmPasswordReset: (token: string, newPassword: string) =>
+    api.post<void>('/api/auth/password-reset/confirm', { token, newPassword }),
 }
 
 // ----- 내 쿠폰/포인트 -----

@@ -33,6 +33,27 @@ data class ChangePasswordRequest(
 )
 
 /**
+ * 비밀번호 재설정 메일 요청.
+ */
+data class PasswordResetRequest(
+    @field:NotBlank
+    @field:Email
+    val email: String,
+)
+
+/**
+ * 비밀번호 재설정 확정 - 메일로 받은 토큰 + 새 비밀번호.
+ */
+data class PasswordResetConfirmRequest(
+    @field:NotBlank
+    val token: String,
+
+    @field:NotBlank
+    @field:Size(min = 8, max = 64, message = "비밀번호는 8~64자여야 합니다.")
+    val newPassword: String,
+)
+
+/**
  * 자체 로그인 요청.
  */
 data class LoginRequest(
