@@ -94,6 +94,8 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/api/auth/signup", permitAll)
                 authorize("/api/auth/login", permitAll)
+                // 비밀번호 분실 재설정(메일 토큰) - 비로그인 경로
+                authorize("/api/auth/password-reset/**", permitAll)
                 authorize("/actuator/health", permitAll)
                 // 메트릭 스크레이프(무인증). 운영은 management 포트를 분리해 외부에 노출하지 않는다(application-prod.yml)
                 authorize("/actuator/prometheus", permitAll)

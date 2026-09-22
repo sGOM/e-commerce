@@ -28,6 +28,7 @@ import GiftClaimPage from './pages/GiftClaimPage'
 import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import PasswordResetPage from './pages/PasswordResetPage'
 // 판매자·관리자 백오피스는 일부 사용자만 쓰므로 별도 청크로 분리해 고객 첫 로딩에서 제외한다.
 const SellerLayout = lazy(() => import('./pages/seller/SellerLayout'))
 const SellerDashboardPage = lazy(() => import('./pages/seller/SellerDashboardPage'))
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="flash-sales" element={<FlashSalesPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
+            <Route path="reset-password" element={<PasswordResetPage />} />
             {/* 장바구니·주문은 게스트(localStorage)와 회원 모두 사용 */}
             <Route path="cart" element={<CartPage />} />
             <Route path="checkout" element={<CheckoutPage />} />

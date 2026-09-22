@@ -89,6 +89,12 @@ export default function LoginPage() {
               {submitting && <Loader2 className="size-4 animate-spin" />}
               {submitting ? '로그인 중…' : '로그인'}
             </Button>
+            <Link
+              to="/reset-password"
+              className="block text-center text-sm text-muted-foreground hover:underline"
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
           </form>
         </CardContent>
         <CardFooter className="justify-center text-sm text-muted-foreground">

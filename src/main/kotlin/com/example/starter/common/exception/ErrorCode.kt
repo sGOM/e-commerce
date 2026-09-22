@@ -24,6 +24,7 @@ enum class ErrorCode(
     UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "AUTH-001", "인증이 필요합니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "AUTH-002", "접근 권한이 없습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "AUTH-003", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    INVALID_RESET_TOKEN(HttpStatus.BAD_REQUEST, "AUTH-004", "만료되었거나 이미 사용한 재설정 링크입니다."),
 
     // 사용자 (USER)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER-001", "사용자를 찾을 수 없습니다."),
