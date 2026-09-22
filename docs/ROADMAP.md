@@ -29,7 +29,8 @@ API 문서(springdoc — `/swagger-ui/index.html`, `/v3/api-docs`, prod 프로�
 Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 실행 지표, 운영은 내부 포트 `MANAGEMENT_PORT` 분리),
 저재고 알림(주문 예약으로 가용재고가 `inventory.low-stock-threshold`(기본 5) 이하로 내려가면 판매자 인앱 알림 `LOW_STOCK`),
 게스트 결제(`POST /api/payments/guest` — 주문번호+연락처 확인, 체크아웃 즉시 결제·조회 화면 재시도),
-재고 CSV 일괄 수정(`PATCH /api/seller/products/stock` — `sku,quantity` 전량 검증 후 일괄 반영).
+재고 CSV 일괄 수정(`PATCH /api/seller/products/stock` — `sku,quantity` 전량 검증 후 일괄 반영),
+이메일 알림 채널(`EmailSender` — `spring.mail.host` 유무로 SMTP/로깅 구현 선택, 재입고·가격인하·멤버십·정기배송·선물 알림 발송).
 
 **5. 관리자 백오피스** 는 남은 항목이 없어 표를 제거했다(번호는 기존 항목 ID 유지를 위해 재사용하지 않는다).
 
@@ -56,14 +57,13 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 3.1 | **비밀번호 재설정(분실)** | 🔴 | S | 6.1(재설정 메일) | 변경(`PATCH /api/auth/password`)은 완료. 메일 토큰 기반 재설정만 남음 |
+| 3.1 | **비밀번호 재설정(분실)** | 🔴 | S | - | 변경(`PATCH /api/auth/password`)은 완료. 메일 토큰 기반 재설정만 남음 |
 | 3.3 | **회원 탈퇴 / 개인정보 처리** | 🟡 | M | - | soft delete/익명화 정책, 멤버십·정기배송 해지 연쇄 |
 
 ## 6. 알림 / 메시징
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 6.1 | **이메일 발송 채널** | 🔴 | M | - | 인앱 알림함만 존재. 재입고·가격인하·정기결제 실패 등 기존 알림 이벤트에 채널 추가 |
 | 6.2 | **배송 추적 연동** | 🟢 | M | - | 택배사 API, 배송 상태 노출 |
 | 6.3 | **웹 푸시** | 🟢 | L | 6.1 | |
 
@@ -91,7 +91,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 | 구분 | 항목 | 필요한 것 |
 |------|------|-----------|
 | 외부 연동 키 | 1.2, 1.3, 1.4, 1.5 | Toss 테스트 키(클라이언트/시크릿) |
-| 외부 연동 키 | 6.1 → 3.1 | SMTP(또는 메일 API) 계정 |
+| 외부 연동 키 | (실발송만) | 6.1 코드는 완료 — 실제 메일 발송에만 SMTP 계정 필요(`MAIL_HOST` 등) |
 | 외부 연동 키 | 6.2, 6.3 | 택배사 API 계약 / 웹푸시 VAPID |
 | 정책 결정 | 7.1, 7.2 | 배송비 모델, 어뷰징 방지 원칙 |
 | 정책 결정 | 3.3 | 탈퇴 시 soft delete vs 익명화 |
@@ -102,5 +102,5 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 1. **결제 완성** — 1.2 Toss 위젯 → 1.3 PG 취소 연동 (Toss 테스트 키 필요)
 2. **상품 완성도** — 업로드 저장소를 S3/영속 볼륨으로 교체(운영 배포 전)
-3. **회원 필수** — 6.1 이메일 → 3.1 비밀번호 재설정
+3. **회원 필수** — 3.1 비밀번호 재설정(메일 채널 완료, 토큰 흐름만 남음)
 4. **정책 확정 후** — 7.1 배송비 모델
