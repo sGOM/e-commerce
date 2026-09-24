@@ -34,7 +34,8 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 비밀번호 분실 재설정(`POST /api/auth/password-reset/request|confirm` — 메일 토큰 30분·1회용, 해시 저장, 계정 열거 방지, `/reset-password` 화면),
 PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액을 토스 `/v1/payments/{paymentKey}/cancel` 로, 결정적 `Idempotency-Key`, PG 거절 시 전체 롤백),
 결제 웹훅(`POST /api/payments/webhook/toss` — 서명 없는 PAYMENT_STATUS_CHANGED 를 PG 재조회로 검증, PG 전액 취소를 주문에 반영),
-토스 결제창 프론트 연동(`VITE_TOSS_CLIENT_KEY` 설정 시 SDK v2 결제창 → `/payments/toss/success` 에서 `paymentKey` 로 서버 승인, 회원·비회원·주문 상세 재결제, 키 없으면 Mock PG).
+토스 결제창 프론트 연동(`VITE_TOSS_CLIENT_KEY` 설정 시 SDK v2 결제창 → `/payments/toss/success` 에서 `paymentKey` 로 서버 승인, 회원·비회원·주문 상세 재결제, 키 없으면 Mock PG),
+미결제 주문 자동 만료(CREATED 30분 경과 시 취소·재고 복원, 결제와 주문 행 잠금으로 경합 차단, `order.unpaid-expiry.scheduler.enabled` 또는 `POST /api/admin/orders/expire-unpaid/run`).
 
 **5. 관리자 백오피스** 는 남은 항목이 없어 표를 제거했다(번호는 기존 항목 ID 유지를 위해 재사용하지 않는다).
 
@@ -46,7 +47,6 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 1.6 | **미결제 주문 자동 만료** | 🔴 | S | - | CREATED 주문을 정리하는 배치가 없어 결제창 이탈·결제 실패 주문이 재고 `reserved` 를 계속 점유한다. 토스 결제창 도입으로 빈도 증가 |
 | 1.5 | **반품·교환 상태 머신** | 🟢 | L | - | 현재는 관리자 환불로 대체. 반품 요청→회수→검수→환불 흐름 |
 
 ## 2. 상품 / 카탈로그

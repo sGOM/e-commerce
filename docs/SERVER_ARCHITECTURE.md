@@ -217,6 +217,12 @@ when {
 - `PARTIAL_CANCELED` 는 어느 SubOrder 몫인지 알 수 없어 경고 로그만. 이미 취소된 주문은 무시(재전송 멱등).
 - 조회 실패는 5xx 로 두어 토스 재전송(최대 7회)에 맡긴다.
 
+### 6-6. 미결제 주문 만료 — 결제와 같은 행 잠금
+결제창 이탈로 CREATED 에 남은 주문은 `UnpaidOrderExpiryService` 가 `order.unpaid-expiry.ttl`(기본 30분) 뒤 취소해 재고 예약을 푼다.
+`PaymentService.pay` 와 `OrderService.expireUnpaidOrder` 는 둘 다 주문 행을 `PESSIMISTIC_WRITE` 로 잠근 뒤 상태를 다시 읽는다 —
+결제 중인 주문을 만료가 취소하거나, 만료된 주문을 결제가 승인하는 경합이 없다. 결제 쪽은 이미 읽은 엔티티라
+`flush` 후 `refresh(order, PESSIMISTIC_WRITE)` 로 잠금과 최신화를 함께 한다(flush 없이 refresh 하면 같은 트랜잭션의 미반영 변경이 사라진다).
+
 ---
 
 ## 7. 정산 — 집계 멱등성 + 조건부 스케줄러
