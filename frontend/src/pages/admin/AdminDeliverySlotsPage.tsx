@@ -69,9 +69,7 @@ export default function AdminDeliverySlotsPage() {
             </Button>
           ))}
         </div>
-        <Button onClick={() => setShowForm((v) => !v)}>
-          {showForm ? '닫기' : '+ 슬롯 개설'}
-        </Button>
+        <Button onClick={() => setShowForm((v) => !v)}>{showForm ? '닫기' : '+ 슬롯 개설'}</Button>
       </div>
 
       {showForm && (
@@ -107,8 +105,8 @@ export default function AdminDeliverySlotsPage() {
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       예약 {slot.reservedCount}/{slot.capacity} · 잔여 {slot.remaining} ·{' '}
-                      {slot.extraFee > 0 ? `추가요금 ${formatKRW(slot.extraFee)}` : '추가요금 없음'} ·{' '}
-                      권역 {slot.regionScope ?? '전국'}
+                      {slot.extraFee > 0 ? `추가요금 ${formatKRW(slot.extraFee)}` : '추가요금 없음'} · 권역{' '}
+                      {slot.regionScope ?? '전국'}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       마감 {new Date(slot.cutoffAt).toLocaleString('ko-KR')}
@@ -198,7 +196,13 @@ function CreateSlotForm({ onCreated }: { onCreated: () => void }) {
               <Label htmlFor="slot-date" className="text-xs text-muted-foreground">
                 날짜
               </Label>
-              <Input id="slot-date" required type="date" value={slotDate} onChange={(e) => setSlotDate(e.target.value)} />
+              <Input
+                id="slot-date"
+                required
+                type="date"
+                value={slotDate}
+                onChange={(e) => setSlotDate(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="slot-type" className="text-xs text-muted-foreground">
@@ -218,7 +222,13 @@ function CreateSlotForm({ onCreated }: { onCreated: () => void }) {
               <Label htmlFor="slot-start" className="text-xs text-muted-foreground">
                 시작 시각
               </Label>
-              <Input id="slot-start" required type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+              <Input
+                id="slot-start"
+                required
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="slot-end" className="text-xs text-muted-foreground">
@@ -230,19 +240,38 @@ function CreateSlotForm({ onCreated }: { onCreated: () => void }) {
               <Label htmlFor="slot-cutoff" className="text-xs text-muted-foreground">
                 주문 마감 시각
               </Label>
-              <Input id="slot-cutoff" required type="datetime-local" value={cutoffAt} onChange={(e) => setCutoffAt(e.target.value)} />
+              <Input
+                id="slot-cutoff"
+                required
+                type="datetime-local"
+                value={cutoffAt}
+                onChange={(e) => setCutoffAt(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="slot-capacity" className="text-xs text-muted-foreground">
                 정원
               </Label>
-              <Input id="slot-capacity" required type="number" min={1} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
+              <Input
+                id="slot-capacity"
+                required
+                type="number"
+                min={1}
+                value={capacity}
+                onChange={(e) => setCapacity(Number(e.target.value))}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="slot-extra-fee" className="text-xs text-muted-foreground">
                 추가 배송비(원)
               </Label>
-              <Input id="slot-extra-fee" type="number" min={0} value={extraFee} onChange={(e) => setExtraFee(Number(e.target.value))} />
+              <Input
+                id="slot-extra-fee"
+                type="number"
+                min={0}
+                value={extraFee}
+                onChange={(e) => setExtraFee(Number(e.target.value))}
+              />
             </div>
             <div className="space-y-1 sm:col-span-2">
               <Label htmlFor="slot-region" className="text-xs text-muted-foreground">

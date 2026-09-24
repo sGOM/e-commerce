@@ -6,14 +6,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -49,10 +42,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
             {error && (
-              <p
-                role="alert"
-                className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              >
+              <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}
@@ -89,10 +79,7 @@ export default function LoginPage() {
               {submitting && <Loader2 className="size-4 animate-spin" />}
               {submitting ? '로그인 중…' : '로그인'}
             </Button>
-            <Link
-              to="/reset-password"
-              className="block text-center text-sm text-muted-foreground hover:underline"
-            >
+            <Link to="/reset-password" className="block text-center text-sm text-muted-foreground hover:underline">
               비밀번호를 잊으셨나요?
             </Link>
           </form>

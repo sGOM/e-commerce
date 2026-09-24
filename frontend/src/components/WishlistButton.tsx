@@ -11,13 +11,7 @@ import { cn } from '@/lib/utils'
  * 찜(위시리스트) 토글 버튼 — 상품 카드/상세 공용. 비로그인 시 로그인 유도 토스트만 띄운다
  * (`docs/planning/wishlist-price-alert.md`).
  */
-export default function WishlistButton({
-  productId,
-  className,
-}: {
-  productId: number
-  className?: string
-}) {
+export default function WishlistButton({ productId, className }: { productId: number; className?: string }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { ids, pendingIds, toggle } = useWishlist()

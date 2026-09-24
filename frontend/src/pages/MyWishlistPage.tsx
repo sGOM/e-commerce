@@ -39,9 +39,7 @@ export default function MyWishlistPage() {
     try {
       await toggle(item.productId)
       toast.success('위시리스트에서 삭제했습니다.')
-      setData((prev) =>
-        prev ? { ...prev, content: prev.content.filter((w) => w.id !== item.id) } : prev,
-      )
+      setData((prev) => (prev ? { ...prev, content: prev.content.filter((w) => w.id !== item.id) } : prev))
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : '삭제에 실패했습니다.')
     }
@@ -91,9 +89,7 @@ export default function MyWishlistPage() {
                   <span className="text-lg font-bold text-primary">{formatKRW(w.currentPrice)}</span>
                   {w.isPriceDropped && (
                     <>
-                      <span className="text-sm text-muted-foreground line-through">
-                        {formatKRW(w.baselinePrice)}
-                      </span>
+                      <span className="text-sm text-muted-foreground line-through">{formatKRW(w.baselinePrice)}</span>
                       <Badge variant="destructive">{w.priceDropRate}% 인하</Badge>
                     </>
                   )}

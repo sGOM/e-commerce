@@ -48,19 +48,18 @@ export default function FlashSalesPage() {
         </div>
       )}
 
-      {flashSales && !loading && !error && (
-        flashSales.length === 0 ? (
-          <p className="py-20 text-center text-sm text-muted-foreground">
-            진행 중인 타임딜이 없습니다.
-          </p>
+      {flashSales &&
+        !loading &&
+        !error &&
+        (flashSales.length === 0 ? (
+          <p className="py-20 text-center text-sm text-muted-foreground">진행 중인 타임딜이 없습니다.</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {flashSales.map((fs) => (
               <FlashSaleCard key={fs.id} flashSale={fs} />
             ))}
           </div>
-        )
-      )}
+        ))}
     </div>
   )
 }

@@ -10,12 +10,7 @@ interface StarRatingDisplayProps {
 }
 
 /** 평점 표시(읽기 전용). 0.5 단위 반영은 생략하고 실수 비율만큼 별을 채운다(AC8). */
-export function StarRatingDisplay({
-  rating,
-  reviewCount,
-  size = 'sm',
-  className,
-}: StarRatingDisplayProps) {
+export function StarRatingDisplay({ rating, reviewCount, size = 'sm', className }: StarRatingDisplayProps) {
   const starSize = size === 'md' ? 'size-5' : 'size-3.5'
   const pct = Math.max(0, Math.min(100, (rating / 5) * 100))
   const label =
@@ -31,10 +26,7 @@ export function StarRatingDisplay({
             <Star key={i} className={cn(starSize, 'fill-current')} />
           ))}
         </span>
-        <span
-          className="absolute inset-0 flex gap-0.5 overflow-hidden text-amber-400"
-          style={{ width: `${pct}%` }}
-        >
+        <span className="absolute inset-0 flex gap-0.5 overflow-hidden text-amber-400" style={{ width: `${pct}%` }}>
           {Array.from({ length: 5 }, (_, i) => (
             <Star key={i} className={cn(starSize, 'shrink-0 fill-current')} />
           ))}
@@ -42,9 +34,7 @@ export function StarRatingDisplay({
       </span>
       <span className="text-xs font-medium text-foreground">{rating.toFixed(1)}</span>
       {reviewCount != null && (
-        <span className="text-xs text-muted-foreground">
-          ({reviewCount.toLocaleString('ko-KR')})
-        </span>
+        <span className="text-xs text-muted-foreground">({reviewCount.toLocaleString('ko-KR')})</span>
       )}
     </div>
   )
@@ -73,12 +63,7 @@ export function StarRatingInput({ value, onChange, label = '별점' }: StarRatin
 
   return (
     <div>
-      <div
-        role="radiogroup"
-        aria-label={label}
-        className="flex gap-1"
-        onMouseLeave={() => setHover(null)}
-      >
+      <div role="radiogroup" aria-label={label} className="flex gap-1" onMouseLeave={() => setHover(null)}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}

@@ -74,13 +74,7 @@ export default function AdminLoyaltyTiersPage() {
           <Button type="button" size="sm" disabled={recalculating} onClick={recalculate}>
             {recalculating ? '실행 중…' : '로열티 등급 재계산 수동 실행'}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={runningReminder}
-            onClick={runCartReminder}
-          >
+          <Button type="button" size="sm" variant="outline" disabled={runningReminder} onClick={runCartReminder}>
             {runningReminder ? '실행 중…' : '장바구니 이탈 리마인드 수동 실행'}
           </Button>
         </CardContent>
@@ -120,8 +114,7 @@ export default function AdminLoyaltyTiersPage() {
                     <p className="text-sm font-medium">회원 #{t.userId}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       최근 12개월 순구매액 {formatKRW(t.netPurchaseAmount12m)}
-                      {t.calculatedAt &&
-                        ` · 산정 시각 ${new Date(t.calculatedAt).toLocaleString('ko-KR')}`}
+                      {t.calculatedAt && ` · 산정 시각 ${new Date(t.calculatedAt).toLocaleString('ko-KR')}`}
                     </p>
                   </div>
                   <Badge className={loyaltyTierBadgeClass[t.tier]}>{loyaltyTierLabel[t.tier]}</Badge>

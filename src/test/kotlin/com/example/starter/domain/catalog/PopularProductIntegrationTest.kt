@@ -65,8 +65,10 @@ class PopularProductIntegrationTest : AbstractIntegrationTest() {
     @Test
     fun `인기 상품은 누적 판매 수량 순으로 정렬된다`() {
         val seller = sellerRepository.save(
-            Seller(userId = userRepository.save(User(email = "pop@seller.com", password = "{noop}x", name = "pop")).id!!,
-                storeName = "인기상점", status = SellerStatus.ACTIVE),
+            Seller(
+                userId = userRepository.save(User(email = "pop@seller.com", password = "{noop}x", name = "pop")).id!!,
+                storeName = "인기상점", status = SellerStatus.ACTIVE,
+            ),
         )
         val (lessId, lessOpt) = seedProduct(seller, "덜팔린상품", "POP-LESS")
         val (moreId, moreOpt) = seedProduct(seller, "많이팔린상품", "POP-MORE")

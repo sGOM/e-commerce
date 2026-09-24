@@ -49,9 +49,7 @@ export default function MyRestockAlertsPage() {
       ) : error ? (
         <p className="py-20 text-center text-sm text-destructive">{error}</p>
       ) : alerts.length === 0 ? (
-        <p className="py-20 text-center text-sm text-muted-foreground">
-          신청한 재입고 알림이 없습니다.
-        </p>
+        <p className="py-20 text-center text-sm text-muted-foreground">신청한 재입고 알림이 없습니다.</p>
       ) : (
         <ul className="space-y-3">
           {alerts.map((a) => (

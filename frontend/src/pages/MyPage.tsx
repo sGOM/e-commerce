@@ -40,9 +40,7 @@ export default function MyPage() {
         <h1 className="mb-4 text-xl font-bold">내 포인트</h1>
         <Card className="p-5">
           <p className="text-sm text-muted-foreground">사용 가능 포인트</p>
-          <p className="text-2xl font-bold text-primary">
-            {formatKRW(points?.balance ?? 0)}
-          </p>
+          <p className="text-2xl font-bold text-primary">{formatKRW(points?.balance ?? 0)}</p>
           {points && points.transactions.length > 0 && (
             <ul className="mt-4 divide-y divide-border text-sm">
               {points.transactions.slice(0, 10).map((t, i) => (
@@ -74,19 +72,14 @@ export default function MyPage() {
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{c.name}</p>
                     {c.used && (
-                      <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                        사용완료
-                      </span>
+                      <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">사용완료</span>
                     )}
                   </div>
                   <p className="mt-1 text-lg font-bold text-primary">
-                    {c.discountType === 'RATE'
-                      ? `${c.discountValue}% 할인`
-                      : `${formatKRW(c.discountValue)} 할인`}
+                    {c.discountType === 'RATE' ? `${c.discountValue}% 할인` : `${formatKRW(c.discountValue)} 할인`}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatKRW(c.minOrderAmount)} 이상 ·{' '}
-                    {new Date(c.validUntil).toLocaleDateString('ko-KR')}까지
+                    {formatKRW(c.minOrderAmount)} 이상 · {new Date(c.validUntil).toLocaleDateString('ko-KR')}까지
                   </p>
                 </Card>
               </li>
@@ -149,7 +142,10 @@ function PasswordChangeSection() {
           />
           <p className="text-xs text-muted-foreground">소셜 로그인만 사용해 온 계정은 현재 비밀번호를 비워 두세요.</p>
           {message && (
-            <p role={message.ok ? 'status' : 'alert'} className={cn('text-sm', message.ok ? 'text-success' : 'text-destructive')}>
+            <p
+              role={message.ok ? 'status' : 'alert'}
+              className={cn('text-sm', message.ok ? 'text-success' : 'text-destructive')}
+            >
               {message.text}
             </p>
           )}

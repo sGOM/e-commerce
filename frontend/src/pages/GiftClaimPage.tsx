@@ -78,7 +78,9 @@ export default function GiftClaimPage() {
         <h1 className="mt-2 text-lg font-bold text-pink-700 dark:text-pink-300">선물이 도착했어요!</h1>
         <p className="mt-1 text-sm text-muted-foreground">{preview.senderName}님이 보낸 선물이에요.</p>
         {preview.giftMessage && (
-          <p className="mt-4 rounded-lg bg-card p-4 text-sm text-card-foreground">&ldquo;{preview.giftMessage}&rdquo;</p>
+          <p className="mt-4 rounded-lg bg-card p-4 text-sm text-card-foreground">
+            &ldquo;{preview.giftMessage}&rdquo;
+          </p>
         )}
       </div>
 
@@ -108,8 +110,8 @@ export default function GiftClaimPage() {
       )}
       {status === 'EXPIRED' && (
         <div className="rounded-xl bg-muted p-5 text-center text-sm text-muted-foreground">
-          {giftClaimStatusLabel.EXPIRED} — 기한 내에 배송지를 입력하지 않아 선물이 자동으로 취소되고
-          전액 환불되었습니다.
+          {giftClaimStatusLabel.EXPIRED} — 기한 내에 배송지를 입력하지 않아 선물이 자동으로 취소되고 전액
+          환불되었습니다.
         </div>
       )}
       {status === 'CANCELED' && (
@@ -129,11 +131,23 @@ export default function GiftClaimPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="receiverName">받는 분 성함</Label>
-                  <Input id="receiverName" required placeholder="받는 분 성함" value={form.receiverName} onChange={set('receiverName')} />
+                  <Input
+                    id="receiverName"
+                    required
+                    placeholder="받는 분 성함"
+                    value={form.receiverName}
+                    onChange={set('receiverName')}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="receiverPhone">받는 분 연락처</Label>
-                  <Input id="receiverPhone" required placeholder="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} />
+                  <Input
+                    id="receiverPhone"
+                    required
+                    placeholder="받는 분 연락처"
+                    value={form.receiverPhone}
+                    onChange={set('receiverPhone')}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zipcode">우편번호</Label>
@@ -141,11 +155,22 @@ export default function GiftClaimPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address1">기본 주소</Label>
-                  <Input id="address1" required placeholder="기본 주소" value={form.address1} onChange={set('address1')} />
+                  <Input
+                    id="address1"
+                    required
+                    placeholder="기본 주소"
+                    value={form.address1}
+                    onChange={set('address1')}
+                  />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="address2">상세 주소 (선택)</Label>
-                  <Input id="address2" placeholder="상세 주소 (선택)" value={form.address2} onChange={set('address2')} />
+                  <Input
+                    id="address2"
+                    placeholder="상세 주소 (선택)"
+                    value={form.address2}
+                    onChange={set('address2')}
+                  />
                 </div>
               </div>
               {claimError && (

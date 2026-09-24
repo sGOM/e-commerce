@@ -132,7 +132,9 @@ function DeliverySubscriptionCard({
         <dl className="grid grid-cols-2 gap-2 text-muted-foreground">
           <div>
             <dt className="text-xs">수량 · 주기</dt>
-            <dd className="text-foreground">{subscription.quantity}개 · {subscription.cycleDays}일마다</dd>
+            <dd className="text-foreground">
+              {subscription.quantity}개 · {subscription.cycleDays}일마다
+            </dd>
           </div>
           <div>
             <dt className="text-xs">{canceled ? '해지일' : '다음 배송일'}</dt>
@@ -204,9 +206,7 @@ function DeliverySubscriptionCard({
                     <div>
                       <p>{new Date(h.attemptedAt).toLocaleString('ko-KR')}</p>
                       {h.detail && <p className="mt-0.5 text-muted-foreground">{h.detail}</p>}
-                      {h.orderId && (
-                        <p className="mt-0.5 text-muted-foreground">주문 #{h.orderId}</p>
-                      )}
+                      {h.orderId && <p className="mt-0.5 text-muted-foreground">주문 #{h.orderId}</p>}
                     </div>
                     <Badge variant={h.result === 'ORDER_CREATED' ? 'default' : 'secondary'}>
                       {deliverySubscriptionHistoryResultLabel[h.result]}

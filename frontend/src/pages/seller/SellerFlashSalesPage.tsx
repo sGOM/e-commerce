@@ -47,9 +47,7 @@ export default function SellerFlashSalesPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setShowForm((v) => !v)}>
-          {showForm ? '닫기' : '+ 타임딜 등록'}
-        </Button>
+        <Button onClick={() => setShowForm((v) => !v)}>{showForm ? '닫기' : '+ 타임딜 등록'}</Button>
       </div>
 
       {showForm && sellerId != null && (
@@ -106,9 +104,7 @@ function FlashSaleRow({ flashSale }: { flashSale: FlashSale }) {
                 )}
               </p>
             </div>
-            <span
-              className={`shrink-0 rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
-            >
+            <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}>
               {flashSalePhaseLabel[flashSale.phase]}
             </span>
           </div>
@@ -118,13 +114,7 @@ function FlashSaleRow({ flashSale }: { flashSale: FlashSale }) {
   )
 }
 
-function CreateFlashSaleForm({
-  sellerId,
-  onCreated,
-}: {
-  sellerId: number
-  onCreated: () => void
-}) {
+function CreateFlashSaleForm({ sellerId, onCreated }: { sellerId: number; onCreated: () => void }) {
   const [products, setProducts] = useState<ProductSummary[]>([])
   const [productId, setProductId] = useState<number | ''>('')
   const [productDetail, setProductDetail] = useState<ProductDetail | null>(null)

@@ -5,11 +5,11 @@ import com.example.starter.domain.catalog.entity.Inventory
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.entity.ProductStatus
+import com.example.starter.domain.catalog.repository.CategoryRepository
+import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.seller.entity.Seller
 import com.example.starter.domain.seller.entity.SellerStatus
 import com.example.starter.domain.seller.repository.SellerRepository
-import com.example.starter.domain.catalog.repository.CategoryRepository
-import com.example.starter.domain.catalog.repository.ProductRepository
 import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.UserRepository
 import com.example.starter.support.AbstractIntegrationTest

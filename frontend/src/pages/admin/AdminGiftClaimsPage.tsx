@@ -139,7 +139,9 @@ export default function AdminGiftClaimsPage() {
                 setPage(0)
               }}
               className={`rounded-full px-3 py-1 text-sm ${
-                status === s ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                status === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'border border-border bg-background text-muted-foreground'
               }`}
             >
               {s ? giftClaimStatusLabel[s] : '전체'}
@@ -185,7 +187,9 @@ export default function AdminGiftClaimsPage() {
                   key={i}
                   onClick={() => setPage(i)}
                   className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border bg-background text-muted-foreground'
                   }`}
                 >
                   {i + 1}

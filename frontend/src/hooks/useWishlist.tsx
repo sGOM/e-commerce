@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { wishlistApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
 
@@ -71,11 +64,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     [user, ids],
   )
 
-  return (
-    <WishlistContext.Provider value={{ ids, pendingIds, toggle }}>
-      {children}
-    </WishlistContext.Provider>
-  )
+  return <WishlistContext.Provider value={{ ids, pendingIds, toggle }}>{children}</WishlistContext.Provider>
 }
 
 export function useWishlist(): WishlistState {

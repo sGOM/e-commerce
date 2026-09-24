@@ -2,8 +2,8 @@ package com.example.starter.domain.order.repository
 
 import com.example.starter.domain.order.entity.Order
 import com.example.starter.domain.order.entity.OrderStatus
-import jakarta.persistence.LockModeType
 import com.linecorp.kotlinjdsl.support.spring.data.jpa.repository.KotlinJdslJpqlExecutor
+import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

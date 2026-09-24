@@ -46,6 +46,8 @@ class SellerOrderService(
             .orElseThrow { BusinessException(ErrorCode.SUB_ORDER_NOT_FOUND) }
 
     private fun sellerId(userId: Long): Long =
-        (sellerRepository.findByUserId(userId)
-            ?: throw BusinessException(ErrorCode.SELLER_NOT_FOUND)).id!!
+        (
+            sellerRepository.findByUserId(userId)
+                ?: throw BusinessException(ErrorCode.SELLER_NOT_FOUND)
+            ).id!!
 }

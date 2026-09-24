@@ -50,7 +50,13 @@ export default function AdminDashboardPage() {
           <Label htmlFor="admin-dashboard-from" className="text-xs text-muted-foreground">
             시작일
           </Label>
-          <Input id="admin-dashboard-from" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+          <Input
+            id="admin-dashboard-from"
+            type="date"
+            value={from}
+            max={to}
+            onChange={(e) => setFrom(e.target.value)}
+          />
         </div>
         <div className="space-y-1">
           <Label htmlFor="admin-dashboard-to" className="text-xs text-muted-foreground">

@@ -67,9 +67,11 @@ class OrderConcurrencyIntegrationTest : AbstractIntegrationTest() {
         val userIds = (1..contenders).map { i ->
             val user = userRepository.save(User(email = "conc-$i@example.com", password = "{noop}x", name = "conc-$i"))
             // 장바구니 담기는 서비스가 아닌 직접 호출 대신 cart 도메인을 거치지 않고 주문 전용으로 준비
-            cartRepository.save(com.example.starter.domain.cart.entity.Cart(userId = user.id!!).apply {
-                addOrIncrease(option, 1)
-            })
+            cartRepository.save(
+                com.example.starter.domain.cart.entity.Cart(userId = user.id!!).apply {
+                    addOrIncrease(option, 1)
+                },
+            )
             user.id!!
         }
 

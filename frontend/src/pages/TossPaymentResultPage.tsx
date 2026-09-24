@@ -18,15 +18,21 @@ export default function TossPaymentResultPage() {
 
   const [pending] = useState(readPendingPayment)
   const retryLink = !pending ? '/' : 'orderId' in pending ? `/orders/${pending.orderId}` : '/orders/lookup'
-  const retryState = pending && 'ordererPhone' in pending
-    ? { orderNumber: pending.orderNumber, ordererPhone: pending.ordererPhone }
-    : undefined
+  const retryState =
+    pending && 'ordererPhone' in pending
+      ? { orderNumber: pending.orderNumber, ordererPhone: pending.ordererPhone }
+      : undefined
 
   useEffect(() => {
     if (result !== 'success' || started.current) return
     started.current = true
     const paymentKey = params.get('paymentKey')
-    if (!pending || !paymentKey || params.get('orderId') !== pending.orderNumber || Number(params.get('amount')) !== pending.amount) {
+    if (
+      !pending ||
+      !paymentKey ||
+      params.get('orderId') !== pending.orderNumber ||
+      Number(params.get('amount')) !== pending.amount
+    ) {
       setError('결제 정보가 올바르지 않습니다. 주문 내역에서 결제 상태를 확인해 주세요.')
       return
     }
@@ -54,14 +60,16 @@ export default function TossPaymentResultPage() {
     void confirm()
   }, [result, params, pending, navigate])
 
-  const message = result === 'fail' ? params.get('message') ?? '결제가 취소되었습니다.' : error
+  const message = result === 'fail' ? (params.get('message') ?? '결제가 취소되었습니다.') : error
 
   if (!message) {
     return <p className="py-20 text-center text-sm text-muted-foreground">결제를 확인하는 중…</p>
   }
   return (
     <Card className="mx-auto max-w-md space-y-4 p-6 text-center">
-      <p role="alert" className="text-sm text-destructive">{message}</p>
+      <p role="alert" className="text-sm text-destructive">
+        {message}
+      </p>
       <p className="text-xs text-muted-foreground">주문은 저장되어 있어 주문 화면에서 다시 결제할 수 있습니다.</p>
       <Link to={retryLink} state={retryState} className="text-sm font-medium underline">
         주문으로 돌아가기

@@ -15,22 +15,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   cn(
     'text-sm transition-colors',
-    isActive
-      ? 'text-primary font-semibold'
-      : 'text-muted-foreground hover:text-foreground',
+    isActive ? 'text-primary font-semibold' : 'text-muted-foreground hover:text-foreground',
   )
 
 function ThemeToggle() {
@@ -40,17 +31,8 @@ function ThemeToggle() {
 
   const isDark = resolvedTheme === 'dark'
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label="테마 전환"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-    >
-      {mounted && isDark ? (
-        <Sun className="size-5" />
-      ) : (
-        <Moon className="size-5" />
-      )}
+    <Button variant="ghost" size="icon" aria-label="테마 전환" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
+      {mounted && isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
     </Button>
   )
 }
@@ -59,13 +41,7 @@ function CartButton() {
   const count = useCartCount()
   const label = count != null && count > 0 ? `장바구니, ${count}개` : '장바구니'
   return (
-    <Button
-      asChild
-      variant="ghost"
-      size="icon"
-      className="relative"
-      aria-label={label}
-    >
+    <Button asChild variant="ghost" size="icon" className="relative" aria-label={label}>
       <Link to="/cart">
         <ShoppingCart className="size-5" />
         {count != null && count > 0 && (
@@ -114,9 +90,7 @@ export default function Layout() {
         { to: '/my/restock-alerts', label: '재입고 알림' },
         { to: '/notifications', label: '알림함' },
         { to: '/seller', label: '판매자' },
-        ...(user.roles.includes('ROLE_ADMIN')
-          ? [{ to: '/admin', label: '관리자' }]
-          : []),
+        ...(user.roles.includes('ROLE_ADMIN') ? [{ to: '/admin', label: '관리자' }] : []),
       ]
     : [{ to: '/orders/lookup', label: '주문조회' }]
 
@@ -166,10 +140,7 @@ export default function Layout() {
                     </SheetClose>
                   ) : (
                     <SheetClose asChild key="login">
-                      <NavLink
-                        to="/login"
-                        className="mt-1 rounded-md px-3 py-2.5 text-sm font-semibold text-primary"
-                      >
+                      <NavLink to="/login" className="mt-1 rounded-md px-3 py-2.5 text-sm font-semibold text-primary">
                         로그인
                       </NavLink>
                     </SheetClose>
@@ -210,9 +181,7 @@ export default function Layout() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel className="truncate">
-                    {user.email}
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {accountNav.map((item) => (
                     <DropdownMenuItem key={item.to} asChild>
@@ -220,9 +189,7 @@ export default function Layout() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={handleLogout}>
-                    로그아웃
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleLogout}>로그아웃</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (

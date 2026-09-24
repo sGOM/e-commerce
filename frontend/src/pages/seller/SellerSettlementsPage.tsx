@@ -34,9 +34,7 @@ export default function SellerSettlementsPage() {
                 </p>
                 <span
                   className={`rounded px-2 py-0.5 text-xs ${
-                    s.status === 'PAID'
-                      ? 'bg-success/10 text-success'
-                      : 'bg-warning/10 text-warning'
+                    s.status === 'PAID' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
                   }`}
                 >
                   {s.status === 'PAID' ? '지급완료' : '지급대기'}

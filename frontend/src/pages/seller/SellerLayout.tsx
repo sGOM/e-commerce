@@ -105,20 +105,13 @@ export default function SellerLayout() {
   }
 
   const tab = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      'pb-2 text-sm',
-      isActive ? 'border-b-2 border-primary font-semibold text-primary' : 'text-muted-foreground',
-    )
+    cn('pb-2 text-sm', isActive ? 'border-b-2 border-primary font-semibold text-primary' : 'text-muted-foreground')
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
         <h1 className="text-xl font-bold">{store?.storeName ?? '판매자 센터'}</h1>
-        {store && (
-          <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
-            {store.status}
-          </span>
-        )}
+        {store && <span className="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">{store.status}</span>}
       </div>
       <nav className="mb-6 flex gap-6 border-b border-border">
         <NavLink to="/seller/dashboard" className={tab}>

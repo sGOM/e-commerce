@@ -101,13 +101,7 @@ export interface Cart {
 }
 
 export type OrderStatus = 'CREATED' | 'PAID' | 'CANCELED'
-export type SubOrderStatus =
-  | 'CREATED'
-  | 'PAID'
-  | 'PREPARING'
-  | 'SHIPPED'
-  | 'DELIVERED'
-  | 'CANCELED'
+export type SubOrderStatus = 'CREATED' | 'PAID' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELED'
 
 export interface OrderItem {
   optionId: number
@@ -210,12 +204,7 @@ export interface IssuedCoupon {
   used: boolean
 }
 
-export type PointTransactionType =
-  | 'EARN'
-  | 'USE'
-  | 'CANCEL_USE'
-  | 'CANCEL_EARN'
-  | 'EXPIRE'
+export type PointTransactionType = 'EARN' | 'USE' | 'CANCEL_USE' | 'CANCEL_EARN' | 'EXPIRE'
 
 export interface PointTransaction {
   type: PointTransactionType

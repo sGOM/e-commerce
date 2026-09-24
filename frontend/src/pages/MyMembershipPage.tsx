@@ -78,24 +78,19 @@ export default function MyMembershipPage() {
   )
 }
 
-function MembershipSummary({
-  membership,
-  onCancel,
-}: {
-  membership: Membership
-  onCancel: () => void
-}) {
+function MembershipSummary({ membership, onCancel }: { membership: Membership; onCancel: () => void }) {
   const cancelable = membership.status === 'ACTIVE' || membership.status === 'PAST_DUE'
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle>BASIC 멤버십</CardTitle>
-        <Badge variant={statusBadgeVariant(membership.status)}>
-          {membershipStatusLabel[membership.status]}
-        </Badge>
+        <Badge variant={statusBadgeVariant(membership.status)}>{membershipStatusLabel[membership.status]}</Badge>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <p className="text-2xl font-bold text-primary">{formatKRW(membership.price)}<span className="ml-1 text-sm font-normal text-muted-foreground">/월</span></p>
+        <p className="text-2xl font-bold text-primary">
+          {formatKRW(membership.price)}
+          <span className="ml-1 text-sm font-normal text-muted-foreground">/월</span>
+        </p>
 
         <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
           <p className="font-medium">
@@ -103,7 +98,10 @@ function MembershipSummary({
           </p>
           <ul className="space-y-0.5 text-muted-foreground">
             <li>
-              무료배송: <span className="font-medium text-foreground">{membership.benefits.freeShipping ? '적용' : '미적용'}</span>
+              무료배송:{' '}
+              <span className="font-medium text-foreground">
+                {membership.benefits.freeShipping ? '적용' : '미적용'}
+              </span>
             </li>
             <li>
               포인트 적립:{' '}
@@ -116,13 +114,14 @@ function MembershipSummary({
 
         {membership.status === 'CANCELED' && (
           <p className="rounded-lg bg-warning/10 p-3 text-warning">
-            해지가 예약되었습니다. {new Date(membership.nextBillingAt).toLocaleDateString('ko-KR')}까지는 혜택이 유지되고,
-            이후 자동으로 만료됩니다.
+            해지가 예약되었습니다. {new Date(membership.nextBillingAt).toLocaleDateString('ko-KR')}까지는 혜택이
+            유지되고, 이후 자동으로 만료됩니다.
           </p>
         )}
         {membership.status === 'PAST_DUE' && (
           <p className="rounded-lg bg-destructive/10 p-3 text-destructive">
-            정기결제가 실패해 재시도 중입니다. 카드 정보를 확인해 주세요. 유예 기간 내 재시도에 실패하면 혜택이 종료됩니다.
+            정기결제가 실패해 재시도 중입니다. 카드 정보를 확인해 주세요. 유예 기간 내 재시도에 실패하면 혜택이
+            종료됩니다.
           </p>
         )}
         {membership.status === 'EXPIRED' && (
@@ -137,9 +136,7 @@ function MembershipSummary({
             <dd>{new Date(membership.startAt).toLocaleDateString('ko-KR')}</dd>
           </div>
           <div>
-            <dt className="text-xs">
-              {membership.status === 'CANCELED' ? '혜택 종료 예정일' : '다음 결제일'}
-            </dt>
+            <dt className="text-xs">{membership.status === 'CANCELED' ? '혜택 종료 예정일' : '다음 결제일'}</dt>
             <dd>{new Date(membership.nextBillingAt).toLocaleDateString('ko-KR')}</dd>
           </div>
         </dl>
@@ -150,9 +147,7 @@ function MembershipSummary({
           </Button>
         )}
         {membership.status === 'EXPIRED' && (
-          <p className="text-center text-xs text-muted-foreground">
-            재가입은 이 페이지를 새로고침한 뒤 진행해 주세요.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">재가입은 이 페이지를 새로고침한 뒤 진행해 주세요.</p>
         )}
       </CardContent>
     </Card>
@@ -230,9 +225,7 @@ function SubscribeFlow({ onSubscribed }: { onSubscribed: () => void }) {
         </CardHeader>
         <CardContent>
           {cardRegistered ? (
-            <p className="text-sm text-muted-foreground">
-              등록 완료 · 카드번호 ****-****-****-{cardLast4}
-            </p>
+            <p className="text-sm text-muted-foreground">등록 완료 · 카드번호 ****-****-****-{cardLast4}</p>
           ) : (
             <form onSubmit={registerCard} className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1">
@@ -270,9 +263,7 @@ function SubscribeFlow({ onSubscribed }: { onSubscribed: () => void }) {
           <Button type="button" className="w-full" disabled={subscribing} onClick={subscribe}>
             {subscribing ? '처리 중…' : '멤버십 구독 시작'}
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
-            카드를 먼저 등록해야 구독을 시작할 수 있습니다.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">카드를 먼저 등록해야 구독을 시작할 수 있습니다.</p>
         </CardContent>
       </Card>
     </div>

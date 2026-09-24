@@ -73,8 +73,7 @@ import type {
 // ----- 인증 -----
 export const authApi = {
   me: () => api.get<User>('/api/auth/me'),
-  login: (email: string, password: string) =>
-    api.post<User>('/api/auth/login', { email, password }),
+  login: (email: string, password: string) => api.post<User>('/api/auth/login', { email, password }),
   signup: (email: string, password: string, name: string) =>
     api.post<User>('/api/auth/signup', { email, password, name }),
   logout: () => api.post<void>('/api/auth/logout'),
@@ -82,8 +81,7 @@ export const authApi = {
   changePassword: (newPassword: string, currentPassword?: string) =>
     api.patch<void>('/api/auth/password', { currentPassword, newPassword }),
   /** 분실 재설정 - 응답은 가입 여부를 알려주지 않는다. */
-  requestPasswordReset: (email: string) =>
-    api.post<void>('/api/auth/password-reset/request', { email }),
+  requestPasswordReset: (email: string) => api.post<void>('/api/auth/password-reset/request', { email }),
   confirmPasswordReset: (token: string, newPassword: string) =>
     api.post<void>('/api/auth/password-reset/confirm', { token, newPassword }),
 }
@@ -119,8 +117,7 @@ export const membershipApi = {
   // Mock 게이트웨이는 형식만 검증(숫자 12~16자리)하고 실 카드 통신은 하지 않는다.
   registerBillingKey: (cardNumber: string) =>
     api.post<MembershipBillingKey>('/api/me/membership/billing-key', { cardNumber }),
-  subscribe: (plan: MembershipPlan = 'BASIC') =>
-    api.post<Membership>('/api/me/membership', { plan }),
+  subscribe: (plan: MembershipPlan = 'BASIC') => api.post<Membership>('/api/me/membership', { plan }),
   // 미가입 시 404(MEMBERSHIP-001) — 호출부에서 ApiError 로 잡아 가입 CTA 를 보여준다.
   my: () => api.get<Membership>('/api/me/membership'),
   cancel: () => api.del<Membership>('/api/me/membership'),
@@ -131,10 +128,8 @@ export const restockAlertApi = {
   // 옵션별 신청 여부를 알려주는 단건 조회 API가 없어, 전체 목록을 받아 optionId로 클라이언트에서 매칭한다.
   myAlerts: (page = 0, size = 50) =>
     api.get<PageResponse<RestockAlert>>(`/api/me/restock-alerts?page=${page}&size=${size}`),
-  subscribe: (optionId: number) =>
-    api.post<RestockAlert>(`/api/products/options/${optionId}/restock-alerts`),
-  unsubscribe: (optionId: number) =>
-    api.del<void>(`/api/products/options/${optionId}/restock-alerts`),
+  subscribe: (optionId: number) => api.post<RestockAlert>(`/api/products/options/${optionId}/restock-alerts`),
+  unsubscribe: (optionId: number) => api.del<void>(`/api/products/options/${optionId}/restock-alerts`),
 }
 
 // ----- 위시리스트(찜) + 가격 인하 알림(회원 전용) -----
@@ -165,8 +160,7 @@ export const adminLoyaltyTierApi = {
     return api.get<PageResponse<AdminLoyaltyTierResponse>>(`/api/admin/loyalty-tiers?${q.toString()}`)
   },
   detail: (userId: number) => api.get<AdminLoyaltyTierResponse>(`/api/admin/loyalty-tiers/${userId}`),
-  recalculate: () =>
-    api.post<LoyaltyTierBatchResult>('/api/admin/loyalty-tiers/recalculate/run'),
+  recalculate: () => api.post<LoyaltyTierBatchResult>('/api/admin/loyalty-tiers/recalculate/run'),
 }
 
 // ----- 장바구니 이탈 리마인드(관리자 수동 트리거) -----
@@ -188,9 +182,10 @@ export const notificationApi = {
     // 서버 응답은 { notifications: Page<AppNotification>, unreadCount } 형태다.
     // 호출부(벨/알림함)는 플랫한 NotificationPage(= Page + unreadCount)를 기대하므로 여기서 병합해 준다.
     return api
-      .get<{ notifications: PageResponse<AppNotification>; unreadCount: number }>(
-        `/api/me/notifications?${q.toString()}`,
-      )
+      .get<{
+        notifications: PageResponse<AppNotification>
+        unreadCount: number
+      }>(`/api/me/notifications?${q.toString()}`)
       .then((d) => ({ ...d.notifications, unreadCount: d.unreadCount }))
   },
   markRead: (id: number) => api.patch<AppNotification>(`/api/me/notifications/${id}/read`),
@@ -199,10 +194,8 @@ export const notificationApi = {
 // ----- 내 리뷰(마이페이지) -----
 export const meReviewApi = {
   // HIDDEN 포함 — 화면에서 "관리자 숨김" 안내로 구분해 보여준다.
-  myReviews: (page = 0, size = 20) =>
-    api.get<PageResponse<Review>>(`/api/me/reviews?page=${page}&size=${size}`),
-  reviewable: () =>
-    api.get<ReviewableOrderItem[]>('/api/me/orders/reviewable'),
+  myReviews: (page = 0, size = 20) => api.get<PageResponse<Review>>(`/api/me/reviews?page=${page}&size=${size}`),
+  reviewable: () => api.get<ReviewableOrderItem[]>('/api/me/orders/reviewable'),
 }
 
 // ----- 카테고리(공개) -----
@@ -233,8 +226,7 @@ export const productApi = {
     q.set('size', String(params.size ?? 20))
     return api.get<PageResponse<ProductSummary>>(`/api/products?${q.toString()}`)
   },
-  popular: (limit = 8) =>
-    api.get<PopularProduct[]>(`/api/products/popular?limit=${limit}`),
+  popular: (limit = 8) => api.get<PopularProduct[]>(`/api/products/popular?limit=${limit}`),
   detail: (id: number) => api.get<ProductDetail>(`/api/products/${id}`),
 }
 
@@ -278,10 +270,7 @@ export interface UpdateReviewBody {
 
 export const reviewApi = {
   // 상품 상세 리뷰 탭 — 공개(비로그인) 접근 가능, HIDDEN 은 서버에서 제외되고 작성자명은 마스킹된다.
-  byProduct: (
-    productId: number,
-    params: { sort?: ReviewSort; photoOnly?: boolean; page?: number; size?: number },
-  ) => {
+  byProduct: (productId: number, params: { sort?: ReviewSort; photoOnly?: boolean; page?: number; size?: number }) => {
     const q = new URLSearchParams()
     q.set('sort', params.sort ?? 'LATEST')
     if (params.photoOnly) q.set('photoOnly', 'true')
@@ -290,11 +279,9 @@ export const reviewApi = {
     return api.get<PageResponse<Review>>(`/api/products/${productId}/reviews?${q.toString()}`)
   },
   create: (body: CreateReviewBody) => api.post<Review>('/api/reviews', body),
-  update: (id: number, body: UpdateReviewBody) =>
-    api.patch<Review>(`/api/reviews/${id}`, body),
+  update: (id: number, body: UpdateReviewBody) => api.patch<Review>(`/api/reviews/${id}`, body),
   remove: (id: number) => api.del<void>(`/api/reviews/${id}`),
-  report: (id: number, reason: string) =>
-    api.post<void>(`/api/reviews/${id}/reports`, { reason }),
+  report: (id: number, reason: string) => api.post<void>(`/api/reviews/${id}/reports`, { reason }),
 }
 
 export interface CreateOptionBody {
@@ -347,22 +334,17 @@ export interface SellerDashboard {
 }
 
 export const sellerApi = {
-  dashboard: (from: string, to: string) =>
-    api.get<SellerDashboard>(`/api/seller/dashboard?from=${from}&to=${to}`),
-  apply: (storeName: string, description?: string) =>
-    api.post<Seller>('/api/seller/apply', { storeName, description }),
+  dashboard: (from: string, to: string) => api.get<SellerDashboard>(`/api/seller/dashboard?from=${from}&to=${to}`),
+  apply: (storeName: string, description?: string) => api.post<Seller>('/api/seller/apply', { storeName, description }),
   myStore: () => api.get<Seller>('/api/seller/store'),
   myProducts: () => api.get<SellerProduct[]>('/api/seller/products'),
-  createProduct: (body: CreateProductBody) =>
-    api.post<unknown>('/api/seller/products', body),
+  createProduct: (body: CreateProductBody) => api.post<unknown>('/api/seller/products', body),
   bulkStock: (items: { sku: string; quantity: number }[]) =>
     api.patch<{ updated: number }>('/api/seller/products/stock', { items }),
   adjustStock: (productId: number, optionId: number, quantity: number) =>
     api.patch<unknown>(`/api/seller/products/${productId}/stock`, { optionId, quantity }),
   listOrders: (status?: SubOrderStatus) =>
-    api.get<SellerSubOrder[]>(
-      `/api/seller/orders${status ? `?status=${status}` : ''}`,
-    ),
+    api.get<SellerSubOrder[]>(`/api/seller/orders${status ? `?status=${status}` : ''}`),
   ship: (subOrderId: number, courier: string, trackingNumber: string) =>
     api.post<SellerSubOrder>(`/api/seller/orders/${subOrderId}/ship`, {
       courier,
@@ -398,8 +380,7 @@ export interface CreateCouponBody {
 
 // ----- 관리자 백오피스 -----
 export const adminApi = {
-  listSellers: (status?: SellerStatus) =>
-    api.get<Seller[]>(`/api/admin/sellers${status ? `?status=${status}` : ''}`),
+  listSellers: (status?: SellerStatus) => api.get<Seller[]>(`/api/admin/sellers${status ? `?status=${status}` : ''}`),
   approveSeller: (sellerId: number, approved: boolean) =>
     api.patch<Seller>(`/api/admin/sellers/${sellerId}/approve`, { approved }),
   searchOrders: (params: { status?: OrderStatus; page?: number }) => {
@@ -422,10 +403,8 @@ export const adminApi = {
     return api.get<PageResponse<Settlement>>(`/api/admin/settlements?${q.toString()}`)
   },
   generateSettlements: () => api.post<Settlement[]>('/api/admin/settlements'),
-  paySettlement: (settlementId: number) =>
-    api.patch<Settlement>(`/api/admin/settlements/${settlementId}/pay`),
-  getSettlementPolicy: () =>
-    api.get<{ commissionRateBp: number }>('/api/admin/settlements/policy'),
+  paySettlement: (settlementId: number) => api.patch<Settlement>(`/api/admin/settlements/${settlementId}/pay`),
+  getSettlementPolicy: () => api.get<{ commissionRateBp: number }>('/api/admin/settlements/policy'),
   updateSettlementPolicy: (commissionRateBp: number) =>
     api.patch<{ commissionRateBp: number }>('/api/admin/settlements/policy', {
       commissionRateBp,
@@ -467,8 +446,7 @@ export const adminReviewApi = {
   changeStatus: (id: number, status: 'VISIBLE' | 'HIDDEN') =>
     api.patch<Review>(`/api/admin/reviews/${id}/status`, { status }),
   getPolicy: () => api.get<ReviewRewardPolicy>('/api/admin/review-policy'),
-  updatePolicy: (body: Partial<ReviewRewardPolicy>) =>
-    api.patch<ReviewRewardPolicy>('/api/admin/review-policy', body),
+  updatePolicy: (body: Partial<ReviewRewardPolicy>) => api.patch<ReviewRewardPolicy>('/api/admin/review-policy', body),
 }
 
 // ----- 관리자 기획전/컬렉션 편성 -----
@@ -490,10 +468,8 @@ export const adminCollectionApi = {
     return api.get<PageResponse<CollectionSummary>>(`/api/admin/collections?${q.toString()}`)
   },
   detail: (id: number) => api.get<CollectionDetail>(`/api/admin/collections/${id}`),
-  create: (body: CollectionRequestBody) =>
-    api.post<CollectionDetail>('/api/admin/collections', body),
-  update: (id: number, body: CollectionRequestBody) =>
-    api.put<CollectionDetail>(`/api/admin/collections/${id}`, body),
+  create: (body: CollectionRequestBody) => api.post<CollectionDetail>('/api/admin/collections', body),
+  update: (id: number, body: CollectionRequestBody) => api.put<CollectionDetail>(`/api/admin/collections/${id}`, body),
   changeStatus: (id: number, status: CollectionStatus) =>
     api.patch<CollectionDetail>(`/api/admin/collections/${id}/status`, { status }),
   // 상품 편성 전체 교체 — productIds 순서 = 노출 순서(displayOrder). 부분추가/삭제 API는 없다.
@@ -509,14 +485,11 @@ export interface GuestCartLine {
 // ----- 장바구니 -----
 export const cartApi = {
   get: () => api.get<Cart>('/api/cart'),
-  addItem: (optionId: number, quantity: number) =>
-    api.post<Cart>('/api/cart/items', { optionId, quantity }),
-  updateItem: (itemId: number, quantity: number) =>
-    api.patch<Cart>(`/api/cart/items/${itemId}`, { quantity }),
+  addItem: (optionId: number, quantity: number) => api.post<Cart>('/api/cart/items', { optionId, quantity }),
+  updateItem: (itemId: number, quantity: number) => api.patch<Cart>(`/api/cart/items/${itemId}`, { quantity }),
   removeItem: (itemId: number) => api.del<Cart>(`/api/cart/items/${itemId}`),
   // 게스트 장바구니 계산(무상태) — localStorage 항목을 그대로 보내 현재가/재고/구매가능 계산
-  guestPreview: (items: GuestCartLine[]) =>
-    api.post<Cart>('/api/cart/guest', { items }),
+  guestPreview: (items: GuestCartLine[]) => api.post<Cart>('/api/cart/guest', { items }),
   // 로그인 시 게스트 장바구니를 서버 장바구니로 병합
   merge: (items: GuestCartLine[]) => api.post<Cart>('/api/cart/merge', { items }),
 }
@@ -569,8 +542,7 @@ export const orderApi = {
     api.post<Order>('/api/orders/guest/lookup', { orderNumber, ordererPhone }),
   claim: (orderNumber: string, ordererPhone: string) =>
     api.post<Order>('/api/orders/claim', { orderNumber, ordererPhone }),
-  myOrders: (page = 0, size = 20) =>
-    api.get<PageResponse<OrderSummary>>(`/api/orders?page=${page}&size=${size}`),
+  myOrders: (page = 0, size = 20) => api.get<PageResponse<OrderSummary>>(`/api/orders?page=${page}&size=${size}`),
   detail: (orderId: number) => api.get<Order>(`/api/orders/${orderId}`),
   cancel: (orderId: number) => api.post<Order>(`/api/orders/${orderId}/cancel`),
   // paymentKey 는 토스 결제창 승인 시에만(Mock PG 는 생략)
@@ -579,8 +551,7 @@ export const orderApi = {
   payGuest: (orderNumber: string, ordererPhone: string, paymentKey?: string) =>
     api.post<Payment>('/api/payments/guest', { orderNumber, ordererPhone, paymentKey }),
   // 하위 주문(판매자 단위) 수령 확인(구매확정). SHIPPED → DELIVERED. 이후 해당 항목에 리뷰를 쓸 수 있다.
-  confirmDelivery: (subOrderId: number) =>
-    api.post<Order>(`/api/orders/sub-orders/${subOrderId}/confirm-delivery`),
+  confirmDelivery: (subOrderId: number) => api.post<Order>(`/api/orders/sub-orders/${subOrderId}/confirm-delivery`),
   // 선물 링크 상태 재확인(회원, 본인 주문). 주문 생성 직후 안내한 공유 링크가 만료/수락되었는지 확인한다.
   giftStatus: (orderId: number) => api.get<GiftClaim>(`/api/orders/${orderId}/gift`),
   // 구매자의 선물 주문 취소(수락 전이면 전액 환불, 이후는 일반 취소 정책과 동일).
@@ -606,8 +577,7 @@ export const adminGiftClaimApi = {
     return api.get<PageResponse<GiftClaim>>(`/api/admin/gift-claims?${q.toString()}`)
   },
   getPolicy: () => api.get<GiftPolicy>('/api/admin/gift-claims/policy'),
-  updatePolicy: (expiryDays: number) =>
-    api.patch<GiftPolicy>('/api/admin/gift-claims/policy', { expiryDays }),
+  updatePolicy: (expiryDays: number) => api.patch<GiftPolicy>('/api/admin/gift-claims/policy', { expiryDays }),
   runExpiry: () => api.post<GiftExpiryBatchResult>('/api/admin/gift-claims/expire/run'),
 }
 
@@ -650,8 +620,7 @@ export const adminMembershipApi = {
     api.get<MembershipBillingHistory[]>(`/api/admin/memberships/${id}/billing-histories`),
   runBilling: () => api.post<MembershipBillingRunResult>('/api/admin/memberships/billing/run'),
   getPolicy: () => api.get<MembershipPolicy>('/api/admin/memberships/policy'),
-  updatePolicy: (body: Partial<MembershipPolicy>) =>
-    api.patch<MembershipPolicy>('/api/admin/memberships/policy', body),
+  updatePolicy: (body: Partial<MembershipPolicy>) => api.patch<MembershipPolicy>('/api/admin/memberships/policy', body),
 }
 
 // ----- 정기배송 구독(회원) — 멤버십과 별도 빌링키 테이블, 상품 옵션 단위 자동 재주문 -----
@@ -673,8 +642,7 @@ export const deliverySubscriptionApi = {
   create: (body: CreateDeliverySubscriptionBody) =>
     api.post<DeliverySubscription>('/api/me/delivery-subscriptions', body),
   my: () => api.get<DeliverySubscription[]>('/api/me/delivery-subscriptions'),
-  histories: (id: number) =>
-    api.get<DeliverySubscriptionHistory[]>(`/api/me/delivery-subscriptions/${id}/histories`),
+  histories: (id: number) => api.get<DeliverySubscriptionHistory[]>(`/api/me/delivery-subscriptions/${id}/histories`),
   pause: (id: number) => api.patch<DeliverySubscription>(`/api/me/delivery-subscriptions/${id}/pause`),
   resume: (id: number) => api.patch<DeliverySubscription>(`/api/me/delivery-subscriptions/${id}/resume`),
   skipNext: (id: number) => api.post<DeliverySubscription>(`/api/me/delivery-subscriptions/${id}/skip-next`),
@@ -693,8 +661,7 @@ export const adminDeliverySubscriptionApi = {
   detail: (id: number) => api.get<AdminDeliverySubscription>(`/api/admin/delivery-subscriptions/${id}`),
   histories: (id: number) =>
     api.get<DeliverySubscriptionHistory[]>(`/api/admin/delivery-subscriptions/${id}/histories`),
-  runBilling: () =>
-    api.post<DeliverySubscriptionBillingRunResult>('/api/admin/delivery-subscriptions/billing/run'),
+  runBilling: () => api.post<DeliverySubscriptionBillingRunResult>('/api/admin/delivery-subscriptions/billing/run'),
   getPolicy: () => api.get<DeliverySubscriptionPolicy>('/api/admin/delivery-subscriptions/policy'),
   updatePolicy: (body: Partial<DeliverySubscriptionPolicy>) =>
     api.patch<DeliverySubscriptionPolicy>('/api/admin/delivery-subscriptions/policy', body),
@@ -708,8 +675,7 @@ export interface CreateDeliveryRegionBody {
 
 export const adminDeliveryRegionApi = {
   list: () => api.get<DeliveryRegion[]>('/api/admin/delivery-regions'),
-  create: (body: CreateDeliveryRegionBody) =>
-    api.post<DeliveryRegion>('/api/admin/delivery-regions', body),
+  create: (body: CreateDeliveryRegionBody) => api.post<DeliveryRegion>('/api/admin/delivery-regions', body),
   update: (id: number, dawnDeliveryAvailable: boolean) =>
     api.patch<DeliveryRegion>(`/api/admin/delivery-regions/${id}`, { dawnDeliveryAvailable }),
   remove: (id: number) => api.del<void>(`/api/admin/delivery-regions/${id}`),
@@ -724,8 +690,7 @@ export const adminUserApi = {
     q.set('page', String(params.page ?? 0))
     return api.get<PageResponse<AdminUser>>(`/api/admin/users?${q.toString()}`)
   },
-  changeStatus: (id: number, status: UserStatus) =>
-    api.patch<AdminUser>(`/api/admin/users/${id}/status`, { status }),
+  changeStatus: (id: number, status: UserStatus) => api.patch<AdminUser>(`/api/admin/users/${id}/status`, { status }),
   grantRole: (id: number, role: string) => api.post<AdminUser>(`/api/admin/users/${id}/roles`, { role }),
   revokeRole: (id: number, role: string) => api.del<AdminUser>(`/api/admin/users/${id}/roles/${role}`),
 }

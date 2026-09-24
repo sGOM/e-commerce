@@ -56,9 +56,7 @@ export default function PasswordResetPage() {
         <CardHeader>
           <CardTitle>{token ? '새 비밀번호 설정' : '비밀번호 찾기'}</CardTitle>
           <CardDescription>
-            {token
-              ? '새로 사용할 비밀번호를 입력하세요.'
-              : '가입한 이메일로 재설정 링크를 보내드립니다.'}
+            {token ? '새로 사용할 비밀번호를 입력하세요.' : '가입한 이메일로 재설정 링크를 보내드립니다.'}
           </CardDescription>
         </CardHeader>
         <CardContent>

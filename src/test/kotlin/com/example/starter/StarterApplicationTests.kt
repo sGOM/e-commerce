@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test
 
 class StarterApplicationTests : AbstractIntegrationTest() {
 
-	@Test
-	fun contextLoads() {
-	}
-
+    @Test
+    fun contextLoads() {
+    }
 }

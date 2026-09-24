@@ -83,13 +83,11 @@ export default function AdminCollectionsPage() {
                       <p className="truncate font-medium">{c.title}</p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {new Date(c.startAt).toLocaleDateString('ko-KR')} ~{' '}
-                        {new Date(c.endAt).toLocaleDateString('ko-KR')} · 순서 {c.displayOrder} · 상품{' '}
-                        {c.productCount}개
+                        {new Date(c.endAt).toLocaleDateString('ko-KR')} · 순서 {c.displayOrder} · 상품 {c.productCount}
+                        개
                       </p>
                     </div>
-                    <span
-                      className={`shrink-0 rounded px-2 py-0.5 text-xs ${statusBadgeClass[c.status]}`}
-                    >
+                    <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${statusBadgeClass[c.status]}`}>
                       {collectionStatusLabel[c.status]}
                     </span>
                   </Link>

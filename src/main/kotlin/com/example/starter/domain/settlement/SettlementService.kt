@@ -72,8 +72,10 @@ class SettlementService(
     }
 
     private fun sellerId(userId: Long): Long =
-        (sellerRepository.findByUserId(userId)
-            ?: throw BusinessException(ErrorCode.SELLER_NOT_FOUND)).id!!
+        (
+            sellerRepository.findByUserId(userId)
+                ?: throw BusinessException(ErrorCode.SELLER_NOT_FOUND)
+            ).id!!
 
     companion object {
         // 취소를 제외한 결제 완료 이후 상태를 정산 대상으로 본다.

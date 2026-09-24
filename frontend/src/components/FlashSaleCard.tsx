@@ -18,10 +18,7 @@ export default function FlashSaleCard({ flashSale, className }: Props) {
   const { label, ended, remainingMs } = useCountdown(flashSale.endAt)
   const urgent = remainingMs > 0 && remainingMs <= URGENT_MS
   const discountRate = Math.round((1 - salePrice / originalPrice) * 100)
-  const soldRate = Math.min(
-    100,
-    Math.round((flashSale.soldQuantity / Math.max(1, flashSale.limitQuantity)) * 100),
-  )
+  const soldRate = Math.min(100, Math.round((flashSale.soldQuantity / Math.max(1, flashSale.limitQuantity)) * 100))
 
   return (
     <Link
@@ -48,9 +45,7 @@ export default function FlashSaleCard({ flashSale, className }: Props) {
 
       <div className="mt-1 flex items-baseline gap-1.5">
         <span className="text-base font-bold text-primary">{formatKRW(salePrice)}</span>
-        <span className="text-xs text-muted-foreground line-through">
-          {formatKRW(originalPrice)}
-        </span>
+        <span className="text-xs text-muted-foreground line-through">{formatKRW(originalPrice)}</span>
       </div>
 
       {/* 진행률(소진율) */}
@@ -63,15 +58,10 @@ export default function FlashSaleCard({ flashSale, className }: Props) {
           aria-valuemax={100}
           className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
         >
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${soldRate}%` }}
-          />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${soldRate}%` }} />
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          {flashSale.remainingQuantity > 0
-            ? `${flashSale.remainingQuantity}개 남음`
-            : '한도 소진'}
+          {flashSale.remainingQuantity > 0 ? `${flashSale.remainingQuantity}개 남음` : '한도 소진'}
         </p>
       </div>
 

@@ -1,0 +1,4 @@
+dist
+node_modules
+# shadcn/ui 생성물은 원본 형식을 유지한다(재생성 시 diff 최소화)
+src/components/ui

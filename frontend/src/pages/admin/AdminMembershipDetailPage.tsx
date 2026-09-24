@@ -58,9 +58,7 @@ export default function AdminMembershipDetailPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>멤버십 #{membership.id}</CardTitle>
-              <Badge variant={statusBadgeVariant(membership.status)}>
-                {membershipStatusLabel[membership.status]}
-              </Badge>
+              <Badge variant={statusBadgeVariant(membership.status)}>{membershipStatusLabel[membership.status]}</Badge>
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-2 gap-3 text-sm">

@@ -155,7 +155,11 @@ describe('CheckoutPage', () => {
     renderPage()
     await screen.findByDisplayValue('주소')
 
-    for (const [label, value] of [['이름', '회원'], ['연락처', '010-1'], ['이메일', 'm@example.com']]) {
+    for (const [label, value] of [
+      ['이름', '회원'],
+      ['연락처', '010-1'],
+      ['이메일', 'm@example.com'],
+    ]) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } })
     }
     fireEvent.click(screen.getByRole('button', { name: '결제하기 (Mock PG)' }))

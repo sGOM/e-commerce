@@ -1,0 +1,33 @@
+# 포맷 규칙의 단일 원천. IntelliJ·ktlint·prettier 가 모두 읽는다. 판단이 필요한 규칙은 docs/CODING_CONVENTIONS.md.
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 160
+ktlint_code_style = intellij_idea
+# 이 저장소의 기존 스타일과 충돌하는 레이아웃 규칙은 끈다(도입 시 1,300건 중 대부분이 이 규칙들이었다).
+# 예: 한 줄 시그니처 + 괄호 뒤 줄바꿈, 테스트의 `with(user(x)); with(csrf())`, 붙여 쓴 `@Autowired` 필드.
+ktlint_standard_class-signature = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_statement-wrapping = disabled
+ktlint_standard_spacing-between-declarations-with-annotations = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_binary-expression-wrapping = disabled
+# DTO 는 도메인별로 `XxxDtos.kt` 한 파일에 모은다(docs/CODING_CONVENTIONS.md).
+ktlint_standard_filename = disabled
+
+[src/test/**.kt]
+# 테스트는 한 줄 JSON 요청 본문(raw string)을 그대로 두는 편이 읽기 쉽다.
+ktlint_standard_max-line-length = disabled
+
+[*.{ts,tsx,js,json,css}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

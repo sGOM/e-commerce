@@ -38,8 +38,7 @@ export function useCartCount(): number | null {
       }
     }
 
-    const compute = () =>
-      setCount(readGuestCart().reduce((sum, l) => sum + l.quantity, 0))
+    const compute = () => setCount(readGuestCart().reduce((sum, l) => sum + l.quantity, 0))
     compute()
     const unsub = subscribeGuestCart(compute)
     return () => {

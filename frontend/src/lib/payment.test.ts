@@ -31,7 +31,13 @@ describe('payment', () => {
     vi.stubEnv('VITE_TOSS_CLIENT_KEY', 'test_ck_x')
     const requestPayment = vi.fn().mockResolvedValue(undefined)
     const payment = vi.fn(() => ({ requestPayment }))
-    vi.stubGlobal('TossPayments', Object.assign(vi.fn(() => ({ payment })), { ANONYMOUS: 'ANON' }))
+    vi.stubGlobal(
+      'TossPayments',
+      Object.assign(
+        vi.fn(() => ({ payment })),
+        { ANONYMOUS: 'ANON' },
+      ),
+    )
     const { payMemberOrder, readPendingPayment } = await import('./payment')
 
     expect(await payMemberOrder(order)).toBe('redirected')

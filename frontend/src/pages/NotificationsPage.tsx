@@ -50,9 +50,7 @@ export default function NotificationsPage() {
           prev
             ? {
                 ...prev,
-                content: prev.content.map((it) =>
-                  it.id === n.id ? { ...it, isRead: true } : it,
-                ),
+                content: prev.content.map((it) => (it.id === n.id ? { ...it, isRead: true } : it)),
               }
             : prev,
         )
@@ -101,14 +99,10 @@ export default function NotificationsPage() {
                 )}
               >
                 <div className="flex w-full items-center gap-2">
-                  {!n.isRead && (
-                    <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                  )}
+                  {!n.isRead && <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                   <span aria-hidden="true">{notificationTypeIcon[n.type] ?? '🔔'}</span>
                   <span className="font-medium">{n.title}</span>
-                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                    {timeAgo(n.createdAt)}
-                  </span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeAgo(n.createdAt)}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{n.body}</p>
               </button>

@@ -27,13 +27,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const CYCLE_PRESETS = [7, 14, 30]
 
@@ -93,7 +87,10 @@ export default function ProductDetailPage() {
   }, [productId])
 
   useEffect(() => {
-    flashSaleApi.list().then(setFlashSales).catch(() => setFlashSales([]))
+    flashSaleApi
+      .list()
+      .then(setFlashSales)
+      .catch(() => setFlashSales([]))
   }, [productId])
 
   useEffect(() => {
@@ -104,9 +101,7 @@ export default function ProductDetailPage() {
     restockAlertApi
       .myAlerts()
       .then((p) =>
-        setPendingAlertOptionIds(
-          new Set(p.content.filter((a) => a.status === 'PENDING').map((a) => a.optionId)),
-        ),
+        setPendingAlertOptionIds(new Set(p.content.filter((a) => a.status === 'PENDING').map((a) => a.optionId))),
       )
       .catch(() => setPendingAlertOptionIds(new Set()))
   }, [user])
@@ -189,19 +184,14 @@ export default function ProductDetailPage() {
   }
   if (!product) return null
 
-  const purchasable =
-    product.status === 'ON_SALE' && (selected?.availableStock ?? 0) > 0
+  const purchasable = product.status === 'ON_SALE' && (selected?.availableStock ?? 0) > 0
 
   const setQty = (n: number) => setQuantity(Math.min(maxStock, Math.max(1, n)))
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
       <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-muted text-6xl">
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
-        ) : (
-          '🛍️'
-        )}
+        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="size-full object-cover" /> : '🛍️'}
       </div>
 
       <div>
@@ -224,15 +214,11 @@ export default function ProductDetailPage() {
         {activeFlashSale ? (
           <FlashSaleBanner flashSale={activeFlashSale} />
         ) : (
-          <p className="mt-4 text-2xl font-bold text-primary">
-            {formatKRW(selected?.price ?? product.basePrice)}
-          </p>
+          <p className="mt-4 text-2xl font-bold text-primary">{formatKRW(selected?.price ?? product.basePrice)}</p>
         )}
 
         {product.description && (
-          <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">
-            {product.description}
-          </p>
+          <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">{product.description}</p>
         )}
 
         <Separator className="my-6" />
@@ -252,15 +238,9 @@ export default function ProductDetailPage() {
               </SelectTrigger>
               <SelectContent>
                 {product.options.map((o) => (
-                  <SelectItem
-                    key={o.id}
-                    value={String(o.id)}
-                    disabled={o.availableStock <= 0}
-                  >
+                  <SelectItem key={o.id} value={String(o.id)} disabled={o.availableStock <= 0}>
                     {o.name} · {formatKRW(o.price)}
-                    {o.availableStock <= 0
-                      ? ' (품절)'
-                      : ` (재고 ${o.availableStock})`}
+                    {o.availableStock <= 0 ? ' (품절)' : ` (재고 ${o.availableStock})`}
                     {flashSaleByOption.has(o.id) && ' ⏰ 타임딜'}
                   </SelectItem>
                 ))}
@@ -318,19 +298,11 @@ export default function ProductDetailPage() {
           </Button>
         ) : (
           <div className="mt-6 space-y-2">
-            <Button
-              onClick={addToCart}
-              disabled={!purchasable || submitting}
-              className="h-12 w-full text-base"
-            >
+            <Button onClick={addToCart} disabled={!purchasable || submitting} className="h-12 w-full text-base">
               {purchasable ? '장바구니에 담기' : '구매할 수 없는 상품'}
             </Button>
             {purchasable && optionId != null && selected && (
-              <DeliverySubscribeEntry
-                optionId={optionId}
-                optionName={selected.name}
-                maxStock={maxStock}
-              />
+              <DeliverySubscribeEntry optionId={optionId} optionName={selected.name} maxStock={maxStock} />
             )}
           </div>
         )}
@@ -562,11 +534,7 @@ function DeliverySubscribeForm({
           </div>
 
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={startImmediately}
-              onChange={(e) => setStartImmediately(e.target.checked)}
-            />
+            <input type="checkbox" checked={startImmediately} onChange={(e) => setStartImmediately(e.target.checked)} />
             등록 즉시 첫 회차 주문(체크 해제 시 다음 주기부터 시작)
           </label>
 
@@ -594,25 +562,17 @@ function FlashSaleBanner({ flashSale }: { flashSale: FlashSale }) {
         <span
           role="timer"
           aria-live="off"
-          className={`text-sm font-semibold tabular-nums ${
-            urgent ? 'text-destructive' : 'text-muted-foreground'
-          }`}
+          className={`text-sm font-semibold tabular-nums ${urgent ? 'text-destructive' : 'text-muted-foreground'}`}
         >
           {ended ? '곧 종료됩니다' : `남은 시간 ${label}`}
         </span>
       </div>
       <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-destructive">
-          {formatKRW(flashSale.salePrice)}
-        </span>
-        <span className="text-sm text-muted-foreground line-through">
-          {formatKRW(flashSale.originalPrice)}
-        </span>
+        <span className="text-2xl font-bold text-destructive">{formatKRW(flashSale.salePrice)}</span>
+        <span className="text-sm text-muted-foreground line-through">{formatKRW(flashSale.originalPrice)}</span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        {flashSale.remainingQuantity > 0
-          ? `한정 ${flashSale.remainingQuantity}개 남음`
-          : '한도 소진 — 곧 종료됩니다'}
+        {flashSale.remainingQuantity > 0 ? `한정 ${flashSale.remainingQuantity}개 남음` : '한도 소진 — 곧 종료됩니다'}
       </p>
     </div>
   )

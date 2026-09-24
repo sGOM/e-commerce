@@ -77,9 +77,7 @@ export default function MyAddressesPage() {
     if (editingId === null) return
     setSaving(true)
     const body: AddressBody = { ...form, label: form.label || undefined, address2: form.address2 || undefined }
-    const ok = await run(() =>
-      editingId === 'new' ? addressApi.create(body) : addressApi.update(editingId, body),
-    )
+    const ok = await run(() => (editingId === 'new' ? addressApi.create(body) : addressApi.update(editingId, body)))
     setSaving(false)
     if (ok) setEditingId(null)
   }
@@ -110,10 +108,34 @@ export default function MyAddressesPage() {
               onChange={set('label')}
               className="sm:col-span-2"
             />
-            <Input required placeholder="받는 분" aria-label="받는 분" value={form.receiverName} onChange={set('receiverName')} />
-            <Input required placeholder="받는 분 연락처" aria-label="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} />
-            <Input required placeholder="우편번호" aria-label="우편번호" value={form.zipcode} onChange={set('zipcode')} />
-            <Input required placeholder="기본 주소" aria-label="기본 주소" value={form.address1} onChange={set('address1')} />
+            <Input
+              required
+              placeholder="받는 분"
+              aria-label="받는 분"
+              value={form.receiverName}
+              onChange={set('receiverName')}
+            />
+            <Input
+              required
+              placeholder="받는 분 연락처"
+              aria-label="받는 분 연락처"
+              value={form.receiverPhone}
+              onChange={set('receiverPhone')}
+            />
+            <Input
+              required
+              placeholder="우편번호"
+              aria-label="우편번호"
+              value={form.zipcode}
+              onChange={set('zipcode')}
+            />
+            <Input
+              required
+              placeholder="기본 주소"
+              aria-label="기본 주소"
+              value={form.address1}
+              onChange={set('address1')}
+            />
             <Input
               placeholder="상세 주소 (선택)"
               aria-label="상세 주소 (선택)"
@@ -145,9 +167,7 @@ export default function MyAddressesPage() {
                     <p className="font-medium">
                       {a.label ?? a.receiverName}
                       {a.isDefault && (
-                        <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                          기본 배송지
-                        </span>
+                        <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">기본 배송지</span>
                       )}
                     </p>
                     <p className="text-muted-foreground">

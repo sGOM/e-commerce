@@ -140,12 +140,7 @@ export default function GuestOrderLookupPage() {
             </Button>
           )}
           {user && (
-            <Button
-              variant="outline"
-              onClick={claim}
-              disabled={claiming}
-              className="mt-6 h-11 w-full"
-            >
+            <Button variant="outline" onClick={claim} disabled={claiming} className="mt-6 h-11 w-full">
               {claiming ? '연결 중…' : '이 주문을 내 계정에 연결하기'}
             </Button>
           )}

@@ -4,11 +4,12 @@ import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.UserRepository
 import com.example.starter.security.oauth.CustomOAuth2User
 import com.example.starter.support.AbstractIntegrationTest
+import org.hamcrest.Matchers.hasItem
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockHttpSession
-import org.hamcrest.Matchers.hasItem
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
@@ -16,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 
 @AutoConfigureMockMvc
 class AuthFlowIntegrationTest : AbstractIntegrationTest() {
