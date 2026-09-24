@@ -66,6 +66,7 @@ enum class ErrorCode(
 
     // 결제 (PAYMENT)
     PAYMENT_FAILED(HttpStatus.PAYMENT_REQUIRED, "PAYMENT-001", "결제가 거절되었습니다."),
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_GATEWAY, "PAYMENT-002", "PG 결제 취소에 실패했습니다. 잠시 후 다시 시도해 주세요."),
 
     // 쿠폰 (COUPON)
     COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON-001", "쿠폰을 찾을 수 없습니다."),

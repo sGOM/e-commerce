@@ -33,7 +33,7 @@ import com.example.starter.domain.order.entity.SubOrder
 import com.example.starter.domain.order.entity.SubOrderStatus
 import com.example.starter.domain.order.repository.OrderRepository
 import com.example.starter.domain.order.repository.SubOrderRepository
-import com.example.starter.domain.payment.repository.PaymentRepository
+import com.example.starter.domain.payment.PaymentService
 import com.example.starter.domain.seller.entity.Seller
 import org.springframework.data.domain.Pageable
 import org.springframework.context.ApplicationEventPublisher
@@ -59,7 +59,7 @@ class OrderService(
     private val subOrderRepository: SubOrderRepository,
     private val inventoryRepository: InventoryRepository,
     private val productOptionRepository: ProductOptionRepository,
-    private val paymentRepository: PaymentRepository,
+    private val paymentService: PaymentService,
     private val couponService: CouponService,
     private val pointService: PointService,
     private val flashSaleRepository: FlashSaleRepository,
@@ -396,9 +396,6 @@ class OrderService(
         // 슬롯이 마감/소진된 뒤에도 정원은 복원한다(AC9, FlashSale.release 와 동일 원칙).
         subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
         subOrder.status = SubOrderStatus.CANCELED
-        if (wasPaid) {
-            paymentRepository.findByOrderId(orderId).ifPresent { it.recordPartialRefund(subOrder.payableShare) }
-        }
 
         // 전체 취소 완료 시점에만 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리
         if (order.isFullyCanceled) {
@@ -409,10 +406,16 @@ class OrderService(
                 order.userId?.let { pointService.restoreUse(it, order.pointUsed, orderId) }
             }
             if (wasPaid) {
-                paymentRepository.findByOrderId(orderId).ifPresent { it.markCanceled("전체 취소 완료") }
                 order.userId?.let { pointService.revokeEarnForOrder(it, orderId) }
             }
             order.status = OrderStatus.CANCELED
+        }
+        // PG 취소는 내부 상태 변경을 모두 끝낸 뒤 마지막에(실패 시 전체 롤백) — PaymentService.refund 참고
+        if (wasPaid) {
+            val fully = order.isFullyCanceled
+            paymentService.refund(
+                orderId, subOrder.payableShare, if (fully) "전체 취소 완료" else "부분 취소", "cancel-sub-$subOrderId", fully,
+            )
         }
         return OrderResponse.from(order)
     }
@@ -467,6 +470,9 @@ class OrderService(
     /** 취소/환불 공통 처리: 재고·쿠폰·사용포인트 복원, 결제 후라면 결제 환불 + 적립 포인트 회수. */
     private fun doCancel(order: Order, reason: String) {
         val orderId = requireNotNull(order.id)
+        val wasPaid = order.status == OrderStatus.PAID
+        // 이미 부분 취소로 환불된 SubOrder 몫은 빼고 남은 금액만 PG 에 취소 요청한다.
+        val remainingPayable = order.subOrders.filter { it.status != SubOrderStatus.CANCELED }.sumOf { it.payableShare }
         order.subOrders.forEach { subOrder ->
             subOrder.items.forEach { item ->
                 inventoryRepository.release(item.optionId, item.quantity)
@@ -484,11 +490,14 @@ class OrderService(
         if (order.pointUsed > 0) {
             order.userId?.let { pointService.restoreUse(it, order.pointUsed, orderId) }
         }
-        if (order.status == OrderStatus.PAID) {
-            paymentRepository.findByOrderId(orderId).ifPresent { it.markCanceled(reason) }
+        if (wasPaid) {
             order.userId?.let { pointService.revokeEarnForOrder(it, orderId) }
         }
         order.status = OrderStatus.CANCELED
+        // PG 취소는 마지막에(실패 시 전체 롤백) — PaymentService.refund 참고
+        if (wasPaid) {
+            paymentService.refund(orderId, remainingPayable, reason, "cancel-order-$orderId", fullyCanceled = true)
+        }
     }
 
     private fun findOwnedOrder(userId: Long, orderId: Long): Order =

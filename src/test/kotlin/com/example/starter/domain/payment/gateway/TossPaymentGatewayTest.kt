@@ -121,4 +121,38 @@ class TossPaymentGatewayTest {
         assertFalse(result.success)
         server.verify()
     }
+    @Test
+    fun `cancel 은 paymentKey 취소 API 를 금액·사유·멱등키와 함께 호출한다`() {
+        val (gateway, server) = gatewayWithMockServer(props())
+        server.expect(requestTo("$baseUrl/v1/payments/pk_c1/cancel"))
+            .andExpect(method(HttpMethod.POST))
+            .andExpect(header("Idempotency-Key", "cancel-sub-7"))
+            .andExpect(jsonPath("$.cancelAmount").value(3_000))
+            .andExpect(jsonPath("$.cancelReason").value("부분 취소"))
+            .andRespond(withSuccess("""{"paymentKey":"pk_c1","status":"PARTIAL_CANCELED"}""", MediaType.APPLICATION_JSON))
+
+        val result = gateway.cancel(PaymentCancelCommand("pk_c1", 3_000, "부분 취소", "cancel-sub-7"))
+
+        assertTrue(result.success)
+        server.verify()
+    }
+
+    @Test
+    fun `cancel 응답이 취소 상태가 아니거나 통신 오류면 실패다`() {
+        val (gateway, server) = gatewayWithMockServer(props())
+        server.expect(requestTo("$baseUrl/v1/payments/pk_c2/cancel"))
+            .andRespond(withSuccess("""{"status":"DONE"}""", MediaType.APPLICATION_JSON))
+        server.expect(requestTo("$baseUrl/v1/payments/pk_c3/cancel"))
+            .andRespond(withServerError())
+
+        assertFalse(gateway.cancel(PaymentCancelCommand("pk_c2", 1_000, "취소", "k2")).success)
+        assertFalse(gateway.cancel(PaymentCancelCommand("pk_c3", 1_000, "취소", "k3")).success)
+        server.verify()
+    }
+
+    @Test
+    fun `거래 키가 없으면 통신 없이 취소 실패다`() {
+        val gateway = TossPaymentGateway(props())
+        assertFalse(gateway.cancel(PaymentCancelCommand(null, 1_000, "취소", "k")).success)
+    }
 }

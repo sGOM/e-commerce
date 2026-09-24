@@ -199,6 +199,15 @@ when {
 - 테스트는 `MockRestServiceServer`로 confirm 호출/Basic 인증/금액 위변조 거절을 외부 통신 없이 검증한다
   (`RestClient.Builder`를 생성자로 주입받는 이유).
 
+### 6-4. 결제 취소 — 마지막에 PG 호출 + 결정적 멱등 키
+주문 취소·부분 취소·관리자 환불·선물 만료 취소는 모두 `PaymentService.refund` 한 곳에서 PG 취소(`cancel`)를 부른다.
+- **금액**: 부분 취소는 그 SubOrder 의 `payableShare`, 전체 취소는 *아직 취소되지 않은* SubOrder 몫의 합(이미 부분 환불된 금액 제외).
+- **순서**: 재고·쿠폰·포인트 복원 등 내부 변경을 모두 끝낸 뒤 **마지막에** PG 를 호출한다. PG 가 거절하면
+  `PAYMENT-002`(502)로 예외 → 트랜잭션 전체 롤백(주문은 그대로 PAID, 재시도 가능).
+- **남는 틈**: PG 취소 성공 뒤 커밋이 실패하면 PG 만 취소된다. 그래서 `Idempotency-Key` 를
+  `cancel-order-{orderId}` / `cancel-sub-{subOrderId}` 로 결정적으로 만들어, 재시도해도 PG 가 한 번만 환불한다
+  ([토스 멱등키](https://docs.tosspayments.com/reference/using-api/idempotency-key)).
+
 ---
 
 ## 7. 정산 — 집계 멱등성 + 조건부 스케줄러

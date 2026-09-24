@@ -31,7 +31,8 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 게스트 결제(`POST /api/payments/guest` — 주문번호+연락처 확인, 체크아웃 즉시 결제·조회 화면 재시도),
 재고 CSV 일괄 수정(`PATCH /api/seller/products/stock` — `sku,quantity` 전량 검증 후 일괄 반영),
 이메일 알림 채널(`EmailSender` — `spring.mail.host` 유무로 SMTP/로깅 구현 선택, 재입고·가격인하·멤버십·정기배송·선물 알림 발송)),
-비밀번호 분실 재설정(`POST /api/auth/password-reset/request|confirm` — 메일 토큰 30분·1회용, 해시 저장, 계정 열거 방지, `/reset-password` 화면).
+비밀번호 분실 재설정(`POST /api/auth/password-reset/request|confirm` — 메일 토큰 30분·1회용, 해시 저장, 계정 열거 방지, `/reset-password` 화면),
+PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액을 토스 `/v1/payments/{paymentKey}/cancel` 로, 결정적 `Idempotency-Key`, PG 거절 시 전체 롤백).
 
 **5. 관리자 백오피스** 는 남은 항목이 없어 표를 제거했다(번호는 기존 항목 ID 유지를 위해 재사용하지 않는다).
 
@@ -44,9 +45,8 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 1.2 | **Toss 결제위젯 프론트 연동** | 🔴 | M | - | 백엔드 `TossPaymentGateway.approve`(금액 위변조 검증)는 완료. 프론트에 위젯 SDK + `paymentKey` 전달 흐름 없음 |
-| 1.3 | **PG 결제 취소 API 연동** | 🔴 | M | 1.2 | `PaymentGateway`에 `approve`만 있다. 취소/부분환불 시 내부 상태만 바뀌고 PG 취소(`/v1/payments/{paymentKey}/cancel`)는 호출되지 않음 |
 | 1.4 | **결제 Webhook 수신** | 🟡 | M | 1.2 | Toss 비동기 상태 변경(취소/가상계좌 입금) 수신 + 검증 |
-| 1.5 | **반품·교환 상태 머신** | 🟢 | L | 1.3 | 현재는 관리자 환불로 대체. 반품 요청→회수→검수→환불 흐름 |
+| 1.5 | **반품·교환 상태 머신** | 🟢 | L | - | 현재는 관리자 환불로 대체. 반품 요청→회수→검수→환불 흐름 |
 
 ## 2. 상품 / 카탈로그
 
@@ -90,7 +90,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 | 구분 | 항목 | 필요한 것 |
 |------|------|-----------|
-| 외부 연동 키(실검증만) | 1.2, 1.3, 1.4, 1.5 | 코드·계약 테스트는 키 없이 진행 가능. 실제 결제 확인에만 Toss 테스트 키(클라이언트/시크릿) |
+| 외부 연동 키(실검증만) | 1.2, 1.4, 1.5 | 코드·계약 테스트는 키 없이 진행 가능. 실제 결제 확인에만 Toss 테스트 키(클라이언트/시크릿) |
 | 외부 연동 키 | (실발송만) | 6.1·3.1 코드는 완료 — 실제 메일 발송에만 SMTP 계정 필요(`MAIL_HOST` 등) |
 | 외부 연동 키 | 6.2, 6.3 | 택배사 API 계약 / 웹푸시 VAPID |
 | 정책 결정 | 7.1, 7.2 | 배송비 모델, 어뷰징 방지 원칙 |
@@ -100,6 +100,6 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 
 ## 추천 진행 순서
 
-1. **결제 완성** — 1.3 PG 취소 연동 → 1.4 Webhook → 1.2 Toss 위젯 (키 없이 코드·테스트, 실결제 확인만 키 필요)
+1. **결제 완성** — 1.4 Webhook → 1.2 Toss 위젯 (키 없이 코드·테스트, 실결제 확인만 키 필요)
 2. **상품 완성도** — 업로드 저장소를 S3/영속 볼륨으로 교체(운영 배포 전)
 3. **정책 확정 후** — 7.1 배송비 모델
