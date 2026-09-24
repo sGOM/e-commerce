@@ -180,7 +180,9 @@ docker compose up -d
 | POST | `/api/auth/signup` | 회원가입 | 불필요 |
 | POST | `/api/auth/login` | 로그인(세션 생성) | 불필요 |
 | POST | `/api/auth/logout` | 로그아웃 | 세션 |
-| GET | `/api/auth/me` | 내 정보 | 세션 |
+| GET | `/api/auth/me` | 내 정보(DB 역할로 세션 권한 갱신) | 세션 |
+| PATCH | `/api/auth/password` | 비밀번호 변경 | 세션 |
+| POST | `/api/auth/password-reset/request` · `/confirm` | 비밀번호 분실 재설정(메일 토큰) | 불필요 |
 
 > **CSRF**: 세션 기반 + SPA 친화로 쿠키 토큰 방식을 쓴다. 클라이언트는 GET 요청 후 받은
 > `XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더에 실어 상태 변경 요청을 보낸다.
@@ -227,6 +229,7 @@ frontend/src
 
 ## 이커머스 API
 > 모든 응답은 공통 규약 `{ success, code, message, data }`. 상태 변경 요청은 CSRF 토큰 필요.
+> 아래 표는 **핵심 흐름만** 요약한다. 전체 목록·스키마는 앱 기동 후 `/swagger-ui/index.html`(prod 비활성)에서 본다.
 
 ### 공개/고객 API
 | 메서드 | 경로 | 설명 | 인증 |
@@ -247,6 +250,9 @@ frontend/src
 | POST | `/api/orders/{id}/cancel` | 주문 전체 취소 | 회원 |
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
 | POST | `/api/payments/{orderId}` | 결제 요청(멱등, 실 PG는 `paymentKey` 동반) | 회원 |
+| POST | `/api/payments/guest` | 비회원 결제(주문번호+연락처 확인) | 불필요 |
+| GET · POST · PUT · DELETE | `/api/me/addresses` | 배송지 주소록(기본 배송지 지정 포함) | 회원 |
+| POST | `/api/uploads` | 이미지 업로드(상품·리뷰 사진) | 회원 |
 | GET | `/api/me/coupons` · `/api/me/points` | 내 쿠폰/포인트 | 회원 |
 | GET | `/api/collections` · `/api/collections/{id}` | 기획전/컬렉션 목록·상세 | 불필요 |
 | GET | `/api/flash-sales` · `/api/flash-sales/{id}` | 진행/예정 플래시세일 | 불필요 |
@@ -305,7 +311,7 @@ frontend/src
 ```bash
 ./gradlew test
 ```
-통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치). 총 **109개** 통합/단위 테스트.
+통합 테스트는 기본적으로 **Testcontainers(PostgreSQL)** 를 사용한다(실 환경 일치).
 
 주요 커버리지:
 - **재고 동시성**(`OrderConcurrencyIntegrationTest`): 재고 5에 동시 주문 20건 → 정확히 5건 성공, 오버셀링 0건
@@ -330,15 +336,15 @@ payment:
     secret-key: ${TOSS_SECRET_KEY}
 ```
 
-### 환경 주의 (이 개발 머신 한정)
+### 환경 주의
 1. **Gradle 런처 JDK**: 시스템 JDK가 26이면 Gradle 8.14.x의 내장 Kotlin 컴파일러가 깨진다.
    `~/.gradle/gradle.properties` 에 `org.gradle.java.home=<JDK 21 경로>` 를 둔다.
-2. **Testcontainers ↔ Docker**: 일부 Docker Desktop 환경에서 docker-java 가 데몬에 접속하지
-   못한다. 이 경우 외부 PostgreSQL 을 직접 띄우고 우회 실행:
+2. **Testcontainers ↔ Docker**: Testcontainers 1.21.4 로 Docker Engine 29 까지 호환된다(`build.gradle.kts`).
+   컨테이너를 띄울 수 없는 환경이면 외부 PostgreSQL 로 우회한다(CI 도 이 경로 — `IT_DATASOURCE_*`):
    ```bash
-   docker run -d --name pg -e POSTGRES_DB=starter -e POSTGRES_USER=starter \
-     -e POSTGRES_PASSWORD=starter -p 5433:5432 postgres:16-alpine
-   ./gradlew test -Dit.datasource.url=jdbc:postgresql://localhost:5433/starter
+   docker run -d --name starter-it-pg -e POSTGRES_DB=starter -e POSTGRES_USER=starter \
+     -e POSTGRES_PASSWORD=starter -p 55433:5432 postgres:16-alpine
+   ./gradlew test -Dit.datasource.url=jdbc:postgresql://localhost:55433/starter
    ```
 
 ## 관리자 API — 스타터 킷(사용자/감사로그)

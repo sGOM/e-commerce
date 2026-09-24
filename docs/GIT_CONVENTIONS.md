@@ -118,9 +118,9 @@ feat(order): reserve stock with atomic conditional UPDATE
 
 - 하위호환을 깨면 footer에 `BREAKING CHANGE: <설명>` 명시 → [SemVer](https://semver.org/lang/ko/)의 MAJOR에 대응.
 - 관련 이슈는 `Refs #123`, 종료는 `Closes #123` ([GitHub 키워드 문서](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)).
-- AI 에이전트 커밋은 footer에 아래를 붙인다:
+- AI 에이전트 커밋은 footer에 세션(도구)이 지정한 공동 작성자 줄을 붙인다. 모델명은 바뀌므로 문서에 고정하지 않는다:
   ```
-  Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+  Co-Authored-By: Claude <모델명> <noreply@anthropic.com>
   ```
 
 ---
