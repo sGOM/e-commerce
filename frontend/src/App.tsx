@@ -29,6 +29,7 @@ import GuestOrderLookupPage from './pages/GuestOrderLookupPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import PasswordResetPage from './pages/PasswordResetPage'
+import TossPaymentResultPage from './pages/TossPaymentResultPage'
 // 판매자·관리자 백오피스는 일부 사용자만 쓰므로 별도 청크로 분리해 고객 첫 로딩에서 제외한다.
 const SellerLayout = lazy(() => import('./pages/seller/SellerLayout'))
 const SellerDashboardPage = lazy(() => import('./pages/seller/SellerDashboardPage'))
@@ -92,6 +93,8 @@ export default function App() {
             <Route path="cart" element={<CartPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
             <Route path="orders/lookup" element={<GuestOrderLookupPage />} />
+            {/* 토스 결제창 복귀(회원·비회원 공용, VITE_TOSS_CLIENT_KEY 설정 시) */}
+            <Route path="payments/toss/:result" element={<TossPaymentResultPage />} />
             {/* 선물 수령(비회원 접근 가능, `docs/planning/gift-order.md` AC6) */}
             <Route path="gift/:token" element={<GiftClaimPage />} />
             <Route

@@ -67,6 +67,7 @@ const renderPage = () =>
       <Routes>
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders/lookup" element={<p>주문 조회 화면</p>} />
+        <Route path="/orders/:id" element={<p>주문 상세 화면</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -145,5 +146,21 @@ describe('CheckoutPage', () => {
     )
     expect(orderApi.payGuest).toHaveBeenCalledWith('ORD-1', '010-1111-2222')
     expect(readGuestCart()).toEqual([])
+  })
+
+  it('회원 주문 생성 뒤 결제가 실패하면 중복 주문을 막도록 주문 상세(재결제)로 이동한다', async () => {
+    asMember({ addresses: [address({ isDefault: true })] })
+    vi.mocked(orderApi.create).mockResolvedValue({ orderId: 9, orderNumber: 'ORD-9' } as never)
+    vi.mocked(orderApi.pay).mockRejectedValue(new Error('결제 모듈 오류'))
+    renderPage()
+    await screen.findByDisplayValue('주소')
+
+    for (const [label, value] of [['이름', '회원'], ['연락처', '010-1'], ['이메일', 'm@example.com']]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: '결제하기 (Mock PG)' }))
+
+    expect(await screen.findByText('주문 상세 화면')).toBeTruthy()
+    expect(orderApi.create).toHaveBeenCalledTimes(1)
   })
 })

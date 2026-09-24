@@ -5,6 +5,7 @@ import { orderApi } from '../api/endpoints'
 import { ApiError } from '../api/client'
 import { giftClaimStatusLabel } from '../labels'
 import OrderView from '../components/OrderView'
+import { payMemberOrder } from '../lib/payment'
 import type { GiftClaim, Order } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -112,13 +113,14 @@ export default function OrderDetailPage() {
   const { id } = useParams()
   const orderId = Number(id)
   const location = useLocation() as {
-    state?: { justPaid?: boolean; giftClaimToken?: string | null }
+    state?: { justPaid?: boolean; giftClaimToken?: string | null; payError?: string }
   }
 
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(location.state?.payError ?? null)
   const [canceling, setCanceling] = useState(false)
+  const [paying, setPaying] = useState(false)
   const [confirmingSubOrderId, setConfirmingSubOrderId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -140,6 +142,20 @@ export default function OrderDetailPage() {
       setError(e instanceof ApiError ? e.message : '수령 확인에 실패했습니다.')
     } finally {
       setConfirmingSubOrderId(null)
+    }
+  }
+
+  // 결제 전(CREATED) 주문 재결제 — 토스 결제창에서 돌아오지 못했거나 결제가 실패한 경우의 재시도 경로.
+  const pay = async () => {
+    if (!order) return
+    setPaying(true)
+    setError(null)
+    try {
+      if ((await payMemberOrder(order)) === 'paid') setOrder(await orderApi.detail(orderId))
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : '결제에 실패했습니다.')
+    } finally {
+      setPaying(false)
     }
   }
 
@@ -190,6 +206,11 @@ export default function OrderDetailPage() {
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
+      )}
+      {order.status === 'CREATED' && (
+        <Button type="button" onClick={pay} disabled={paying} className="h-12 w-full">
+          {paying ? '결제 중…' : '결제하기'}
+        </Button>
       )}
       {cancelable && (
         <Button

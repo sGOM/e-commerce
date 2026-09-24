@@ -15,6 +15,11 @@
 - 인증: 세션 기반. 변경 요청은 `XSRF-TOKEN` 쿠키를 읽어 `X-XSRF-TOKEN` 헤더로 전송(`src/api/client.ts`)
 - 공통 응답 `{ success, code, message, data }` 를 클라이언트에서 언랩하고 실패 시 `ApiError` 로 변환
 
+## 결제 (토스 결제창)
+`frontend/.env` 에 `VITE_TOSS_CLIENT_KEY=test_ck_...`(토스 개발자센터의 **API 개별 연동** 클라이언트 키)를 두면 체크아웃·주문 재결제가
+토스 결제창(SDK v2, `src/lib/payment.ts`)으로 이동하고 `/payments/toss/success|fail` 로 돌아와 서버 승인한다.
+없으면 기존처럼 백엔드 Mock PG 로 즉시 결제한다. 백엔드도 `PAYMENT_GATEWAY=toss` + `PAYMENT_TOSS_SECRETKEY` 가 필요하다.
+
 ## 실행
 ```bash
 # 1) 백엔드 먼저 기동 (저장소 루트)

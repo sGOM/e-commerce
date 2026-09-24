@@ -573,9 +573,11 @@ export const orderApi = {
     api.get<PageResponse<OrderSummary>>(`/api/orders?page=${page}&size=${size}`),
   detail: (orderId: number) => api.get<Order>(`/api/orders/${orderId}`),
   cancel: (orderId: number) => api.post<Order>(`/api/orders/${orderId}/cancel`),
-  pay: (orderId: number) => api.post<Payment>(`/api/payments/${orderId}`),
-  payGuest: (orderNumber: string, ordererPhone: string) =>
-    api.post<Payment>('/api/payments/guest', { orderNumber, ordererPhone }),
+  // paymentKey 는 토스 결제창 승인 시에만(Mock PG 는 생략)
+  pay: (orderId: number, paymentKey?: string) =>
+    api.post<Payment>(`/api/payments/${orderId}`, paymentKey ? { paymentKey } : undefined),
+  payGuest: (orderNumber: string, ordererPhone: string, paymentKey?: string) =>
+    api.post<Payment>('/api/payments/guest', { orderNumber, ordererPhone, paymentKey }),
   // 하위 주문(판매자 단위) 수령 확인(구매확정). SHIPPED → DELIVERED. 이후 해당 항목에 리뷰를 쓸 수 있다.
   confirmDelivery: (subOrderId: number) =>
     api.post<Order>(`/api/orders/sub-orders/${subOrderId}/confirm-delivery`),
