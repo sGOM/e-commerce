@@ -251,6 +251,7 @@ frontend/src
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
 | POST | `/api/payments/{orderId}` | 결제 요청(멱등, 실 PG는 `paymentKey` 동반) | 회원 |
 | POST | `/api/payments/guest` | 비회원 결제(주문번호+연락처 확인) | 불필요 |
+| POST | `/api/payments/webhook/toss` | 토스 결제 웹훅(PG 재조회로 검증, CSRF 제외) | 불필요 |
 | GET · POST · PUT · DELETE | `/api/me/addresses` | 배송지 주소록(기본 배송지 지정 포함) | 회원 |
 | POST | `/api/uploads` | 이미지 업로드(상품·리뷰 사진) | 회원 |
 | GET | `/api/me/coupons` · `/api/me/points` | 내 쿠폰/포인트 | 회원 |
