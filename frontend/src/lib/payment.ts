@@ -17,7 +17,7 @@ export const tossEnabled = Boolean(clientKey)
 
 /** 결제창에서 돌아왔을 때 승인에 필요한 정보. 게스트는 연락처로 본인 확인한다. */
 export type PendingPayment = { orderNumber: string; amount: number } & (
-  | { orderId: number }
+  | { orderId: number; giftClaimToken?: string | null }
   | { ordererPhone: string }
 )
 
@@ -52,7 +52,7 @@ function orderName(order: Order): string {
   return (items.length > 1 ? `${first} 외 ${items.length - 1}건` : first).slice(0, 100)
 }
 
-/** 토스 결제창을 연다(페이지 이동). 사용자가 결제창을 닫으면 failUrl 로 돌아온다. */
+/** 토스 결제창을 연다(페이지 이동). 호출자는 결제창 이탈이 reject 로 올 수도 있다고 보고 처리한다. */
 async function requestTossPayment(order: Order, pending: PendingPayment) {
   sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending))
   const TossPayments = await loadSdk()
@@ -74,7 +74,13 @@ export async function payMemberOrder(order: Order): Promise<'paid' | 'redirected
     await orderApi.pay(order.orderId)
     return 'paid'
   }
-  await requestTossPayment(order, { orderId: order.orderId, orderNumber: order.orderNumber, amount: order.payableAmount })
+  // 선물 공유 토큰은 주문 생성 응답에만 있어, 리다이렉트 뒤 상세 화면에 넘기려면 함께 보관한다.
+  await requestTossPayment(order, {
+    orderId: order.orderId,
+    orderNumber: order.orderNumber,
+    amount: order.payableAmount,
+    giftClaimToken: order.giftClaimToken,
+  })
   return 'redirected'
 }
 

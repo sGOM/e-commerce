@@ -1,11 +1,15 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import TossPaymentResultPage from './TossPaymentResultPage'
 import { orderApi } from '../api/endpoints'
 
 vi.mock('../api/endpoints', () => ({ orderApi: { pay: vi.fn(), payGuest: vi.fn() } }))
+
+function ShowState() {
+  return <p data-testid="state">{JSON.stringify(useLocation().state)}</p>
+}
 
 const renderAt = (url: string) =>
   render(
@@ -36,6 +40,24 @@ describe('TossPaymentResultPage', () => {
     await waitFor(() => expect(orderApi.pay).toHaveBeenCalledWith(7, 'pk_1'))
     expect(await screen.findByText('주문 상세')).toBeTruthy()
     expect(sessionStorage.getItem('tossPendingPayment')).toBeNull()
+  })
+
+  it('선물 주문은 공유 토큰을 주문 상세로 넘긴다', async () => {
+    sessionStorage.setItem(
+      'tossPendingPayment',
+      JSON.stringify({ orderId: 7, orderNumber: 'ORD-1', amount: 25000, giftClaimToken: 'gift-tok' }),
+    )
+    vi.mocked(orderApi.pay).mockResolvedValue({ status: 'PAID' } as never)
+    render(
+      <MemoryRouter initialEntries={['/payments/toss/success?paymentKey=pk_1&orderId=ORD-1&amount=25000']}>
+        <Routes>
+          <Route path="/payments/toss/:result" element={<TossPaymentResultPage />} />
+          <Route path="/orders/:id" element={<ShowState />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect((await screen.findByTestId('state')).textContent).toContain('gift-tok')
   })
 
   it('금액이 요청 때와 다르면 승인하지 않는다', async () => {

@@ -35,7 +35,10 @@ export default function TossPaymentResultPage() {
         if ('orderId' in pending) {
           await orderApi.pay(pending.orderId, paymentKey)
           clearPendingPayment()
-          navigate(`/orders/${pending.orderId}`, { replace: true, state: { justPaid: true } })
+          navigate(`/orders/${pending.orderId}`, {
+            replace: true,
+            state: { justPaid: true, giftClaimToken: pending.giftClaimToken },
+          })
         } else {
           await orderApi.payGuest(pending.orderNumber, pending.ordererPhone, paymentKey)
           clearPendingPayment()

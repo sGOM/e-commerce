@@ -113,12 +113,12 @@ export default function OrderDetailPage() {
   const { id } = useParams()
   const orderId = Number(id)
   const location = useLocation() as {
-    state?: { justPaid?: boolean; giftClaimToken?: string | null }
+    state?: { justPaid?: boolean; giftClaimToken?: string | null; payError?: string }
   }
 
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(location.state?.payError ?? null)
   const [canceling, setCanceling] = useState(false)
   const [paying, setPaying] = useState(false)
   const [confirmingSubOrderId, setConfirmingSubOrderId] = useState<number | null>(null)

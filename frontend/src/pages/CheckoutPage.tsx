@@ -13,7 +13,7 @@ import {
 import { ApiError, formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
-import { payGuestOrder, payMemberOrder } from '../lib/payment'
+import { payGuestOrder, payMemberOrder, tossEnabled } from '../lib/payment'
 import { deliverySlotTypeLabel } from '../labels'
 import type { Cart, CartItem, DeliverySlot, IssuedCoupon, Membership, UserAddress } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -279,7 +279,18 @@ export default function CheckoutPage() {
           isGift,
           giftMessage: isGift ? giftMessage.trim() || null : null,
         })
-        if ((await payMemberOrder(order)) === 'redirected') return // 토스 결제창으로 이동
+        try {
+          if ((await payMemberOrder(order)) === 'redirected') return // 토스 결제창으로 이동
+        } catch (err) {
+          // 주문은 이미 생성됐으므로 체크아웃에 머물면 재제출 시 주문이 중복된다 → 주문 상세의 재결제로 보낸다.
+          navigate(`/orders/${order.orderId}`, {
+            state: {
+              payError: err instanceof ApiError ? err.message : '결제를 완료하지 못했습니다. 다시 결제해 주세요.',
+              giftClaimToken: order.giftClaimToken,
+            },
+          })
+          return
+        }
         navigate(`/orders/${order.orderId}`, {
           state: { justPaid: true, giftClaimToken: order.giftClaimToken },
         })
@@ -543,7 +554,7 @@ export default function CheckoutPage() {
           </p>
         )}
         <Button type="submit" disabled={submitting || !cart} className="mt-5 h-12 w-full text-base">
-          {submitting ? '처리 중…' : isGuest ? '비회원 결제하기 (Mock PG)' : '결제하기 (Mock PG)'}
+          {submitting ? '처리 중…' : `${isGuest ? '비회원 결제하기' : '결제하기'}${tossEnabled ? '' : ' (Mock PG)'}`}
         </Button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {isGuest
