@@ -5,6 +5,8 @@ import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.entity.ProductStatus
 import com.example.starter.domain.catalog.repository.ProductRepository
+import com.example.starter.domain.gift.GiftExpiryBatchService
+import com.example.starter.domain.gift.repository.GiftClaimRepository
 import com.example.starter.domain.payment.entity.PaymentStatus
 import com.example.starter.domain.payment.gateway.PaymentApproveResult
 import com.example.starter.domain.payment.gateway.PaymentCancelCommand
@@ -32,6 +34,8 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * 주문 취소가 PG 결제 취소로 이어지는지 검증한다(ROADMAP 1.3). PG 롤백 의미를 확인하려고 테스트 트랜잭션을
@@ -45,6 +49,8 @@ class PaymentCancelIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var sellerRepository: SellerRepository
     @Autowired lateinit var productRepository: ProductRepository
     @Autowired lateinit var paymentRepository: PaymentRepository
+    @Autowired lateinit var giftExpiryBatchService: GiftExpiryBatchService
+    @Autowired lateinit var giftClaimRepository: GiftClaimRepository
 
     @MockkBean lateinit var paymentGateway: PaymentGateway
 
@@ -149,5 +155,41 @@ class PaymentCancelIntegrationTest : AbstractIntegrationTest() {
             .andExpect { status { isOk() } }
 
         verify(exactly = 0) { paymentGateway.cancel(any()) }
+    }
+
+    @Test
+    fun `선물 만료 배치에서 한 건의 PG 취소가 실패해도 다른 건의 취소는 커밋된다`() {
+        val buyer = seedBuyer("pg-cancel-gift@example.com")
+        val (failing, ok) = listOf("PGG-1", "PGG-2").map { sku ->
+            val optionId = seedOption(sku, 10_000)
+            mockMvc.post("/api/cart/items") {
+                with(user(buyer)); with(csrf())
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"optionId":$optionId,"quantity":1}"""
+            }.andExpect { status { isOk() } }
+            val res = mockMvc.post("/api/orders") {
+                with(user(buyer)); with(csrf())
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"ordererName":"구매","ordererPhone":"010-1","ordererEmail":"b@e.com","isGift":true}"""
+            }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+            val orderId = Regex(""""orderId":(\d+)""").find(res)!!.groupValues[1].toLong()
+            mockMvc.post("/api/payments/$orderId") { with(user(buyer)); with(csrf()) }.andExpect { status { isOk() } }
+            orderId
+        }
+        every { paymentGateway.cancel(match { it.idempotencyKey == "cancel-order-$failing" }) } returns
+            PaymentCancelResult(false, "PG 오류")
+
+        val result = giftExpiryBatchService.expireDueClaims(Instant.now().plus(3650, ChronoUnit.DAYS))
+
+        assertEquals(1, result.erroredCount)
+        assertEquals(PaymentStatus.CANCELED, paymentRepository.findByOrderId(ok).get().status)
+        assertEquals(PaymentStatus.PAID, paymentRepository.findByOrderId(failing).get().status)
+
+        // 정리(테스트 트랜잭션 없음): 남은 PAID 주문은 정산 집계 테스트에 섞이지 않도록 취소
+        every { paymentGateway.cancel(any()) } returns PaymentCancelResult(true, "취소")
+        mockMvc.post("/api/orders/$failing/cancel") { with(user(buyer)); with(csrf()) }
+            .andExpect { status { isOk() } }
+        // gift_claims → orders FK 가 orders 를 전부 지우는 테스트(OrderConcurrencyIntegrationTest) 정리를 막지 않게 한다
+        listOf(failing, ok).forEach { id -> giftClaimRepository.findByOrderId(id).ifPresent(giftClaimRepository::delete) }
     }
 }
