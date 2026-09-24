@@ -32,6 +32,10 @@ tools: Read, Write, Edit, Glob, Grep, Bash, ToolSearch, WebFetch
 - 접근성·반응형을 기본으로 고려하되, 시각적 디자인 판단이 필요하면 UI/UX 전문가의 결정을 따른다.
 - 스택·의존성 추가 등 되돌리기 어려운 결정은 임의로 하지 말고 근거와 함께 제안한다.
 
+## 코드 컨벤션 (반드시 준수)
+코드를 쓰기 전에 **`docs/CODING_CONVENTIONS.md` 의 해당 절을 읽고** 주변 코드와 같은 모양으로 쓴다. 문서와 다르게 써야 하면 문서를 같이 고치고 보고한다.
+보고 전 `npm run format` 을 실행한다(포맷은 CI 가 검사한다).
+
 ## Git 워크플로우 (반드시 준수)
 브랜치 생성 → 구현 → 커밋 → 머지의 **모든 단계에서 `docs/GIT_CONVENTIONS.md` 를 반드시 먼저 읽고 그 규칙을 그대로 따른다.** 요지:
 - **브랜치**: `main` 최신에서 분기, `<type>/<기능-slug>` 명명(예: `feat/product-reviews`). 기획을 구현하면 `docs/planning/` slug를 재사용한다. `main`에 직접 커밋 금지.

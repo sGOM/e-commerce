@@ -11,6 +11,7 @@ B2C 마켓플레이스 이커머스. 백엔드 Kotlin/Spring Boot 3.5(`src/`, �
 | 기능의 "무엇을·왜"·수용기준 | [`docs/planning/`](docs/planning/README.md) |
 | 동시성·금액·결제·정산 등 비CRUD 구현 원리 | [`docs/SERVER_ARCHITECTURE.md`](docs/SERVER_ARCHITECTURE.md) |
 | 제품 요구사항·확정된 정책 결정 | [`PRD.md`](PRD.md) |
+| **코드 작성 규칙(레이어·트랜잭션·예외·DTO·테스트 모양)** | [`docs/CODING_CONVENTIONS.md`](docs/CODING_CONVENTIONS.md) — 코드 작성 전 해당 절을 읽는다 |
 | 브랜치·커밋·PR 규칙 | [`docs/GIT_CONVENTIONS.md`](docs/GIT_CONVENTIONS.md) |
 | UI 토큰·컴포넌트 규칙 | [`docs/design/storefront-ui-spec.md`](docs/design/storefront-ui-spec.md) |
 | 전체 API 목록 | 앱 기동 후 `/swagger-ui/index.html` (README 표는 핵심만) |
@@ -21,10 +22,12 @@ B2C 마켓플레이스 이커머스. 백엔드 Kotlin/Spring Boot 3.5(`src/`, �
 ./gradlew compileKotlin          # 빠른 백엔드 검증
 ./gradlew test                   # 전체 테스트(Testcontainers PostgreSQL — Docker 필요)
 ./gradlew test --tests '*OrderConcurrencyIntegrationTest*'  # 단일 테스트
-cd frontend && npm test && npm run lint && npm run build   # CI 와 동일한 프론트 검증
+./gradlew ktlintFormat           # Kotlin 포맷(규칙: .editorconfig) — 커밋 전 필수
+cd frontend && npm run format    # 프론트 포맷(prettier). Edit/Write 한 파일은 훅이 자동 포맷한다
+cd frontend && npm test && npm run lint && npm run build   # 프론트 검증
 ```
 
-CI(`.github/workflows/ci.yml`)는 백엔드 테스트 + 프론트 lint/test 를 돌린다. `build` 는 CI 에 없으니 로컬에서 확인한다.
+CI(`.github/workflows/ci.yml`)는 `ktlintCheck` + 백엔드 테스트, 프론트 lint/`format:check`/test 를 돌린다. `build` 는 CI 에 없으니 로컬에서 확인한다.
 
 ## 반드시 지킬 불변식
 
@@ -44,7 +47,7 @@ CI(`.github/workflows/ci.yml`)는 백엔드 테스트 + 프론트 lint/test 를 
      정산 대상 상태(PAID 등) 주문이나 `orders` 를 참조하는 행(`gift_claims` 등)을 남기지 않게 정리한다 —
      정산 테스트는 전역 집계, `OrderConcurrencyIntegrationTest` 는 `orders` 전체 삭제를 한다.
    - 배치의 건별 격리는 **별도 빈 + `REQUIRES_NEW`** 로 한다(같은 클래스 자기 호출엔 `@Transactional` 미적용).
-3. 백엔드 전체 테스트 + 프론트 test/lint/build 통과 확인.
+3. `./gradlew ktlintFormat`(Kotlin 을 고쳤다면) 후 백엔드 전체 테스트 + 프론트 test/lint/build 통과 확인. [`CODING_CONVENTIONS.md` §5 자가 점검](docs/CODING_CONVENTIONS.md#5-pr-전-자가-점검)을 훑는다.
 4. 커밋은 GIT_CONVENTIONS 규칙(원자적, 마이그레이션은 사용 코드와 같은 커밋, 비자명한 결정은 본문에 "왜"+공식 문서 링크).
 5. `gh pr create --base main` → CI green 확인 → `gh pr merge --merge` → ROADMAP 완료 반영.
    - 열린 PR 에 추가 push 하면 `gh pr checks --watch` 가 새 실행 등록 전 "no checks reported" 로 실패할 수 있다.
@@ -56,4 +59,6 @@ CI(`.github/workflows/ci.yml`)는 백엔드 테스트 + 프론트 lint/test 를 
 ## 서브에이전트
 
 `.claude/agents/` — `spring-expert`(백엔드), `react-expert`(프론트), `uiux-expert`(디자인 판단), `product-planner`(기획서).
-작은 변경은 직접 하고, 독립적인 큰 작업만 위임한다.
+작은 변경은 직접 하고, 독립적인 큰 작업만 위임한다. 코드 규칙의 원천은 에이전트 정의가 아니라 `CODING_CONVENTIONS.md` 하나다(중복 기재 금지).
+
+`.claude/settings.json` 훅: Edit/Write 한 `frontend/src` 의 ts/tsx/css 를 prettier 로 자동 포맷(`.claude/hooks/format-edited-file.cjs`).
