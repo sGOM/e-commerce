@@ -45,11 +45,11 @@ export default function CollectionsPage() {
         </div>
       )}
 
-      {collections && !loading && !error && (
-        collections.length === 0 ? (
-          <p className="py-20 text-center text-sm text-muted-foreground">
-            진행 중인 기획전이 없습니다.
-          </p>
+      {collections &&
+        !loading &&
+        !error &&
+        (collections.length === 0 ? (
+          <p className="py-20 text-center text-sm text-muted-foreground">진행 중인 기획전이 없습니다.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {collections.map((c) => (
@@ -74,8 +74,7 @@ export default function CollectionsPage() {
               </Link>
             ))}
           </div>
-        )
-      )}
+        ))}
     </div>
   )
 }

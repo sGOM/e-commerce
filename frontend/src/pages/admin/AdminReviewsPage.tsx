@@ -253,12 +253,7 @@ export default function AdminReviewsPage() {
                     {r.imageUrls.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {r.imageUrls.map((url, i) => (
-                          <img
-                            key={i}
-                            src={url}
-                            alt={`리뷰 사진 ${i + 1}`}
-                            className="size-14 rounded object-cover"
-                          />
+                          <img key={i} src={url} alt={`리뷰 사진 ${i + 1}`} className="size-14 rounded object-cover" />
                         ))}
                       </div>
                     )}

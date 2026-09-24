@@ -193,7 +193,7 @@ class CartIntegrationTest : AbstractIntegrationTest() {
         }.andExpect {
             status { isOk() }
             jsonPath("$.data.items.length()") { value(1) } // 판매중지 옵션 제외
-            jsonPath("$.data.totalQuantity") { value(3) }   // 재고 3까지만
+            jsonPath("$.data.totalQuantity") { value(3) } // 재고 3까지만
         }
     }
 }

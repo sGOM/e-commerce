@@ -20,9 +20,7 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-bold">{order.orderNumber}</h1>
-              <p className="text-xs text-muted-foreground">
-                {new Date(order.createdAt).toLocaleString('ko-KR')}
-              </p>
+              <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString('ko-KR')}</p>
             </div>
             <span className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
               {orderStatusLabel[order.status]}
@@ -94,14 +92,13 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
       <Card>
         <CardContent>
           <h2 className="mb-3 font-bold">
-            배송지{' '}
-            {order.isGift && <span className="ml-1 text-sm font-normal text-pink-500">🎁 선물주문</span>}
+            배송지 {order.isGift && <span className="ml-1 text-sm font-normal text-pink-500">🎁 선물주문</span>}
           </h2>
           {order.isGift ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                선물 주문은 수령자 프라이버시 보호를 위해 배송지를 구매자에게 공개하지 않습니다. 수령자가
-                공유 링크로 배송지를 입력하면 배송이 시작됩니다.
+                선물 주문은 수령자 프라이버시 보호를 위해 배송지를 구매자에게 공개하지 않습니다. 수령자가 공유 링크로
+                배송지를 입력하면 배송이 시작됩니다.
               </p>
               {order.giftMessage && (
                 <p className="rounded-lg bg-pink-50 p-3 text-sm text-pink-700 dark:bg-pink-950/40 dark:text-pink-300">
@@ -115,8 +112,7 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
                 {order.shippingAddress.receiverName} · {order.shippingAddress.receiverPhone}
               </p>
               <p className="text-sm text-muted-foreground">
-                ({order.shippingAddress.zipcode}) {order.shippingAddress.address1}{' '}
-                {order.shippingAddress.address2}
+                ({order.shippingAddress.zipcode}) {order.shippingAddress.address1} {order.shippingAddress.address2}
               </p>
             </>
           ) : (

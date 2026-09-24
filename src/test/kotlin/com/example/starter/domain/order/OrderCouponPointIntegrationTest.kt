@@ -1,15 +1,15 @@
 package com.example.starter.domain.order
 
-import com.example.starter.domain.coupon.entity.Coupon
-import com.example.starter.domain.coupon.entity.DiscountType
-import com.example.starter.domain.coupon.entity.IssuedCoupon
-import com.example.starter.domain.coupon.repository.CouponRepository
-import com.example.starter.domain.coupon.repository.IssuedCouponRepository
 import com.example.starter.domain.catalog.entity.Inventory
 import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.entity.ProductStatus
 import com.example.starter.domain.catalog.repository.ProductRepository
+import com.example.starter.domain.coupon.entity.Coupon
+import com.example.starter.domain.coupon.entity.DiscountType
+import com.example.starter.domain.coupon.entity.IssuedCoupon
+import com.example.starter.domain.coupon.repository.CouponRepository
+import com.example.starter.domain.coupon.repository.IssuedCouponRepository
 import com.example.starter.domain.point.entity.PointAccount
 import com.example.starter.domain.point.repository.PointAccountRepository
 import com.example.starter.domain.seller.entity.Seller
@@ -60,7 +60,7 @@ class OrderCouponPointIntegrationTest : AbstractIntegrationTest() {
     private fun issueRateCoupon(userId: Long, percent: Long, minOrder: Long = 0): Long {
         val coupon = couponRepository.save(
             Coupon(
-                name = "${percent}% 할인",
+                name = "$percent% 할인",
                 discountType = DiscountType.RATE,
                 discountValue = percent,
                 minOrderAmount = minOrder,
@@ -84,7 +84,11 @@ class OrderCouponPointIntegrationTest : AbstractIntegrationTest() {
         val buyer = seedMember("cp-buyer-1@example.com")
         val userId = buyer.userId
         // 보유 포인트 1,000 시드
-        pointAccountRepository.save(PointAccount(userId = userId).apply { earn(1_000, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS)) })
+        pointAccountRepository.save(
+            PointAccount(userId = userId).apply {
+                earn(1_000, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS))
+            },
+        )
         val optionId = seedOption("CP-SKU-1", basePrice = 20_000)
         addToCart(buyer, optionId, 1) // 상품합계 20,000
         val couponId = issueRateCoupon(userId, percent = 10) // 10% → 2,000 할인
@@ -109,7 +113,11 @@ class OrderCouponPointIntegrationTest : AbstractIntegrationTest() {
     @Test
     fun `보유보다 많은 포인트는 사용할 수 없다`() {
         val buyer = seedMember("cp-buyer-2@example.com")
-        pointAccountRepository.save(PointAccount(userId = buyer.userId).apply { earn(500, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS)) })
+        pointAccountRepository.save(
+            PointAccount(userId = buyer.userId).apply {
+                earn(500, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS))
+            },
+        )
         val optionId = seedOption("CP-SKU-2", basePrice = 20_000)
         addToCart(buyer, optionId, 1)
 
@@ -144,7 +152,11 @@ class OrderCouponPointIntegrationTest : AbstractIntegrationTest() {
     fun `주문을 취소하면 쿠폰과 포인트가 복원된다`() {
         val buyer = seedMember("cp-buyer-4@example.com")
         val userId = buyer.userId
-        pointAccountRepository.save(PointAccount(userId = userId).apply { earn(1_000, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS)) })
+        pointAccountRepository.save(
+            PointAccount(userId = userId).apply {
+                earn(1_000, null, java.time.Instant.now().plus(365, java.time.temporal.ChronoUnit.DAYS))
+            },
+        )
         val optionId = seedOption("CP-SKU-4", basePrice = 20_000)
         addToCart(buyer, optionId, 1)
         val couponId = issueRateCoupon(userId, percent = 10)

@@ -43,9 +43,7 @@ export default function CollectionDetailPage() {
     return (
       <div className="mx-auto max-w-sm py-16 text-center">
         <p className="text-2xl">⚠️</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {error ?? '기획전을 찾을 수 없습니다.'}
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{error ?? '기획전을 찾을 수 없습니다.'}</p>
         <div className="mt-4 flex justify-center gap-2">
           <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
             다시 시도
@@ -64,25 +62,17 @@ export default function CollectionDetailPage() {
     <div>
       <div className="relative mb-6 flex aspect-[16/6] flex-col justify-end overflow-hidden rounded-lg border border-border bg-muted p-5 shadow-sm sm:p-8">
         {collection.bannerImageUrl && (
-          <img
-            src={collection.bannerImageUrl}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
+          <img src={collection.bannerImageUrl} alt="" className="absolute inset-0 size-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
         <div className="relative text-white">
           <h1 className="text-xl font-bold sm:text-2xl">{collection.title}</h1>
-          {collection.subtitle && (
-            <p className="mt-1 text-sm text-white/85 sm:text-base">{collection.subtitle}</p>
-          )}
+          {collection.subtitle && <p className="mt-1 text-sm text-white/85 sm:text-base">{collection.subtitle}</p>}
         </div>
       </div>
 
       {products.length === 0 ? (
-        <p className="py-16 text-center text-sm text-muted-foreground">
-          현재 노출 가능한 상품이 없습니다.
-        </p>
+        <p className="py-16 text-center text-sm text-muted-foreground">현재 노출 가능한 상품이 없습니다.</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {products.map(({ product }) => (

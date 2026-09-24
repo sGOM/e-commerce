@@ -6,14 +6,7 @@ import { useAuth } from '../auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function SignupPage() {
   const { signup } = useAuth()
@@ -49,10 +42,7 @@ export default function SignupPage() {
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
             {error && (
-              <p
-                role="alert"
-                className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-              >
+              <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}

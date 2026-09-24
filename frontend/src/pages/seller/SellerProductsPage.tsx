@@ -37,9 +37,7 @@ export default function SellerProductsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <StockCsvUpload onUploaded={load} />
-        <Button onClick={() => setShowForm((v) => !v)}>
-          {showForm ? '닫기' : '+ 상품 등록'}
-        </Button>
+        <Button onClick={() => setShowForm((v) => !v)}>{showForm ? '닫기' : '+ 상품 등록'}</Button>
       </div>
 
       {showForm && (
@@ -176,10 +174,7 @@ function StockCsvUpload({ onUploaded }: { onUploaded: () => void }) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <label
-        htmlFor="stock-csv"
-        className="cursor-pointer text-sm text-muted-foreground underline underline-offset-4"
-      >
+      <label htmlFor="stock-csv" className="cursor-pointer text-sm text-muted-foreground underline underline-offset-4">
         {busy ? '재고 반영 중…' : '재고 CSV 업로드 (sku,quantity)'}
       </label>
       <input
@@ -248,10 +243,30 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
       <CardContent>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input required placeholder="상품명" aria-label="상품명" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input required type="number" min={0} placeholder="기본가" aria-label="기본가" value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} />
+            <Input
+              required
+              placeholder="상품명"
+              aria-label="상품명"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              required
+              type="number"
+              min={0}
+              placeholder="기본가"
+              aria-label="기본가"
+              value={basePrice}
+              onChange={(e) => setBasePrice(Number(e.target.value))}
+            />
           </div>
-          <Textarea placeholder="설명 (선택)" aria-label="설명" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          <Textarea
+            placeholder="설명 (선택)"
+            aria-label="설명"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+          />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'ON_SALE')}
@@ -280,10 +295,36 @@ function CreateProductForm({ onCreated }: { onCreated: () => void }) {
             <p className="text-xs font-medium text-muted-foreground">옵션</p>
             {options.map((o, i) => (
               <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Input required placeholder="옵션명" aria-label="옵션명" value={o.name} onChange={(e) => setOpt(i, { name: e.target.value })} />
-                <Input required placeholder="SKU" aria-label="SKU" value={o.sku} onChange={(e) => setOpt(i, { sku: e.target.value })} />
-                <Input type="number" min={0} placeholder="추가금" aria-label="추가금" value={o.additionalPrice} onChange={(e) => setOpt(i, { additionalPrice: Number(e.target.value) })} />
-                <Input type="number" min={0} placeholder="재고" aria-label="재고" value={o.stockQuantity} onChange={(e) => setOpt(i, { stockQuantity: Number(e.target.value) })} />
+                <Input
+                  required
+                  placeholder="옵션명"
+                  aria-label="옵션명"
+                  value={o.name}
+                  onChange={(e) => setOpt(i, { name: e.target.value })}
+                />
+                <Input
+                  required
+                  placeholder="SKU"
+                  aria-label="SKU"
+                  value={o.sku}
+                  onChange={(e) => setOpt(i, { sku: e.target.value })}
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="추가금"
+                  aria-label="추가금"
+                  value={o.additionalPrice}
+                  onChange={(e) => setOpt(i, { additionalPrice: Number(e.target.value) })}
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="재고"
+                  aria-label="재고"
+                  value={o.stockQuantity}
+                  onChange={(e) => setOpt(i, { stockQuantity: Number(e.target.value) })}
+                />
               </div>
             ))}
             <Button

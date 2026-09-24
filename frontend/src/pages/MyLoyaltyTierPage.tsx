@@ -51,10 +51,7 @@ export default function MyLoyaltyTierPage() {
                 <span>{formatKRW(tier.amountToNextTier ?? 0)} 남음</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
               </div>
             </div>
           ) : (
@@ -64,8 +61,7 @@ export default function MyLoyaltyTierPage() {
           )}
 
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-muted-foreground">
-            등급 혜택: 전용 쿠폰 — 등급이 오르면 등급 전용 쿠폰이 자동 발급되어 내 쿠폰함에서 확인할 수
-            있습니다.
+            등급 혜택: 전용 쿠폰 — 등급이 오르면 등급 전용 쿠폰이 자동 발급되어 내 쿠폰함에서 확인할 수 있습니다.
           </div>
 
           {tier.calculatedAt && (

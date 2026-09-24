@@ -4,7 +4,12 @@ import { toast } from 'sonner'
 import { adminDeliverySubscriptionApi } from '../../api/endpoints'
 import { ApiError } from '../../api/client'
 import { deliverySubscriptionStatusLabel } from '../../labels'
-import type { AdminDeliverySubscription, DeliverySubscriptionPolicy, DeliverySubscriptionStatus, PageResponse } from '../../api/types'
+import type {
+  AdminDeliverySubscription,
+  DeliverySubscriptionPolicy,
+  DeliverySubscriptionStatus,
+  PageResponse,
+} from '../../api/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -90,8 +95,8 @@ function PolicyPanel() {
           </Button>
           {policy && (
             <p className="text-xs text-muted-foreground">
-              현재: 연속 실패 {policy.maxConsecutiveFailures}회 시 자동 정지 · 배송일 {policy.skipDeadlineDays}일
-              전까지 스킵 가능
+              현재: 연속 실패 {policy.maxConsecutiveFailures}회 시 자동 정지 · 배송일 {policy.skipDeadlineDays}일 전까지
+              스킵 가능
             </p>
           )}
         </form>
@@ -154,7 +159,9 @@ export default function AdminDeliverySubscriptionsPage() {
                 setPage(0)
               }}
               className={`rounded-full px-3 py-1 text-sm ${
-                status === s ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                status === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'border border-border bg-background text-muted-foreground'
               }`}
             >
               {s ? deliverySubscriptionStatusLabel[s] : '전체'}
@@ -185,7 +192,8 @@ export default function AdminDeliverySubscriptionsPage() {
                       정기배송 #{s.id} · 회원 #{s.userId} · 옵션 #{s.optionId}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {s.quantity}개 · {s.cycleDays}일마다 · 다음 배송일 {new Date(s.nextOrderAt).toLocaleDateString('ko-KR')}
+                      {s.quantity}개 · {s.cycleDays}일마다 · 다음 배송일{' '}
+                      {new Date(s.nextOrderAt).toLocaleDateString('ko-KR')}
                       {s.consecutiveFailureCount > 0 && ` · 결제실패 ${s.consecutiveFailureCount}회`}
                       {s.skipRequested && ' · 스킵예약'}
                     </p>
@@ -203,7 +211,9 @@ export default function AdminDeliverySubscriptionsPage() {
                   key={i}
                   onClick={() => setPage(i)}
                   className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border bg-background text-muted-foreground'
                   }`}
                 >
                   {i + 1}

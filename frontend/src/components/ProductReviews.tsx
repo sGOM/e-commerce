@@ -9,13 +9,7 @@ import { StarRatingDisplay } from './StarRating'
 import type { PageResponse, Review, ReviewSort } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const sortLabel: Record<ReviewSort, string> = {
   LATEST: '최신순',
@@ -107,9 +101,7 @@ export default function ProductReviews({ productId }: { productId: number }) {
   return (
     <section id="reviews" className="scroll-mt-20">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">
-          리뷰 {data ? data.totalElements.toLocaleString('ko-KR') : ''}개
-        </h2>
+        <h2 className="text-lg font-semibold">리뷰 {data ? data.totalElements.toLocaleString('ko-KR') : ''}개</h2>
         <div className="flex items-center gap-2">
           <Button
             type="button"

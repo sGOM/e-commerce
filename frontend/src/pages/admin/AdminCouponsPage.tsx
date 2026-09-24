@@ -65,7 +65,13 @@ function CouponForm() {
       <CardContent>
         <form onSubmit={submit} className="space-y-3">
           <h2 className="font-bold">쿠폰 발행</h2>
-          <Input required placeholder="쿠폰명" aria-label="쿠폰명" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            required
+            placeholder="쿠폰명"
+            aria-label="쿠폰명"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
           <div className="flex gap-2">
             <select
               value={discountType}
@@ -76,25 +82,63 @@ function CouponForm() {
               <option value="RATE">정률(%)</option>
               <option value="FIXED">정액(원)</option>
             </select>
-            <Input required type="number" min={0} aria-label="할인값" value={discountValue} onChange={(e) => setDiscountValue(Number(e.target.value))} />
+            <Input
+              required
+              type="number"
+              min={0}
+              aria-label="할인값"
+              value={discountValue}
+              onChange={(e) => setDiscountValue(Number(e.target.value))}
+            />
           </div>
           <div className="flex gap-2">
-            <Input type="number" min={0} placeholder="최소주문금액" aria-label="최소주문금액" value={minOrderAmount} onChange={(e) => setMinOrderAmount(Number(e.target.value))} />
-            <Input type="number" min={0} placeholder="최대할인(정률, 선택)" aria-label="최대할인" value={maxDiscountAmount} onChange={(e) => setMaxDiscountAmount(e.target.value)} />
+            <Input
+              type="number"
+              min={0}
+              placeholder="최소주문금액"
+              aria-label="최소주문금액"
+              value={minOrderAmount}
+              onChange={(e) => setMinOrderAmount(Number(e.target.value))}
+            />
+            <Input
+              type="number"
+              min={0}
+              placeholder="최대할인(정률, 선택)"
+              aria-label="최대할인"
+              value={maxDiscountAmount}
+              onChange={(e) => setMaxDiscountAmount(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="coupon-valid-from" className="text-xs text-muted-foreground">
               유효 시작
             </Label>
-            <Input id="coupon-valid-from" required type="datetime-local" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} />
+            <Input
+              id="coupon-valid-from"
+              required
+              type="datetime-local"
+              value={validFrom}
+              onChange={(e) => setValidFrom(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="coupon-valid-until" className="text-xs text-muted-foreground">
               유효 종료
             </Label>
-            <Input id="coupon-valid-until" required type="datetime-local" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+            <Input
+              id="coupon-valid-until"
+              required
+              type="datetime-local"
+              value={validUntil}
+              onChange={(e) => setValidUntil(e.target.value)}
+            />
           </div>
-          <Input placeholder="발급 대상 userId (쉼표구분, 선택)" aria-label="발급 대상 userId" value={issueTo} onChange={(e) => setIssueTo(e.target.value)} />
+          <Input
+            placeholder="발급 대상 userId (쉼표구분, 선택)"
+            aria-label="발급 대상 userId"
+            value={issueTo}
+            onChange={(e) => setIssueTo(e.target.value)}
+          />
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
@@ -121,7 +165,11 @@ function CategoryForm() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const load = () => categoryApi.list().then(setCategories).catch(() => setError('카테고리를 불러오지 못했습니다.'))
+  const load = () =>
+    categoryApi
+      .list()
+      .then(setCategories)
+      .catch(() => setError('카테고리를 불러오지 못했습니다.'))
   useEffect(() => {
     load()
   }, [])
@@ -155,8 +203,19 @@ function CategoryForm() {
       <CardContent className="space-y-4">
         <form onSubmit={submit} className="space-y-3">
           <h2 className="font-bold">카테고리 관리</h2>
-          <Input required placeholder="카테고리명" aria-label="카테고리명" value={name} onChange={(e) => setName(e.target.value)} />
-          <select aria-label="상위 카테고리" value={parentId} onChange={(e) => setParentId(e.target.value)} className={selectClass}>
+          <Input
+            required
+            placeholder="카테고리명"
+            aria-label="카테고리명"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <select
+            aria-label="상위 카테고리"
+            value={parentId}
+            onChange={(e) => setParentId(e.target.value)}
+            className={selectClass}
+          >
             <option value="">상위 없음(최상위)</option>
             {categories.map((c) => (
               <option key={c.categoryId} value={c.categoryId}>
@@ -208,8 +267,18 @@ function CategoryRow({
 
   return (
     <li className="flex flex-wrap items-center gap-2 py-2">
-      <Input aria-label={`${category.name} 이름`} value={name} onChange={(e) => setName(e.target.value)} className="min-w-0 flex-1" />
-      <select aria-label={`${category.name} 상위`} value={parentId} onChange={(e) => setParentId(e.target.value)} className={`${selectClass} w-32`}>
+      <Input
+        aria-label={`${category.name} 이름`}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="min-w-0 flex-1"
+      />
+      <select
+        aria-label={`${category.name} 상위`}
+        value={parentId}
+        onChange={(e) => setParentId(e.target.value)}
+        className={`${selectClass} w-32`}
+      >
         <option value="">최상위</option>
         {categories
           .filter((c) => c.categoryId !== category.categoryId)
@@ -219,7 +288,13 @@ function CategoryRow({
             </option>
           ))}
       </select>
-      <Input type="number" aria-label={`${category.name} 정렬`} value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="w-16" />
+      <Input
+        type="number"
+        aria-label={`${category.name} 정렬`}
+        value={sortOrder}
+        onChange={(e) => setSortOrder(Number(e.target.value))}
+        className="w-16"
+      />
       <Button type="button" size="sm" variant="outline" disabled={disabled || !name.trim()} onClick={save}>
         저장
       </Button>

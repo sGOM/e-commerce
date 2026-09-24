@@ -31,7 +31,11 @@ export default function SellerDashboardPage() {
   }, [from, to])
 
   const stats = data && [
-    { label: '주문 수', value: `${data.orderCount.toLocaleString('ko-KR')}건`, hint: '기간 내 주문 중 결제된 건(취소 제외)' },
+    {
+      label: '주문 수',
+      value: `${data.orderCount.toLocaleString('ko-KR')}건`,
+      hint: '기간 내 주문 중 결제된 건(취소 제외)',
+    },
     { label: '매출', value: formatKRW(data.salesAmount), hint: '위 주문의 판매액' },
     { label: '정산 전 판매액', value: formatKRW(data.unsettledAmount), hint: '아직 정산서가 만들어지지 않은 판매액' },
     { label: '지급 대기액', value: formatKRW(data.pendingPayoutAmount), hint: '정산 완료, 지급 전(수수료 차감)' },

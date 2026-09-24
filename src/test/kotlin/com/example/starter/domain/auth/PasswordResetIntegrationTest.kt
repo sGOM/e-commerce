@@ -26,7 +26,8 @@ class PasswordResetIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var userRepository: UserRepository
     @Autowired lateinit var tokenRepository: PasswordResetTokenRepository
 
-    @MockkBean(relaxed = true) lateinit var emailSender: EmailSender
+    @MockkBean(relaxed = true)
+    lateinit var emailSender: EmailSender
 
     private fun seedUser(): String {
         val email = "reset-${System.nanoTime()}@example.com"

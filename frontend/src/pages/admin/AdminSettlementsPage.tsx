@@ -66,9 +66,7 @@ export default function AdminSettlementsPage() {
     setMsg(null)
     try {
       const list = await adminApi.generateSettlements()
-      setMsg(
-        list.length > 0 ? `정산서 ${list.length}건을 생성했습니다.` : '정산할 미정산 주문이 없습니다.',
-      )
+      setMsg(list.length > 0 ? `정산서 ${list.length}건을 생성했습니다.` : '정산할 미정산 주문이 없습니다.')
       await loadList()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : '정산 생성 실패')
@@ -158,18 +156,14 @@ export default function AdminSettlementsPage() {
                   <div>
                     <p className="font-medium">{s.storeName}</p>
                     <p className="text-xs text-muted-foreground">
-                      판매 {formatKRW(s.salesAmount)} · 수수료 {formatKRW(s.commissionAmount)} ·{' '}
-                      {s.settledCount}건 · {new Date(s.createdAt).toLocaleDateString('ko-KR')}
+                      판매 {formatKRW(s.salesAmount)} · 수수료 {formatKRW(s.commissionAmount)} · {s.settledCount}건 ·{' '}
+                      {new Date(s.createdAt).toLocaleDateString('ko-KR')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-primary">
-                      {formatKRW(s.payoutAmount)}
-                    </span>
+                    <span className="font-semibold text-primary">{formatKRW(s.payoutAmount)}</span>
                     {s.status === 'PAID' ? (
-                      <span className="rounded bg-success/10 px-2 py-0.5 text-xs text-success">
-                        지급완료
-                      </span>
+                      <span className="rounded bg-success/10 px-2 py-0.5 text-xs text-success">지급완료</span>
                     ) : (
                       <Button type="button" size="sm" onClick={() => pay(s.settlementId)}>
                         지급

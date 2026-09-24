@@ -26,10 +26,7 @@ import { cn } from '@/lib/utils'
 /** 쿠폰 할인 미리보기(서버 calculateDiscount 와 동일 규칙). 최종 금액은 서버가 재계산한다. */
 function couponDiscount(coupon: IssuedCoupon, amount: number): number {
   if (amount < coupon.minOrderAmount) return 0
-  const raw =
-    coupon.discountType === 'RATE'
-      ? Math.floor((amount * coupon.discountValue) / 100)
-      : coupon.discountValue
+  const raw = coupon.discountType === 'RATE' ? Math.floor((amount * coupon.discountValue) / 100) : coupon.discountValue
   const capped = coupon.maxDiscountAmount ? Math.min(raw, coupon.maxDiscountAmount) : raw
   return Math.min(capped, amount)
 }
@@ -134,7 +131,10 @@ export default function CheckoutPage() {
           setCoupons(cps.filter((c) => !c.used))
           setPointBalance(pts.balance)
           // 미가입(404)은 정상 상태이므로 조용히 무시한다.
-          membershipApi.my().then(setMembership).catch(() => setMembership(null))
+          membershipApi
+            .my()
+            .then(setMembership)
+            .catch(() => setMembership(null))
           // 기본 배송지가 있으면 폼을 미리 채운다. 조회 실패 시 수동 입력으로 진행한다.
           addressApi
             .list()
@@ -309,9 +309,29 @@ export default function CheckoutPage() {
             주문자 정보 {isGuest && <span className="text-sm font-normal text-muted-foreground">(비회원)</span>}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input required placeholder="이름" aria-label="이름" value={form.ordererName} onChange={set('ordererName')} />
-            <Input required placeholder="연락처" aria-label="연락처" value={form.ordererPhone} onChange={set('ordererPhone')} />
-            <Input required type="email" placeholder="이메일" aria-label="이메일" value={form.ordererEmail} onChange={set('ordererEmail')} className="sm:col-span-2" />
+            <Input
+              required
+              placeholder="이름"
+              aria-label="이름"
+              value={form.ordererName}
+              onChange={set('ordererName')}
+            />
+            <Input
+              required
+              placeholder="연락처"
+              aria-label="연락처"
+              value={form.ordererPhone}
+              onChange={set('ordererPhone')}
+            />
+            <Input
+              required
+              type="email"
+              placeholder="이메일"
+              aria-label="이메일"
+              value={form.ordererEmail}
+              onChange={set('ordererEmail')}
+              className="sm:col-span-2"
+            />
           </div>
         </Card>
 
@@ -321,8 +341,8 @@ export default function CheckoutPage() {
               <span>
                 <span className="font-bold">🎁 선물하기</span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  배송지 없이 결제하고, 수령자가 링크로 직접 배송지를 입력하게 할 수 있어요. 새벽배송
-                  슬롯은 선물 주문과 함께 선택할 수 없습니다.
+                  배송지 없이 결제하고, 수령자가 링크로 직접 배송지를 입력하게 할 수 있어요. 새벽배송 슬롯은 선물 주문과
+                  함께 선택할 수 없습니다.
                 </span>
               </span>
               <input
@@ -355,8 +375,8 @@ export default function CheckoutPage() {
           <Card className="p-5">
             <h2 className="mb-2 font-bold">배송지</h2>
             <p className="rounded-lg bg-pink-50 p-3 text-sm text-pink-700 dark:bg-pink-950/30 dark:text-pink-300">
-              선물 주문은 배송지 입력을 생략합니다. 결제 완료 후 발급되는 공유 링크를 수령자에게
-              전달하면, 수령자가 직접 배송지를 입력해 배송이 시작됩니다.
+              선물 주문은 배송지 입력을 생략합니다. 결제 완료 후 발급되는 공유 링크를 수령자에게 전달하면, 수령자가 직접
+              배송지를 입력해 배송이 시작됩니다.
             </p>
           </Card>
         ) : (
@@ -386,11 +406,41 @@ export default function CheckoutPage() {
               )}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Input required placeholder="받는 분" aria-label="받는 분" value={form.receiverName} onChange={set('receiverName')} />
-              <Input required placeholder="받는 분 연락처" aria-label="받는 분 연락처" value={form.receiverPhone} onChange={set('receiverPhone')} />
-              <Input required placeholder="우편번호" aria-label="우편번호" value={form.zipcode} onChange={set('zipcode')} />
-              <Input required placeholder="기본 주소" aria-label="기본 주소" value={form.address1} onChange={set('address1')} />
-              <Input placeholder="상세 주소 (선택)" aria-label="상세 주소 (선택)" value={form.address2} onChange={set('address2')} className="sm:col-span-2" />
+              <Input
+                required
+                placeholder="받는 분"
+                aria-label="받는 분"
+                value={form.receiverName}
+                onChange={set('receiverName')}
+              />
+              <Input
+                required
+                placeholder="받는 분 연락처"
+                aria-label="받는 분 연락처"
+                value={form.receiverPhone}
+                onChange={set('receiverPhone')}
+              />
+              <Input
+                required
+                placeholder="우편번호"
+                aria-label="우편번호"
+                value={form.zipcode}
+                onChange={set('zipcode')}
+              />
+              <Input
+                required
+                placeholder="기본 주소"
+                aria-label="기본 주소"
+                value={form.address1}
+                onChange={set('address1')}
+              />
+              <Input
+                placeholder="상세 주소 (선택)"
+                aria-label="상세 주소 (선택)"
+                value={form.address2}
+                onChange={set('address2')}
+                className="sm:col-span-2"
+              />
             </div>
           </Card>
         )}
@@ -399,8 +449,8 @@ export default function CheckoutPage() {
           <Card className="p-5">
             <h2 className="mb-1 font-bold">배송 슬롯 선택 (새벽배송)</h2>
             <p className="mb-3 text-xs text-muted-foreground">
-              새벽배송 가능 상품이 포함된 판매자별로 원하는 배송 시간대를 선택하세요. 선택하지 않으면
-              일반배송으로 진행됩니다.
+              새벽배송 가능 상품이 포함된 판매자별로 원하는 배송 시간대를 선택하세요. 선택하지 않으면 일반배송으로
+              진행됩니다.
             </p>
 
             {!form.zipcode.trim() ? (
@@ -454,8 +504,7 @@ export default function CheckoutPage() {
 
         {membership?.benefitActive && (
           <p className="rounded-lg bg-primary/10 p-2.5 text-xs text-primary">
-            멤버십 혜택 적용 중
-            {membership.benefits.freeShipping && ' · 무료배송 적용됨'}
+            멤버십 혜택 적용 중{membership.benefits.freeShipping && ' · 무료배송 적용됨'}
             {membership.benefits.pointEarnMultiplierBp > 10_000 &&
               ` · 포인트 ${(membership.benefits.pointEarnMultiplierBp / 10_000).toFixed(1).replace(/\.0$/, '')}배 적립 예정`}
           </p>
@@ -478,19 +527,13 @@ export default function CheckoutPage() {
                   const usable = subtotal >= c.minOrderAmount
                   return (
                     <option key={c.issuedCouponId} value={c.issuedCouponId} disabled={!usable}>
-                      {c.name} (
-                      {c.discountType === 'RATE'
-                        ? `${c.discountValue}%`
-                        : formatKRW(c.discountValue)}
-                      )
+                      {c.name} ({c.discountType === 'RATE' ? `${c.discountValue}%` : formatKRW(c.discountValue)})
                       {!usable ? ` · ${formatKRW(c.minOrderAmount)} 이상` : ''}
                     </option>
                   )
                 })}
               </select>
-              {coupons.length === 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">보유한 쿠폰이 없습니다.</p>
-              )}
+              {coupons.length === 0 && <p className="mt-1 text-xs text-muted-foreground">보유한 쿠폰이 없습니다.</p>}
             </div>
             <div>
               <Label htmlFor="point-input" className="mb-1 text-xs font-medium text-muted-foreground">
@@ -505,12 +548,7 @@ export default function CheckoutPage() {
                   value={pointInput}
                   onChange={(e) => setPointInput(Math.max(0, Number(e.target.value)))}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setPointInput(maxPoint)}
-                  className="shrink-0"
-                >
+                <Button type="button" variant="outline" onClick={() => setPointInput(maxPoint)} className="shrink-0">
                   전액
                 </Button>
               </div>
@@ -601,12 +639,7 @@ function SellerSlotPicker({
             selectedSlotId === null ? 'border-primary bg-primary/10' : 'border-border',
           )}
         >
-          <input
-            type="radio"
-            name={name}
-            checked={selectedSlotId === null}
-            onChange={() => onSelect(null)}
-          />
+          <input type="radio" name={name} checked={selectedSlotId === null} onChange={() => onSelect(null)} />
           일반배송 (슬롯 선택 안 함)
         </label>
 
@@ -618,8 +651,7 @@ function SellerSlotPicker({
             hour: '2-digit',
             minute: '2-digit',
           })
-          const soon =
-            !disabled && new Date(slot.cutoffAt).getTime() - Date.now() < 2 * 60 * 60 * 1000
+          const soon = !disabled && new Date(slot.cutoffAt).getTime() - Date.now() < 2 * 60 * 60 * 1000
           return (
             <label
               key={slot.id}
@@ -641,12 +673,11 @@ function SellerSlotPicker({
               />
               <span className="flex-1">
                 <span className="font-medium">
-                  {deliverySlotTypeLabel[slot.type]} · {slot.startTime.slice(0, 5)}~
-                  {slot.endTime.slice(0, 5)}
+                  {deliverySlotTypeLabel[slot.type]} · {slot.startTime.slice(0, 5)}~{slot.endTime.slice(0, 5)}
                 </span>
                 <span className="ml-1 text-xs text-muted-foreground">
-                  {slot.extraFee > 0 ? `+${formatKRW(slot.extraFee)}` : '배송비 무료'} · 잔여{' '}
-                  {slot.remaining}/{slot.capacity}
+                  {slot.extraFee > 0 ? `+${formatKRW(slot.extraFee)}` : '배송비 무료'} · 잔여 {slot.remaining}/
+                  {slot.capacity}
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   {disabled

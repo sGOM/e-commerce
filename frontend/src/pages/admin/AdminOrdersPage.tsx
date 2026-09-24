@@ -77,17 +77,13 @@ export default function AdminOrdersPage() {
                 <Card className="flex-row items-center justify-between p-4">
                   <div>
                     <p className="text-sm font-medium">{o.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(o.createdAt).toLocaleString('ko-KR')}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString('ko-KR')}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                       {orderStatusLabel[o.status]}
                     </span>
-                    <span className="font-semibold text-primary">
-                      {formatKRW(o.payableAmount)}
-                    </span>
+                    <span className="font-semibold text-primary">{formatKRW(o.payableAmount)}</span>
                     {o.status !== 'CANCELED' && (
                       <Button
                         type="button"

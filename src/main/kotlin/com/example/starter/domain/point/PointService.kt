@@ -5,7 +5,6 @@ import com.example.starter.common.exception.ErrorCode
 import com.example.starter.domain.membership.MembershipBenefitService
 import com.example.starter.domain.point.dto.PointSummaryResponse
 import com.example.starter.domain.point.entity.PointAccount
-import com.example.starter.domain.point.entity.PointPolicy
 import com.example.starter.domain.point.repository.PointAccountRepository
 import com.example.starter.domain.point.repository.PointPolicyRepository
 import org.springframework.stereotype.Service

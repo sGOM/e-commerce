@@ -5,9 +5,9 @@ import com.example.starter.common.exception.ErrorCode
 import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.notification.dto.MyNotificationsResponse
 import com.example.starter.domain.notification.dto.NotificationResponse
+import com.example.starter.domain.notification.email.EmailSender
 import com.example.starter.domain.notification.entity.Notification
 import com.example.starter.domain.notification.entity.NotificationType
-import com.example.starter.domain.notification.email.EmailSender
 import com.example.starter.domain.notification.repository.NotificationRepository
 import com.example.starter.domain.user.repository.UserRepository
 import org.slf4j.LoggerFactory

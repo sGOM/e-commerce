@@ -7,11 +7,11 @@ import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.OAuthAccountRepository
 import com.example.starter.domain.user.repository.RoleRepository
 import com.example.starter.domain.user.repository.UserRepository
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.user.OAuth2User
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

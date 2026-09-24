@@ -8,16 +8,11 @@ export default function AdminLayout() {
   const isAdmin = user?.roles.includes('ROLE_ADMIN') ?? false
 
   if (!isAdmin) {
-    return (
-      <p className="py-20 text-center text-sm text-muted-foreground">관리자 전용 페이지입니다.</p>
-    )
+    return <p className="py-20 text-center text-sm text-muted-foreground">관리자 전용 페이지입니다.</p>
   }
 
   const tab = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      'pb-2 text-sm',
-      isActive ? 'border-b-2 border-primary font-semibold text-primary' : 'text-muted-foreground',
-    )
+    cn('pb-2 text-sm', isActive ? 'border-b-2 border-primary font-semibold text-primary' : 'text-muted-foreground')
 
   return (
     <div>

@@ -36,9 +36,7 @@ export function addGuestItem(optionId: number, quantity: number) {
 
 export function setGuestItemQuantity(optionId: number, quantity: number) {
   if (quantity < 1) return
-  const lines = readGuestCart().map((l) =>
-    l.optionId === optionId ? { ...l, quantity } : l,
-  )
+  const lines = readGuestCart().map((l) => (l.optionId === optionId ? { ...l, quantity } : l))
   write(lines)
 }
 

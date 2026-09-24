@@ -6,11 +6,7 @@ import { cartApi } from '../api/endpoints'
 import { formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { notifyCartChanged } from '../hooks/useCartCount'
-import {
-  readGuestCart,
-  removeGuestItem,
-  setGuestItemQuantity,
-} from '../cart/guestCart'
+import { readGuestCart, removeGuestItem, setGuestItemQuantity } from '../cart/guestCart'
 import type { Cart } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,10 +19,7 @@ function CartSkeleton() {
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-3 lg:col-span-2">
         {Array.from({ length: 3 }, (_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 rounded-lg border border-border bg-card p-4"
-          >
+          <div key={i} className="flex items-center gap-4 rounded-lg border border-border bg-card p-4">
             <Skeleton className="size-16 rounded-md" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-2/3" />
@@ -55,11 +48,7 @@ export default function CartPage() {
     try {
       if (isGuest) {
         const lines = readGuestCart()
-        setCart(
-          lines.length === 0
-            ? { items: [], totalQuantity: 0, totalPrice: 0 }
-            : await cartApi.guestPreview(lines),
-        )
+        setCart(lines.length === 0 ? { items: [], totalQuantity: 0, totalPrice: 0 } : await cartApi.guestPreview(lines))
       } else {
         setCart(await cartApi.get())
       }
@@ -75,10 +64,7 @@ export default function CartPage() {
   }, [load])
 
   // 회원은 itemId, 게스트는 optionId 로 항목을 다룬다.
-  const updateQty = async (
-    key: { itemId: number | null; optionId: number },
-    quantity: number,
-  ) => {
+  const updateQty = async (key: { itemId: number | null; optionId: number }, quantity: number) => {
     if (quantity < 1) return
     setBusy(key.optionId)
     try {
@@ -128,9 +114,7 @@ export default function CartPage() {
       {!cart || cart.items.length === 0 ? (
         <div className="mx-auto max-w-sm py-16 text-center">
           <p className="text-4xl">🛒</p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            장바구니가 비어 있습니다.
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">장바구니가 비어 있습니다.</p>
           <Button asChild className="mt-4">
             <Link to="/">상품 보러 가기</Link>
           </Button>
@@ -145,19 +129,11 @@ export default function CartPage() {
                     🛍️
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {item.productName}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {item.optionName}
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-primary">
-                      {formatKRW(item.unitPrice)}
-                    </p>
+                    <p className="truncate text-sm font-medium">{item.productName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.optionName}</p>
+                    <p className="mt-1 text-sm font-bold text-primary">{formatKRW(item.unitPrice)}</p>
                     {!item.purchasable && (
-                      <p className="mt-1 text-xs font-medium text-destructive">
-                        재고 부족(가용 {item.availableStock})
-                      </p>
+                      <p className="mt-1 text-xs font-medium text-destructive">재고 부족(가용 {item.availableStock})</p>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -172,9 +148,7 @@ export default function CartPage() {
                       >
                         <Minus className="size-4" />
                       </Button>
-                      <span className="w-8 text-center text-sm tabular-nums">
-                        {item.quantity}
-                      </span>
+                      <span className="w-8 text-center text-sm tabular-nums">{item.quantity}</span>
                       <Button
                         variant="outline"
                         size="icon"
@@ -210,15 +184,9 @@ export default function CartPage() {
             <Separator className="my-3" />
             <div className="flex justify-between font-bold">
               <span>합계</span>
-              <span className="text-primary tabular-nums">
-                {formatKRW(cart.totalPrice)}
-              </span>
+              <span className="text-primary tabular-nums">{formatKRW(cart.totalPrice)}</span>
             </div>
-            <Button
-              onClick={() => navigate('/checkout')}
-              disabled={hasBlocked}
-              className="mt-5 h-12 w-full text-base"
-            >
+            <Button onClick={() => navigate('/checkout')} disabled={hasBlocked} className="mt-5 h-12 w-full text-base">
               주문하기
             </Button>
             {isGuest && (

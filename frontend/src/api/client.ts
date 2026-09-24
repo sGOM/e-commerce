@@ -19,11 +19,7 @@ function readCsrfToken(): string | null {
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
-async function request<T>(
-  method: string,
-  path: string,
-  body?: unknown,
-): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
   const isForm = body instanceof FormData // multipart 경계는 브라우저가 Content-Type 에 채운다
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'

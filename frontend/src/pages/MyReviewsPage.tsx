@@ -11,14 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import ImageUploadButton from '../components/ImageUploadButton'
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 const MIN_CONTENT_LENGTH = 10
 const MAX_IMAGES = 5
@@ -252,12 +245,7 @@ function MyReviewCard({
       {review.imageUrls.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {review.imageUrls.map((url, i) => (
-            <img
-              key={i}
-              src={url}
-              alt={`리뷰 사진 ${i + 1}`}
-              className="size-16 rounded-md object-cover"
-            />
+            <img key={i} src={url} alt={`리뷰 사진 ${i + 1}`} className="size-16 rounded-md object-cover" />
           ))}
         </div>
       )}

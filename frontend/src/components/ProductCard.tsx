@@ -48,11 +48,7 @@ export default function ProductCard({
       className="group relative flex flex-col rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="relative mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted text-4xl">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" loading="lazy" className="size-full object-cover" />
-        ) : (
-          '🛍️'
-        )}
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" className="size-full object-cover" /> : '🛍️'}
         <StatusBadge status={status} />
         {badge && (
           <Badge variant="secondary" className="absolute left-2 top-2">
@@ -65,11 +61,7 @@ export default function ProductCard({
       <p className="mt-0.5 line-clamp-2 text-sm font-medium">{name}</p>
       <p className="mt-1 text-base font-bold text-primary">{formatKRW(basePrice)}</p>
       {reviewCount != null && reviewCount > 0 && (
-        <StarRatingDisplay
-          rating={avgRating ?? 0}
-          reviewCount={reviewCount}
-          className="mt-1"
-        />
+        <StarRatingDisplay rating={avgRating ?? 0} reviewCount={reviewCount} className="mt-1" />
       )}
     </Link>
   )

@@ -132,8 +132,7 @@ export default function OrderDetailPage() {
   }, [orderId])
 
   const confirmDelivery = async (subOrderId: number) => {
-    if (!confirm('상품을 수령하셨나요? 확인 후에는 되돌릴 수 없으며, 리뷰를 작성할 수 있게 됩니다.'))
-      return
+    if (!confirm('상품을 수령하셨나요? 확인 후에는 되돌릴 수 없으며, 리뷰를 작성할 수 있게 됩니다.')) return
     setConfirmingSubOrderId(subOrderId)
     setError(null)
     try {
@@ -181,26 +180,17 @@ export default function OrderDetailPage() {
   if (!order) return null
 
   const cancelable =
-    order.status !== 'CANCELED' &&
-    !order.subOrders.some((s) => s.status === 'SHIPPED' || s.status === 'DELIVERED')
+    order.status !== 'CANCELED' && !order.subOrders.some((s) => s.status === 'SHIPPED' || s.status === 'DELIVERED')
 
   return (
     <div className="space-y-6">
       {location.state?.justPaid && (
-        <div className="rounded-xl bg-success/10 p-4 text-center text-sm text-success">
-          🎉 결제가 완료되었습니다!
-        </div>
+        <div className="rounded-xl bg-success/10 p-4 text-center text-sm text-success">🎉 결제가 완료되었습니다!</div>
       )}
 
-      {order.isGift && (
-        <GiftStatusCard order={order} shareToken={location.state?.giftClaimToken} />
-      )}
+      {order.isGift && <GiftStatusCard order={order} shareToken={location.state?.giftClaimToken} />}
 
-      <OrderView
-        order={order}
-        onConfirmDelivery={confirmDelivery}
-        confirmingSubOrderId={confirmingSubOrderId}
-      />
+      <OrderView order={order} onConfirmDelivery={confirmDelivery} confirmingSubOrderId={confirmingSubOrderId} />
 
       {error && (
         <p role="alert" className="text-sm text-destructive">

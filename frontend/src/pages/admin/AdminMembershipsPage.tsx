@@ -118,8 +118,8 @@ function PolicyPanel() {
           {policy && (
             <p className="text-xs text-muted-foreground">
               현재: {formatKRW(policy.monthlyPrice)}/월 · 포인트 {policy.pointEarnMultiplierBp / 10_000}배 ·
-              {policy.freeShippingEnabled ? ' 무료배송 ON' : ' 무료배송 OFF'} · 재시도{' '}
-              {policy.maxRetryCount}회 · 유예 {policy.graceDays}일
+              {policy.freeShippingEnabled ? ' 무료배송 ON' : ' 무료배송 OFF'} · 재시도 {policy.maxRetryCount}회 · 유예{' '}
+              {policy.graceDays}일
             </p>
           )}
         </form>
@@ -181,7 +181,9 @@ export default function AdminMembershipsPage() {
                 setPage(0)
               }}
               className={`rounded-full px-3 py-1 text-sm ${
-                status === s ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                status === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'border border-border bg-background text-muted-foreground'
               }`}
             >
               {s ? membershipStatusLabel[s] : '전체'}
@@ -229,7 +231,9 @@ export default function AdminMembershipsPage() {
                   key={i}
                   onClick={() => setPage(i)}
                   className={`h-8 w-8 rounded text-sm ${
-                    i === page ? 'bg-primary text-primary-foreground' : 'border border-border bg-background text-muted-foreground'
+                    i === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border bg-background text-muted-foreground'
                   }`}
                 >
                   {i + 1}

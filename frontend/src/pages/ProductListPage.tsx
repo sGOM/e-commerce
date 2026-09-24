@@ -73,7 +73,10 @@ export default function ProductListPage() {
 
   // 카테고리는 한 번만 로드
   useEffect(() => {
-    categoryApi.list().then(setCategories).catch(() => setCategories([]))
+    categoryApi
+      .list()
+      .then(setCategories)
+      .catch(() => setCategories([]))
   }, [])
 
   // 인기 상품·기획전은 기본 화면(검색·필터·정렬 변경 없을 때)에만 노출
@@ -81,9 +84,18 @@ export default function ProductListPage() {
   const isDefaultView = !hasFilter && sort === 'LATEST'
   useEffect(() => {
     if (isDefaultView) {
-      productApi.popular(8).then(setPopular).catch(() => setPopular([]))
-      collectionApi.list().then(setCollections).catch(() => setCollections([]))
-      flashSaleApi.list().then(setFlashSales).catch(() => setFlashSales([]))
+      productApi
+        .popular(8)
+        .then(setPopular)
+        .catch(() => setPopular([]))
+      collectionApi
+        .list()
+        .then(setCollections)
+        .catch(() => setCollections([]))
+      flashSaleApi
+        .list()
+        .then(setFlashSales)
+        .catch(() => setFlashSales([]))
     } else {
       setPopular([])
       setCollections([])
@@ -124,8 +136,7 @@ export default function ProductListPage() {
     updateParams({ keyword: input || null })
   }
 
-  const selectCategory = (id: number | null) =>
-    updateParams({ categoryId: id != null ? String(id) : null })
+  const selectCategory = (id: number | null) => updateParams({ categoryId: id != null ? String(id) : null })
 
   const applyPrice = (e: React.FormEvent) => {
     e.preventDefault()
@@ -240,10 +251,7 @@ export default function ProductListPage() {
         <section className="mb-8">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">⏰ 타임딜</h2>
-            <Link
-              to="/flash-sales"
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-            >
+            <Link to="/flash-sales" className="text-sm text-muted-foreground hover:text-foreground hover:underline">
               전체보기
             </Link>
           </div>
@@ -260,10 +268,7 @@ export default function ProductListPage() {
         <section className="mb-8">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">🎁 기획전</h2>
-            <Link
-              to="/collections"
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-            >
+            <Link to="/collections" className="text-sm text-muted-foreground hover:text-foreground hover:underline">
               전체보기
             </Link>
           </div>
@@ -316,9 +321,7 @@ export default function ProductListPage() {
       )}
 
       {/* 전체 상품 */}
-      {isDefaultView && (
-        <h2 className="mb-3 text-lg font-semibold">전체 상품</h2>
-      )}
+      {isDefaultView && <h2 className="mb-3 text-lg font-semibold">전체 상품</h2>}
 
       {loading && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -332,11 +335,7 @@ export default function ProductListPage() {
         <div className="mx-auto max-w-sm rounded-lg border border-border bg-card p-8 text-center shadow-sm">
           <p className="text-2xl">⚠️</p>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => setReloadKey((k) => k + 1)}
-          >
+          <Button variant="outline" className="mt-4" onClick={() => setReloadKey((k) => k + 1)}>
             다시 시도
           </Button>
         </div>
@@ -347,9 +346,7 @@ export default function ProductListPage() {
           {data.content.length === 0 ? (
             <div className="mx-auto max-w-sm py-16 text-center">
               <p className="text-4xl">🔍</p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                조건에 맞는 상품이 없습니다.
-              </p>
+              <p className="mt-3 text-sm text-muted-foreground">조건에 맞는 상품이 없습니다.</p>
               {hasFilter && (
                 <Button variant="outline" className="mt-4" onClick={resetFilters}>
                   필터 초기화
@@ -368,7 +365,7 @@ export default function ProductListPage() {
                   storeName={p.storeName}
                   avgRating={p.avgRating}
                   reviewCount={p.reviewCount}
-                imageUrl={p.imageUrl}
+                  imageUrl={p.imageUrl}
                 />
               ))}
             </div>
@@ -382,10 +379,7 @@ export default function ProductListPage() {
                     text="이전"
                     href="#"
                     aria-disabled={page === 0}
-                    className={cn(
-                      'h-11',
-                      page === 0 && 'pointer-events-none opacity-50',
-                    )}
+                    className={cn('h-11', page === 0 && 'pointer-events-none opacity-50')}
                     onClick={(e) => {
                       e.preventDefault()
                       if (page > 0) goPage(page - 1)
@@ -428,11 +422,7 @@ export default function ProductListPage() {
                     text="다음"
                     href="#"
                     aria-disabled={page >= data.totalPages - 1}
-                    className={cn(
-                      'h-11',
-                      page >= data.totalPages - 1 &&
-                        'pointer-events-none opacity-50',
-                    )}
+                    className={cn('h-11', page >= data.totalPages - 1 && 'pointer-events-none opacity-50')}
                     onClick={(e) => {
                       e.preventDefault()
                       if (page < data.totalPages - 1) goPage(page + 1)

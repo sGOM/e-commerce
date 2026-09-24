@@ -41,13 +41,7 @@ export default function SellerOrdersPage() {
   )
 }
 
-function SellerOrderCard({
-  order,
-  onShipped,
-}: {
-  order: SellerSubOrder
-  onShipped: () => void
-}) {
+function SellerOrderCard({ order, onShipped }: { order: SellerSubOrder; onShipped: () => void }) {
   const [courier, setCourier] = useState('')
   const [tracking, setTracking] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -82,7 +76,10 @@ function SellerOrderCard({
           {order.items.map((it, i) => (
             <li key={i} className="flex justify-between">
               <span>
-                {it.productName} <span className="text-muted-foreground">{it.optionName} · {it.quantity}개</span>
+                {it.productName}{' '}
+                <span className="text-muted-foreground">
+                  {it.optionName} · {it.quantity}개
+                </span>
               </span>
               <span>{formatKRW(it.lineTotal)}</span>
             </li>

@@ -152,17 +152,14 @@ function FlashSaleRow({
             {flashSale.soldQuantity}/{flashSale.limitQuantity}개 판매
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~{' '}
-            {new Date(flashSale.endAt).toLocaleString('ko-KR')}
+            {new Date(flashSale.startAt).toLocaleString('ko-KR')} ~ {new Date(flashSale.endAt).toLocaleString('ko-KR')}
             {flashSale.phase === 'ONGOING' && !ended && (
               <span className="ml-1 font-medium text-primary">· 남은 시간 {label}</span>
             )}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <span
-            className={`rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}
-          >
+          <span className={`rounded px-2 py-0.5 text-xs ${phaseBadgeClass[flashSale.phase]}`}>
             {flashSalePhaseLabel[flashSale.phase]}
           </span>
           {cancelable && (

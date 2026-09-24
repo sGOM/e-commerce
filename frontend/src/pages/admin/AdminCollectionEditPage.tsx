@@ -4,12 +4,7 @@ import { toast } from 'sonner'
 import { adminCollectionApi, productApi } from '../../api/endpoints'
 import { ApiError, formatKRW } from '../../api/client'
 import { collectionStatusLabel } from '../../labels'
-import type {
-  CollectionDetail,
-  CollectionProductItem,
-  CollectionStatus,
-  ProductSummary,
-} from '../../api/types'
+import type { CollectionDetail, CollectionProductItem, CollectionStatus, ProductSummary } from '../../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -324,9 +319,7 @@ function ProductAssignmentPanel({
         )}
 
         <div>
-          <p className="mb-1 text-xs text-muted-foreground">
-            편성된 상품 {items.length}개 (노출 순서, 위/아래로 조정)
-          </p>
+          <p className="mb-1 text-xs text-muted-foreground">편성된 상품 {items.length}개 (노출 순서, 위/아래로 조정)</p>
           {items.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">편성된 상품이 없습니다.</p>
           ) : (
@@ -424,9 +417,7 @@ export default function AdminCollectionEditPage() {
         <>
           {collection && <StatusPanel collection={collection} onChanged={setCollection} />}
           <MetaForm collection={collection} onSaved={setCollection} />
-          {collection && (
-            <ProductAssignmentPanel collection={collection} onChanged={setCollection} />
-          )}
+          {collection && <ProductAssignmentPanel collection={collection} onChanged={setCollection} />}
         </>
       )}
     </div>

@@ -8,7 +8,9 @@ import { useAuth } from '../auth/AuthContext'
 
 vi.mock('../api/endpoints', () => ({ orderApi: { guestLookup: vi.fn(), payGuest: vi.fn(), claim: vi.fn() } }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
-vi.mock('../components/OrderView', () => ({ default: ({ order }: { order: { status: string } }) => <p>상태 {order.status}</p> }))
+vi.mock('../components/OrderView', () => ({
+  default: ({ order }: { order: { status: string } }) => <p>상태 {order.status}</p>,
+}))
 
 describe('GuestOrderLookupPage', () => {
   afterEach(() => {
@@ -23,7 +25,9 @@ describe('GuestOrderLookupPage', () => {
       .mockResolvedValueOnce({ orderNumber: 'ORD-1', status: 'PAID' } as never)
     vi.mocked(orderApi.payGuest).mockResolvedValue({ status: 'PAID' } as never)
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/orders/lookup', state: { orderNumber: 'ORD-1', ordererPhone: '010-1' } }]}>
+      <MemoryRouter
+        initialEntries={[{ pathname: '/orders/lookup', state: { orderNumber: 'ORD-1', ordererPhone: '010-1' } }]}
+      >
         <GuestOrderLookupPage />
       </MemoryRouter>,
     )

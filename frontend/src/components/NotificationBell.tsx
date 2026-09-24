@@ -64,8 +64,7 @@ export default function NotificationBell() {
     if (n.linkUrl) navigate(n.linkUrl)
   }
 
-  const label =
-    unreadCount != null && unreadCount > 0 ? `알림, 안읽음 ${unreadCount}개` : '알림'
+  const label = unreadCount != null && unreadCount > 0 ? `알림, 안읽음 ${unreadCount}개` : '알림'
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -94,18 +93,10 @@ export default function NotificationBell() {
             <DropdownMenuItem
               key={n.id}
               onSelect={() => handleSelect(n)}
-              className={cn(
-                'flex flex-col items-start gap-0.5 whitespace-normal py-2',
-                !n.isRead && 'bg-accent/60',
-              )}
+              className={cn('flex flex-col items-start gap-0.5 whitespace-normal py-2', !n.isRead && 'bg-accent/60')}
             >
               <div className="flex w-full items-center gap-1.5">
-                {!n.isRead && (
-                  <span
-                    className="size-1.5 shrink-0 rounded-full bg-primary"
-                    aria-hidden="true"
-                  />
-                )}
+                {!n.isRead && <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
                 <span aria-hidden="true">{notificationTypeIcon[n.type] ?? '🔔'}</span>
                 <span className="truncate text-sm font-medium">{n.title}</span>
               </div>

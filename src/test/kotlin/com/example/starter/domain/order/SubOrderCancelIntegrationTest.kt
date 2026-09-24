@@ -5,8 +5,6 @@ import com.example.starter.domain.catalog.entity.Product
 import com.example.starter.domain.catalog.entity.ProductOption
 import com.example.starter.domain.catalog.entity.ProductStatus
 import com.example.starter.domain.catalog.repository.ProductRepository
-import com.example.starter.domain.order.entity.OrderStatus
-import com.example.starter.domain.order.entity.SubOrderStatus
 import com.example.starter.domain.order.repository.OrderRepository
 import com.example.starter.domain.payment.entity.PaymentStatus
 import com.example.starter.domain.payment.repository.PaymentRepository

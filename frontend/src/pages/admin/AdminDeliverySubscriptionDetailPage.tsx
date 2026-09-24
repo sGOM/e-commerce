@@ -3,7 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { adminDeliverySubscriptionApi } from '../../api/endpoints'
 import { ApiError } from '../../api/client'
 import { deliverySubscriptionHistoryResultLabel, deliverySubscriptionStatusLabel } from '../../labels'
-import type { AdminDeliverySubscription, DeliverySubscriptionHistory, DeliverySubscriptionStatus } from '../../api/types'
+import type {
+  AdminDeliverySubscription,
+  DeliverySubscriptionHistory,
+  DeliverySubscriptionStatus,
+} from '../../api/types'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -73,7 +77,9 @@ export default function AdminDeliverySubscriptionDetailPage() {
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">수량 · 주기</dt>
-                  <dd>{subscription.quantity}개 · {subscription.cycleDays}일마다</dd>
+                  <dd>
+                    {subscription.quantity}개 · {subscription.cycleDays}일마다
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">다음 배송일</dt>

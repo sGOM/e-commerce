@@ -35,17 +35,13 @@ export default function MyOrdersPage() {
                 <Card className="flex-row items-center justify-between p-4 hover:shadow-sm">
                   <div>
                     <p className="text-sm font-medium">{o.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(o.createdAt).toLocaleString('ko-KR')}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString('ko-KR')}</p>
                   </div>
                   <div className="text-right">
                     <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                       {orderStatusLabel[o.status]}
                     </span>
-                    <p className="mt-1 font-bold text-primary">
-                      {formatKRW(o.payableAmount)}
-                    </p>
+                    <p className="mt-1 font-bold text-primary">{formatKRW(o.payableAmount)}</p>
                   </div>
                 </Card>
               </Link>

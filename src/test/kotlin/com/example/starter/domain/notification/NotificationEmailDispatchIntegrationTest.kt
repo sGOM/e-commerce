@@ -6,11 +6,11 @@ import com.example.starter.domain.notification.repository.NotificationRepository
 import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.UserRepository
 import com.example.starter.support.AbstractIntegrationTest
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
@@ -23,7 +23,8 @@ class NotificationEmailDispatchIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var notificationRepository: NotificationRepository
     @Autowired lateinit var userRepository: UserRepository
 
-    @MockkBean(relaxed = true) lateinit var emailSender: EmailSender
+    @MockkBean(relaxed = true)
+    lateinit var emailSender: EmailSender
 
     private fun seedUser(email: String) =
         userRepository.save(User(email = email, password = "{noop}x", name = "회원")).id!!
