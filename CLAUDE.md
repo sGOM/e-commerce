@@ -40,6 +40,10 @@ CI(`.github/workflows/ci.yml`)는 백엔드 테스트 + 프론트 lint/test 를 
 
 1. `docs/ROADMAP.md` 에서 항목 선택 → `main` 최신에서 `<type>/<slug>` 브랜치.
 2. TDD: 실패하는 테스트 먼저(통합 테스트는 `AbstractIntegrationTest` 상속, 외부 빈은 `@MockkBean`).
+   - 통합 테스트는 DB 컨테이너를 공유한다. 롤백 검증 등으로 `@Transactional` 을 뺀 테스트는 데이터가 커밋되므로
+     정산 대상 상태(PAID 등) 주문이나 `orders` 를 참조하는 행(`gift_claims` 등)을 남기지 않게 정리한다 —
+     정산 테스트는 전역 집계, `OrderConcurrencyIntegrationTest` 는 `orders` 전체 삭제를 한다.
+   - 배치의 건별 격리는 **별도 빈 + `REQUIRES_NEW`** 로 한다(같은 클래스 자기 호출엔 `@Transactional` 미적용).
 3. 백엔드 전체 테스트 + 프론트 test/lint/build 통과 확인.
 4. 커밋은 GIT_CONVENTIONS 규칙(원자적, 마이그레이션은 사용 코드와 같은 커밋, 비자명한 결정은 본문에 "왜"+공식 문서 링크).
 5. `gh pr create --base main` → CI green 확인 → `gh pr merge --merge` → ROADMAP 완료 반영.
