@@ -47,7 +47,7 @@ filterChain.doFilter(request, response)
 2차로 컨트롤러/서비스의 `@PreAuthorize("hasRole(...)")`. 한쪽 설정 실수가 곧바로 권한 누수로 이어지지 않게 한다.
 세션은 `HttpSessionSecurityContextRepository`에 저장하고, 동시 세션은 1개로 제한한다.
 
-> **알려진 제약**: 권한이 로그인 시점 세션에 고정되므로, 판매자 승인 직후 권한 반영에는 재로그인이 필요하다(ROADMAP 3.4).
+> 권한은 로그인 시점 세션에 저장되지만, `GET /api/auth/me` 가 DB 역할로 세션 권한을 갱신하므로 판매자 승인 직후에도 재로그인이 필요 없다.
 
 ---
 
@@ -274,7 +274,7 @@ return soldById.keys.mapNotNull { id ->            // soldById(LinkedHashMap)의
 ```
 - `findAllById`는 순서를 보장하지 않으므로, **집계가 매긴 순서(`soldById.keys`)를 기준으로** 다시 매핑해 랭킹을 유지한다.
 - 품절(`OUT_OF_STOCK`)은 노출, 숨김/삭제(`DRAFT/HIDDEN`)는 제외 — `ProductStatus.isVisible`로 표현.
-- 현재 매 요청 집계라 트래픽이 늘면 캐싱이 필요(ROADMAP 7.3).
+- 현재 매 요청 집계라 트래픽이 늘면 캐싱이 필요(ROADMAP 8.6).
 
 ---
 
