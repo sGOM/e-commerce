@@ -467,8 +467,19 @@ class OrderService(
         return OrderResponse.from(order)
     }
 
+    /**
+     * PG 에서 이미 취소된 결제를 주문에 반영(결제 웹훅, [com.example.starter.domain.payment.PaymentWebhookService]).
+     * PG 가 이미 환불했으므로 배송 여부와 무관하게 내부 상태만 맞추고 PG 는 다시 호출하지 않는다. 이미 취소면 무시(웹훅 재전송 멱등).
+     */
+    @Transactional
+    fun cancelByPg(orderNumber: String) {
+        val order = orderRepository.findByOrderNumber(orderNumber).orElse(null) ?: return
+        if (order.status != OrderStatus.PAID) return
+        doCancel(order, "PG 취소 반영", refundAtPg = false)
+    }
+
     /** 취소/환불 공통 처리: 재고·쿠폰·사용포인트 복원, 결제 후라면 결제 환불 + 적립 포인트 회수. */
-    private fun doCancel(order: Order, reason: String) {
+    private fun doCancel(order: Order, reason: String, refundAtPg: Boolean = true) {
         val orderId = requireNotNull(order.id)
         val wasPaid = order.status == OrderStatus.PAID
         // 이미 부분 취소로 환불된 SubOrder 몫은 빼고 남은 금액만 PG 에 취소 요청한다.
@@ -496,7 +507,7 @@ class OrderService(
         order.status = OrderStatus.CANCELED
         // PG 취소는 마지막에(실패 시 전체 롤백) — PaymentService.refund 참고
         if (wasPaid) {
-            paymentService.refund(orderId, remainingPayable, reason, "cancel-order-$orderId", fullyCanceled = true)
+            paymentService.refund(orderId, remainingPayable, reason, "cancel-order-$orderId", fullyCanceled = true, callPg = refundAtPg)
         }
     }
 

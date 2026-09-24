@@ -151,6 +151,19 @@ class TossPaymentGatewayTest {
     }
 
     @Test
+    fun `lookup 은 결제 단건 조회로 PG 의 현재 상태와 주문번호를 돌려준다`() {
+        val (gateway, server) = gatewayWithMockServer(props())
+        server.expect(requestTo("$baseUrl/v1/payments/pk_l1"))
+            .andExpect(method(HttpMethod.GET))
+            .andRespond(
+                withSuccess("""{"paymentKey":"pk_l1","orderId":"ORD-9","status":"CANCELED"}""", MediaType.APPLICATION_JSON),
+            )
+
+        assertEquals(PaymentLookupResult("pk_l1", "ORD-9", "CANCELED"), gateway.lookup("pk_l1"))
+        server.verify()
+    }
+
+    @Test
     fun `거래 키가 없으면 통신 없이 취소 실패다`() {
         val gateway = TossPaymentGateway(props())
         assertFalse(gateway.cancel(PaymentCancelCommand(null, 1_000, "취소", "k")).success)

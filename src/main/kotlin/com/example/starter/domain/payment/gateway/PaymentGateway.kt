@@ -31,6 +31,13 @@ data class PaymentCancelResult(
     val message: String,
 )
 
+/** PG 에서 다시 조회한 결제의 현재 상태. [orderNumber] 는 승인 때 보낸 우리 주문번호(토스 `orderId`). */
+data class PaymentLookupResult(
+    val paymentKey: String,
+    val orderNumber: String,
+    val status: String,
+)
+
 /**
  * 결제 게이트웨이 추상화. MVP 는 [MockPaymentGateway] 로 동작하며, 추후 실 PG(토스 등)로
  * 구현체만 교체한다. 서비스 계층은 이 인터페이스에만 의존한다.
@@ -39,4 +46,7 @@ interface PaymentGateway {
     fun approve(command: PaymentApproveCommand): PaymentApproveResult
 
     fun cancel(command: PaymentCancelCommand): PaymentCancelResult
+
+    /** PG 의 결제 현재 상태 재조회(웹훅 검증용). 조회 수단이 없으면 null, 통신 오류는 예외로 전파한다. */
+    fun lookup(transactionId: String): PaymentLookupResult?
 }
