@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { orderApi } from '../api/endpoints'
 import { ApiError } from '../api/client'
 import OrderView from '../components/OrderView'
+import { payGuestOrder, tossEnabled } from '../lib/payment'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -62,7 +63,7 @@ export default function GuestOrderLookupPage() {
     setPaying(true)
     setError(null)
     try {
-      await orderApi.payGuest(order.orderNumber, phone)
+      if ((await payGuestOrder(order, phone)) === 'redirected') return
       await lookup(order.orderNumber, phone)
     } catch (e) {
       setError(e instanceof ApiError ? e.message : '결제에 실패했습니다.')
@@ -135,7 +136,7 @@ export default function GuestOrderLookupPage() {
           <OrderView order={order} />
           {order.status === 'CREATED' && (
             <Button onClick={pay} disabled={paying} className="mt-6 h-11 w-full">
-              {paying ? '결제 중…' : '결제하기 (Mock PG)'}
+              {paying ? '결제 중…' : tossEnabled ? '결제하기' : '결제하기 (Mock PG)'}
             </Button>
           )}
           {user && (

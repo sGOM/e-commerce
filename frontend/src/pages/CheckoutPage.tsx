@@ -13,6 +13,7 @@ import {
 import { ApiError, formatKRW } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
+import { payGuestOrder, payMemberOrder } from '../lib/payment'
 import { deliverySlotTypeLabel } from '../labels'
 import type { Cart, CartItem, DeliverySlot, IssuedCoupon, Membership, UserAddress } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -257,7 +258,7 @@ export default function CheckoutPage() {
           deliverySlotSelections,
         })
         clearGuestCart()
-        await orderApi.payGuest(order.orderNumber, form.ordererPhone).catch(() => undefined)
+        if ((await payGuestOrder(order, form.ordererPhone).catch(() => null)) === 'redirected') return
         navigate('/orders/lookup', {
           state: {
             orderNumber: order.orderNumber,
@@ -278,7 +279,7 @@ export default function CheckoutPage() {
           isGift,
           giftMessage: isGift ? giftMessage.trim() || null : null,
         })
-        await orderApi.pay(order.orderId) // Mock PG 즉시 결제
+        if ((await payMemberOrder(order)) === 'redirected') return // 토스 결제창으로 이동
         navigate(`/orders/${order.orderId}`, {
           state: { justPaid: true, giftClaimToken: order.giftClaimToken },
         })
