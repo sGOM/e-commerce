@@ -99,6 +99,6 @@ class PaymentService(
                 throw BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED, result.message)
             }
         }
-        if (fullyCanceled) payment.markCanceled(reason) else payment.recordPartialRefund(amount)
+        if (fullyCanceled) payment.markCanceled("$reason (환불 ${amount}원)") else payment.recordPartialRefund(amount)
     }
 }
