@@ -4,6 +4,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.3"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
+	id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
 }
 
 group = "com.example"
@@ -88,4 +89,9 @@ tasks.withType<Test> {
 	listOf("it.datasource.url", "it.datasource.username", "it.datasource.password").forEach { key ->
 		System.getProperty(key)?.let { systemProperty(key, it) }
 	}
+}
+
+// 포맷 검사: 규칙은 루트 .editorconfig. CLI 로 측정한 버전에 고정해 로컬·CI 위반 집합을 같게 둔다.
+ktlint {
+	version.set("1.5.0")
 }
