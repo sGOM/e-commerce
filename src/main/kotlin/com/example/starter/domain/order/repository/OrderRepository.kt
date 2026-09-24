@@ -1,10 +1,13 @@
 package com.example.starter.domain.order.repository
 
 import com.example.starter.domain.order.entity.Order
+import com.example.starter.domain.order.entity.OrderStatus
+import jakarta.persistence.LockModeType
 import com.linecorp.kotlinjdsl.support.spring.data.jpa.repository.KotlinJdslJpqlExecutor
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
@@ -22,6 +25,13 @@ interface OrderRepository : JpaRepository<Order, Long>, KotlinJdslJpqlExecutor {
 
     /** 주문번호 + 주문 시 연락처가 모두 일치하는 주문(게스트 조회/연결/결제의 본인 확인) */
     fun findByOrderNumberAndOrdererPhone(orderNumber: String, ordererPhone: String): Optional<Order>
+
+    /** 결제 기한이 지난 미결제 주문 후보(자동 만료 배치). 처리 직전에 [findWithLockById] 로 다시 확인한다. */
+    fun findByStatusAndCreatedAtBefore(status: OrderStatus, before: Instant): List<Order>
+
+    /** 행 잠금(SELECT ... FOR UPDATE) 조회 — 결제와 미결제 만료가 같은 주문을 동시에 바꾸지 못하게 한다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findWithLockById(id: Long): Optional<Order>
 
     /**
      * 순구매액(실결제액, 취소/환불 제외) 집계 — 로열티 등급 재계산 배치용

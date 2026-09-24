@@ -14,6 +14,8 @@ import com.example.starter.domain.payment.gateway.PaymentCancelCommand
 import com.example.starter.domain.payment.gateway.PaymentGateway
 import com.example.starter.domain.payment.repository.PaymentRepository
 import com.example.starter.domain.point.PointService
+import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -30,6 +32,7 @@ class PaymentService(
     private val paymentRepository: PaymentRepository,
     private val paymentGateway: PaymentGateway,
     private val pointService: PointService,
+    private val entityManager: EntityManager,
 ) {
 
     @Transactional
@@ -51,6 +54,11 @@ class PaymentService(
 
     private fun pay(order: Order, paymentKey: String?): PaymentResponse {
         val orderId = requireNotNull(order.id)
+        // 주문 행을 잠그고 최신 상태로 다시 읽는다 — 미결제 만료 배치(OrderService.expireUnpaidOrder)와 동시에
+        // 같은 주문을 바꾸지 않게 한다. 먼저 읽은 엔티티라 잠금 조회 대신 refresh 로 상태까지 갱신하되, 같은 트랜잭션에서
+        // 아직 flush 되지 않은 변경(예: 주문 생성 직후 결제)을 잃지 않도록 먼저 flush 한다.
+        entityManager.flush()
+        entityManager.refresh(order, LockModeType.PESSIMISTIC_WRITE)
 
         // 멱등: 이미 결제 완료면 재승인 없이 기존 결과 반환(중복 결제 방지)
         val existing = paymentRepository.findByOrderId(orderId).orElse(null)

@@ -91,6 +91,12 @@ class GiftClaimService(
         return GiftClaimResponse.from(claim, order.orderNumber)
     }
 
+    /** 주문이 결제 전에 취소될 때(미결제 만료) 대기 중인 수령 링크를 함께 마감한다. */
+    @Transactional
+    fun cancelForOrder(orderId: Long) {
+        giftClaimRepository.findByOrderId(orderId).ifPresent { it.cancel() }
+    }
+
     private fun findByToken(token: String): GiftClaim =
         giftClaimRepository.findByToken(token).orElseThrow { BusinessException(ErrorCode.GIFT_CLAIM_NOT_FOUND) }
 

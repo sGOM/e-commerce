@@ -89,6 +89,16 @@ management:
 # billing:
 #   gateway: mock
 
+# 미결제(CREATED) 주문 자동 만료(기본 비활성 — 관리자 수동 트리거 `/api/admin/orders/expire-unpaid/run` 만).
+# 결제창 이탈 주문의 재고 예약을 풀어 준다. 토스 결제창을 쓰는 운영에서는 켜는 것을 권장:
+# order:
+#   unpaid-expiry:
+#     ttl: PT30M              # 주문 생성 후 이 시간이 지나도록 미결제면 취소
+#     scheduler:
+#       enabled: true
+#       cron: "0 */10 * * * *"   # 10분마다
+#       zone: "Asia/Seoul"
+
 # 선물 미수락 만료 배치(기본 비활성 — 관리자 수동 트리거 `/api/admin/gift-claims/expire/run` 만). 운영에서 켜려면:
 # gift:
 #   scheduler:

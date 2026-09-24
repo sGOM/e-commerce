@@ -38,6 +38,7 @@ import com.example.starter.domain.seller.entity.Seller
 import org.springframework.data.domain.Pageable
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.time.LocalDate
@@ -465,6 +466,21 @@ class OrderService(
         }
         doCancel(order, "선물 미수락 만료 자동 취소")
         return OrderResponse.from(order)
+    }
+
+    /**
+     * 결제 기한이 지난 미결제 주문 자동 취소(배치 전용, [UnpaidOrderExpiryService]). 건별 트랜잭션(REQUIRES_NEW)으로
+     * 한 건의 실패가 다른 건을 되돌리지 않게 하고, 주문 행을 잠가 진행 중인 결제([PaymentService.pay] 도 같은 행을
+     * 잠근다)와 겹치지 않게 한다. 잠금 뒤 상태를 다시 보므로 그 사이 결제된 주문은 건드리지 않는다.
+     * 결제 전이라 PG 호출은 없고, 선물 주문이면 수령 링크도 함께 마감한다.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun expireUnpaidOrder(orderId: Long, createdBefore: Instant): Boolean {
+        val order = orderRepository.findWithLockById(orderId).orElse(null) ?: return false
+        if (order.status != OrderStatus.CREATED || !order.createdAt.isBefore(createdBefore)) return false
+        doCancel(order, "미결제 자동 취소")
+        if (order.isGift) giftClaimService.cancelForOrder(orderId)
+        return true
     }
 
     /**
