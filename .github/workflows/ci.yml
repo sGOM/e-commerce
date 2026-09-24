@@ -36,6 +36,8 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
+      # 포맷 규칙은 .editorconfig. 실패 시 로컬에서 ./gradlew ktlintFormat
+      - run: ./gradlew ktlintCheck --console=plain
       - run: ./gradlew test --console=plain
       - if: failure()
         uses: actions/upload-artifact@v4
@@ -57,5 +59,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
+      # 실패 시 로컬에서 npm run format
+      - run: npm run format:check
       - run: npm test
       - run: npm run build
