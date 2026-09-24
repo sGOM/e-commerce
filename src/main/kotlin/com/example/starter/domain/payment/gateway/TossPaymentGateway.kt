@@ -91,6 +91,27 @@ class TossPaymentGateway(
         }.getOrElse { e -> PaymentCancelResult(false, "PG 통신 오류: ${e.message}") }
     }
 
+    /**
+     * 결제 단건 조회(`GET /v1/payments/{paymentKey}`). 웹훅 PAYMENT_STATUS_CHANGED 는 서명이 없어 payload 를 믿지 않고
+     * 이 결과로만 상태를 판단한다. 통신 오류는 예외로 올려 웹훅이 200 이 아닌 응답을 내고 토스가 재전송하게 한다.
+     * https://docs.tosspayments.com/reference#paymentkey로-결제-조회
+     */
+    override fun lookup(transactionId: String): PaymentLookupResult? {
+        val secretKey = properties.toss.secretKey
+        if (secretKey.isBlank()) return null
+        val response = restClient.get()
+            .uri("/v1/payments/{paymentKey}", transactionId)
+            .header(HttpHeaders.AUTHORIZATION, basicAuth(secretKey))
+            .retrieve()
+            .body(TossConfirmResponse::class.java)
+            ?: return null
+        return PaymentLookupResult(
+            paymentKey = response.paymentKey ?: transactionId,
+            orderNumber = response.orderId ?: return null,
+            status = response.status ?: return null,
+        )
+    }
+
     private fun basicAuth(secretKey: String): String {
         // 토스는 'secretKey:' (콜론 뒤 빈 비밀번호)를 base64 로 인코딩한 Basic 인증을 사용한다.
         val encoded = Base64.getEncoder().encodeToString("$secretKey:".toByteArray())

@@ -86,6 +86,8 @@ class SecurityConfig(
                 csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse()
                 // BREACH 보호 + SPA 호환을 위한 표준 핸들러
                 csrfTokenRequestHandler = CsrfTokenRequestAttributeHandler()
+                // PG 웹훅은 서버 간 호출이라 CSRF 토큰이 없다. 내용은 PG 재조회로 검증한다(PaymentWebhookService).
+                ignoringRequestMatchers("/api/payments/webhook/**")
             }
             // 지연 로딩된 CSRF 토큰을 매 요청에서 강제 렌더링 → XSRF-TOKEN 쿠키 항상 발급
             addFilterAfter<CsrfFilter>(CsrfCookieFilter())
@@ -128,6 +130,7 @@ class SecurityConfig(
                 authorize("/api/orders/guest", permitAll)
                 authorize("/api/orders/guest/lookup", permitAll)
                 authorize("/api/payments/guest", permitAll)
+                authorize("/api/payments/webhook/**", permitAll)
                 // 선물 수령자 플로우 — 비회원 허용(토큰이 유일한 인가 수단, `docs/planning/gift-order.md` §4)
                 authorize("/api/gift/**", permitAll)
                 // 업로드 이미지 조회는 공개(상품/리뷰 이미지). 업로드 자체는 아래 anyRequest 로 회원 전용

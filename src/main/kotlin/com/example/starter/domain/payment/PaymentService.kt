@@ -89,11 +89,20 @@ class PaymentService(
      * 호출자는 내부 상태 변경을 모두 끝낸 **마지막 단계**에서 부른다 — 외부 호출 뒤에 DB 작업이 실패하면 PG 만
      * 취소된 채 남기 때문이다. 그래도 커밋 자체가 실패할 수 있어 [idempotencyKey] 를 결정적으로 만들어, 재시도가
      * PG 에서 한 번만 처리되게 한다.
+     *
+     * [callPg] = false 는 PG 에서 이미 취소된 결제를 반영할 때(웹훅)만 쓴다 — 다시 취소를 부르면 "이미 취소됨"으로 거절된다.
      */
     @Transactional
-    fun refund(orderId: Long, amount: Long, reason: String, idempotencyKey: String, fullyCanceled: Boolean) {
+    fun refund(
+        orderId: Long,
+        amount: Long,
+        reason: String,
+        idempotencyKey: String,
+        fullyCanceled: Boolean,
+        callPg: Boolean = true,
+    ) {
         val payment = paymentRepository.findByOrderId(orderId).orElse(null) ?: return
-        if (amount > 0) {
+        if (callPg && amount > 0) {
             val result = paymentGateway.cancel(PaymentCancelCommand(payment.pgTransactionId, amount, reason, idempotencyKey))
             if (!result.success) {
                 throw BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED, result.message)

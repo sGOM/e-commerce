@@ -24,4 +24,7 @@ class MockPaymentGateway : PaymentGateway {
 
     override fun cancel(command: PaymentCancelCommand): PaymentCancelResult =
         if (command.amount > 0) PaymentCancelResult(true, "취소") else PaymentCancelResult(false, "유효하지 않은 취소 금액")
+
+    /** 모의 PG 는 외부 상태가 없어 웹훅 대상이 아니다. */
+    override fun lookup(transactionId: String): PaymentLookupResult? = null
 }

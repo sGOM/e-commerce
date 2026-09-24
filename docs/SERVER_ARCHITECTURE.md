@@ -208,6 +208,15 @@ when {
   `cancel-order-{orderId}` / `cancel-sub-{subOrderId}` 로 결정적으로 만들어, 재시도해도 PG 가 한 번만 환불한다
   ([토스 멱등키](https://docs.tosspayments.com/reference/using-api/idempotency-key)).
 
+### 6-5. 결제 웹훅 — payload 불신, PG 재조회
+`POST /api/payments/webhook/toss`(공개·CSRF 제외). 토스 `PAYMENT_STATUS_CHANGED` 에는 서명이 없어
+([웹훅 이벤트](https://docs.tosspayments.com/reference/using-api/webhook-events)) payload 에서는 `paymentKey` 만 꺼내고
+`PaymentGateway.lookup`(`GET /v1/payments/{paymentKey}`) 결과로만 판단한다. 위조 요청은 PG 의 실제 상태 외엔 아무것도 바꾸지 못한다.
+- PG 가 `CANCELED` 인데 우리 주문이 `PAID` → `OrderService.cancelByPg` 로 재고·쿠폰·포인트를 복원하고 결제를 취소 처리(PG 재호출 없음).
+  6-4 의 "PG 취소 성공 후 커밋 실패" 틈과 대시보드 직접 취소를 여기서 맞춘다.
+- `PARTIAL_CANCELED` 는 어느 SubOrder 몫인지 알 수 없어 경고 로그만. 이미 취소된 주문은 무시(재전송 멱등).
+- 조회 실패는 5xx 로 두어 토스 재전송(최대 7회)에 맡긴다.
+
 ---
 
 ## 7. 정산 — 집계 멱등성 + 조건부 스케줄러

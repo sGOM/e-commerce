@@ -20,7 +20,12 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/payments")
 class PaymentController(
     private val paymentService: PaymentService,
+    private val paymentWebhookService: PaymentWebhookService,
 ) {
+
+    /** 토스 결제 웹훅(공개·CSRF 제외). 10초 안에 200 을 받지 못하면 토스가 재전송하므로 처리 오류는 그대로 5xx 로 둔다. */
+    @PostMapping("/webhook/toss")
+    fun tossWebhook(@RequestBody request: TossWebhookRequest) = paymentWebhookService.handleToss(request)
 
     @PostMapping("/guest")
     fun payGuest(@RequestBody @Valid request: GuestPayRequest): ApiResponse<PaymentResponse> =
