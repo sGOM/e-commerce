@@ -23,7 +23,14 @@ import java.time.Instant
 @RequestMapping("/api/admin/orders")
 class AdminOrderController(
     private val adminOrderService: AdminOrderService,
+    private val unpaidOrderExpiryService: UnpaidOrderExpiryService,
 ) {
+
+    /** 미결제 주문 만료 배치 수동 실행(스케줄러 비활성 환경 대비). 만료 처리한 건수를 돌려준다. */
+    @PostMapping("/expire-unpaid/run")
+    fun expireUnpaid(): ApiResponse<Int> =
+        ApiResponse.success(unpaidOrderExpiryService.expireUnpaid(), "미결제 주문 만료를 실행했습니다.")
+
 
     @GetMapping
     fun search(
