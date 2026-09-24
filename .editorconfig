@@ -19,6 +19,12 @@ ktlint_standard_spacing-between-declarations-with-annotations = disabled
 ktlint_standard_argument-list-wrapping = disabled
 ktlint_standard_function-expression-body = disabled
 ktlint_standard_binary-expression-wrapping = disabled
+# DTO 는 도메인별로 `XxxDtos.kt` 한 파일에 모은다(docs/CODING_CONVENTIONS.md).
+ktlint_standard_filename = disabled
+
+[src/test/**.kt]
+# 테스트는 한 줄 JSON 요청 본문(raw string)을 그대로 두는 편이 읽기 쉽다.
+ktlint_standard_max-line-length = disabled
 
 [*.{ts,tsx,js,json,css}]
 indent_size = 2

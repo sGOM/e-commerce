@@ -14,6 +14,7 @@ interface OrderItemRepository : JpaRepository<OrderItem, Long> {
 
     /** 회원의 리뷰 작성 대기 목록 후보 — 배송완료(DELIVERED) 하위 주문의 항목만. */
     @EntityGraph(attributePaths = ["subOrder", "subOrder.order"])
+    @Suppress("ktlint:standard:function-naming") // Spring Data 중첩 속성 경로는 `_` 로 구분한다
     fun findBySubOrder_Order_UserIdAndSubOrder_StatusOrderByIdDesc(
         userId: Long,
         status: SubOrderStatus,
