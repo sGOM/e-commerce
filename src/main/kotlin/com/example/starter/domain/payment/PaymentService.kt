@@ -10,6 +10,7 @@ import com.example.starter.domain.payment.dto.PaymentResponse
 import com.example.starter.domain.payment.entity.Payment
 import com.example.starter.domain.payment.entity.PaymentStatus
 import com.example.starter.domain.payment.gateway.PaymentApproveCommand
+import com.example.starter.domain.payment.gateway.PaymentCancelCommand
 import com.example.starter.domain.payment.gateway.PaymentGateway
 import com.example.starter.domain.payment.repository.PaymentRepository
 import com.example.starter.domain.point.PointService
@@ -79,5 +80,25 @@ class PaymentService(
         order.userId?.let { pointService.earn(it, order.payableAmount, orderId) }
 
         return PaymentResponse.from(payment)
+    }
+
+    /**
+     * 결제 환불. PG 에 [amount] 만큼 취소를 요청하고, 성공하면 [fullyCanceled] 에 따라 결제를 취소 상태로 두거나
+     * 부분 환불 이력만 남긴다. PG 가 거절하면 예외로 호출자 트랜잭션 전체(재고·쿠폰 복원 포함)를 롤백한다.
+     *
+     * 호출자는 내부 상태 변경을 모두 끝낸 **마지막 단계**에서 부른다 — 외부 호출 뒤에 DB 작업이 실패하면 PG 만
+     * 취소된 채 남기 때문이다. 그래도 커밋 자체가 실패할 수 있어 [idempotencyKey] 를 결정적으로 만들어, 재시도가
+     * PG 에서 한 번만 처리되게 한다.
+     */
+    @Transactional
+    fun refund(orderId: Long, amount: Long, reason: String, idempotencyKey: String, fullyCanceled: Boolean) {
+        val payment = paymentRepository.findByOrderId(orderId).orElse(null) ?: return
+        if (amount > 0) {
+            val result = paymentGateway.cancel(PaymentCancelCommand(payment.pgTransactionId, amount, reason, idempotencyKey))
+            if (!result.success) {
+                throw BusinessException(ErrorCode.PAYMENT_CANCEL_FAILED, result.message)
+            }
+        }
+        if (fullyCanceled) payment.markCanceled(reason) else payment.recordPartialRefund(amount)
     }
 }

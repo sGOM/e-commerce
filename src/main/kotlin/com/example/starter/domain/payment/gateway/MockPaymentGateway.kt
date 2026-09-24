@@ -21,4 +21,7 @@ class MockPaymentGateway : PaymentGateway {
         val transactionId = "MOCK-" + UUID.randomUUID().toString().substring(0, 12).uppercase()
         return PaymentApproveResult(success = true, transactionId = transactionId, message = "승인")
     }
+
+    override fun cancel(command: PaymentCancelCommand): PaymentCancelResult =
+        if (command.amount > 0) PaymentCancelResult(true, "취소") else PaymentCancelResult(false, "유효하지 않은 취소 금액")
 }
