@@ -7,6 +7,7 @@ import {
   meApi,
   membershipApi,
   orderApi,
+  shippingPolicyApi,
   type DeliverySlotSelectionBody,
   type ShippingAddressBody,
 } from '../api/endpoints'
@@ -88,6 +89,14 @@ export default function CheckoutPage() {
   const [pointInput, setPointInput] = useState(0)
   // 멤버십 혜택 인라인 안내(무료배송/포인트 우대) — 미가입/조회 실패 시 조용히 무시한다.
   const [membership, setMembership] = useState<Membership | null>(null)
+  // 기본 배송비(판매자 단위). 조회 실패 시 0 으로 미리보기하고 최종 금액은 서버가 계산한다.
+  const [baseShippingFee, setBaseShippingFee] = useState(0)
+  useEffect(() => {
+    shippingPolicyApi
+      .get()
+      .then((p) => setBaseShippingFee(p.baseFee))
+      .catch(() => setBaseShippingFee(0))
+  }, [])
   // 회원 전용: 배송지 주소록
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([])
 
@@ -216,12 +225,15 @@ export default function CheckoutPage() {
   const discount = selectedCoupon ? couponDiscount(selectedCoupon, subtotal) : 0
   const maxPoint = Math.max(0, Math.min(pointBalance, subtotal - discount))
   const pointToUse = Math.max(0, Math.min(pointInput, maxPoint))
-  const deliveryFeePreview = eligibleGroups.reduce((sum, g) => {
+  // 서버와 같은 규칙: 판매자마다 기본 배송비 + 선택한 슬롯 추가요금, 멤버십 무료배송이면 전부 0원.
+  const freeShipping = Boolean(membership?.benefitActive && membership.benefits.freeShipping)
+  const slotFeePreview = eligibleGroups.reduce((sum, g) => {
     const slotId = selectedSlots[g.sellerId]
     if (slotId == null) return sum
     const slot = slots.find((s) => s.id === slotId)
     return sum + (slot?.extraFee ?? 0)
   }, 0)
+  const deliveryFeePreview = freeShipping ? 0 : baseShippingFee * sellerGroups.length + slotFeePreview
   const payable = subtotal - discount - pointToUse + deliveryFeePreview
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -576,7 +588,7 @@ export default function CheckoutPage() {
             )}
             {deliveryFeePreview > 0 && (
               <div className="flex justify-between">
-                <span>배송비(새벽배송)</span>
+                <span>배송비</span>
                 <span>+{formatKRW(deliveryFeePreview)}</span>
               </div>
             )}
