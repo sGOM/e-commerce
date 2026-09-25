@@ -3,8 +3,6 @@ package com.example.starter.domain.upload
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
 import com.example.starter.common.response.ApiResponse
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.Resource
 import org.springframework.http.CacheControl
 import org.springframework.http.MediaType
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.util.UUID
 
@@ -28,37 +24,39 @@ data class UploadResponse(val url: String)
  *
  * 형식은 클라이언트가 보낸 확장자·Content-Type 대신 **파일 앞부분 시그니처(magic bytes)** 로 판별하고,
  * 저장 파일명은 서버가 만든 UUID + 판별된 확장자라 경로 조작이나 HTML/SVG 위장 업로드가 불가능하다.
- * 최대 크기는 `spring.servlet.multipart.max-file-size` 로 제한한다.
+ * 최대 크기는 `spring.servlet.multipart.max-file-size` 로 제한한다. 저장 위치는 [ImageStorage](local/s3)가 정한다.
  */
-// ponytail: 로컬 디스크 저장, 컨테이너 재배포 시 사라지고 다중 인스턴스 간 공유 안 됨 — 운영 전 볼륨 마운트 또는 S3 로 교체
 @RestController
 @RequestMapping("/api/uploads")
 class UploadController(
-    @Value("\${upload.dir:uploads}") dir: String,
+    private val storage: ImageStorage,
 ) {
-    private val root: Path = Path.of(dir).toAbsolutePath().normalize().also { Files.createDirectories(it) }
 
     @PostMapping
     fun upload(@RequestParam file: MultipartFile): ApiResponse<UploadResponse> {
-        val head = file.inputStream.use { it.readNBytes(12) }
-        val type = ImageType.detect(head) ?: throw BusinessException(ErrorCode.UNSUPPORTED_IMAGE)
+        val bytes = file.bytes
+        val type = ImageType.detect(bytes.copyOf(minOf(bytes.size, 12))) ?: throw BusinessException(ErrorCode.UNSUPPORTED_IMAGE)
         val name = "${UUID.randomUUID()}.${type.extension}"
-        file.transferTo(root.resolve(name))
+        storage.save(name, bytes, type)
         return ApiResponse.success(UploadResponse("/api/uploads/$name"))
     }
 
     @GetMapping("/{name}")
     fun download(@PathVariable name: String): ResponseEntity<Resource> {
+        // 서버가 만든 이름(UUID.확장자)만 허용 — 경로 구분자나 다른 형식은 저장소에 닿기 전에 거른다.
         val type = ImageType.entries.firstOrNull { name.endsWith(".${it.extension}") }
-        val path = root.resolve(name).normalize()
-        if (type == null || path.parent != root || !Files.isRegularFile(path)) {
-            throw BusinessException(ErrorCode.UPLOAD_NOT_FOUND)
-        }
+            ?.takeIf { NAME.matches(name) }
+            ?: throw BusinessException(ErrorCode.UPLOAD_NOT_FOUND)
+        val resource = storage.load(name) ?: throw BusinessException(ErrorCode.UPLOAD_NOT_FOUND)
         return ResponseEntity.ok()
             .contentType(type.mediaType)
             .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
             .header("X-Content-Type-Options", "nosniff")
-            .body(FileSystemResource(path))
+            .body(resource)
+    }
+
+    private companion object {
+        val NAME = Regex("""^[0-9a-f-]{36}\.[a-z]+$""")
     }
 }
 

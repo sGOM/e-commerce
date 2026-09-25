@@ -37,6 +37,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    // 업로드 이미지 S3 저장(upload.storage=s3 일 때만 사용). 로컬 기본은 디스크 저장
+    implementation("software.amazon.awssdk:s3:2.46.7")
 
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
