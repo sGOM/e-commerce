@@ -259,6 +259,8 @@ frontend/src
 | GET | `/api/collections` · `/api/collections/{id}` | 기획전/컬렉션 목록·상세 | 불필요 |
 | GET | `/api/flash-sales` · `/api/flash-sales/{id}` | 진행/예정 플래시세일 | 불필요 |
 | GET · POST | `/api/products/{id}/reviews` | 상품 리뷰 조회 / 작성(구매 인증) | 조회 불필요·작성 회원 |
+| GET | `/api/products/{id}/faqs` | 상품 FAQ(판매자 작성, 공개) | 불필요 |
+| POST · GET | `/api/me/inquiries` | 상품 비밀 문의 작성 / 내 문의·답변 조회 | 회원 |
 | POST · DELETE | `/api/products/options/{optionId}/restock-alerts` | 재입고 알림 신청/해제 | 회원 |
 | POST · DELETE · GET | `/api/me/wishlist` · `/api/me/wishlist/{productId}` | 위시리스트 담기/빼기/목록(가격 인하 배지) | 회원 |
 | GET | `/api/me/loyalty-tier` | 내 로열티 등급·다음 등급까지 남은 금액 | 회원 |
@@ -278,6 +280,8 @@ frontend/src
 | POST | `/api/seller/orders/{subOrderId}/ship` | 송장 등록 → SHIPPED |
 | GET | `/api/seller/settlements` | 본인 상점 정산 내역 |
 | GET · POST | `/api/seller/flash-sales` | 본인 상품 플래시세일 신청/조회 |
+| GET · PUT | `/api/seller/inquiries` · `/{id}/answer` | 내 상품 문의 조회(미답변 필터)·답변 |
+| POST · PUT · DELETE | `/api/seller/products/{id}/faqs` · `/api/seller/faqs/{id}` | 상품 FAQ 관리 |
 
 ### 관리자 API (`ROLE_ADMIN`)
 | 메서드 | 경로 | 설명 |
