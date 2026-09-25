@@ -42,3 +42,11 @@ data class PaymentResponse(
         )
     }
 }
+
+/** 토스 웹훅 본문. 서명이 없는 이벤트라 [Data.paymentKey] 외에는 쓰지 않는다. */
+data class TossWebhookRequest(
+    val eventType: String? = null,
+    val data: Data? = null,
+) {
+    data class Data(val paymentKey: String? = null)
+}

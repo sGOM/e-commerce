@@ -1,17 +1,10 @@
 package com.example.starter.domain.payment
 
 import com.example.starter.domain.order.OrderService
+import com.example.starter.domain.payment.dto.TossWebhookRequest
 import com.example.starter.domain.payment.gateway.PaymentGateway
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-
-/** 토스 웹훅 본문. 서명이 없는 이벤트라 [Data.paymentKey] 외에는 쓰지 않는다. */
-data class TossWebhookRequest(
-    val eventType: String? = null,
-    val data: Data? = null,
-) {
-    data class Data(val paymentKey: String? = null)
-}
 
 /**
  * 결제 웹훅 처리(ROADMAP 1.4). 토스 PAYMENT_STATUS_CHANGED 는 서명이 없으므로 payload 의 상태는 믿지 않고
