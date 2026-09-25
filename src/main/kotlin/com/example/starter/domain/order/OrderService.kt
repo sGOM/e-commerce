@@ -9,6 +9,7 @@ import com.example.starter.domain.catalog.event.InventoryReservedEvent
 import com.example.starter.domain.catalog.repository.InventoryRepository
 import com.example.starter.domain.catalog.repository.ProductOptionRepository
 import com.example.starter.domain.coupon.CouponService
+import com.example.starter.domain.delivery.ShippingPolicyService
 import com.example.starter.domain.delivery.entity.DeliverySlotType
 import com.example.starter.domain.delivery.repository.DeliveryRegionRepository
 import com.example.starter.domain.delivery.repository.DeliverySlotRepository
@@ -66,6 +67,7 @@ class OrderService(
     private val deliverySlotRepository: DeliverySlotRepository,
     private val deliveryRegionRepository: DeliveryRegionRepository,
     private val membershipBenefitService: MembershipBenefitService,
+    private val shippingPolicyService: ShippingPolicyService,
     private val giftClaimService: GiftClaimService,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
@@ -265,6 +267,9 @@ class OrderService(
             isGift = isGift,
             giftMessage = giftMessage,
         )
+        // 기본 배송비(ROADMAP 7.1): 판매자(SubOrder)마다 부과, 멤버십 무료배송 회원은 면제(슬롯 추가요금도 면제).
+        val freeShipping = userId != null && membershipBenefitService.isFreeShippingActive(userId, now)
+        val baseFee = if (freeShipping) 0 else shippingPolicyService.baseFee()
         lines.groupBy { it.seller.id }.values.forEach { sellerLines ->
             val subOrder = SubOrder(seller = sellerLines.first().seller)
             sellerLines.forEach { line ->
@@ -286,8 +291,9 @@ class OrderService(
             // 실제로는 선물 주문이 slotSelections 를 비워 보내도록 상위에서 막아 이 분기는 도달하지 않는다.
             slotSelections[sellerId]?.let { slotId ->
                 val nonNullAddress = address ?: throw BusinessException(ErrorCode.GIFT_DELIVERY_SLOT_NOT_SUPPORTED)
-                applyDeliverySlot(subOrder, slotId, sellerLines, nonNullAddress, now, userId)
+                applyDeliverySlot(subOrder, slotId, sellerLines, nonNullAddress, now, freeShipping)
             }
+            subOrder.deliveryFee += baseFee
             order.addSubOrder(subOrder)
         }
         order.recalculateAmounts() // 상품합계 확정(쿠폰/포인트 적용 전)
@@ -302,7 +308,7 @@ class OrderService(
      *
      * 멤버십 무료배송 혜택(`docs/planning/subscription-membership.md` AC8)이 활성인 회원은 슬롯 추가
      * 배송비를 0원으로 스냅샷한다 — 정원은 그대로 소모하되(자리는 실제로 쓰므로) 결제 금액에는 반영하지
-     * 않는다. 게스트([userId] == null)는 멤버십 대상이 아니므로 항상 정가 배송비가 적용된다.
+     * 않는다. 게스트는 멤버십 대상이 아니므로 항상 정가 배송비가 적용된다. 기본 배송비는 호출 뒤 [buildOrder] 가 더한다.
      */
     private fun applyDeliverySlot(
         subOrder: SubOrder,
@@ -310,7 +316,7 @@ class OrderService(
         sellerLines: List<OrderLine>,
         address: ShippingAddress,
         now: Instant,
-        userId: Long?,
+        freeShipping: Boolean,
     ) {
         if (sellerLines.none { it.dawnDeliveryEligible }) {
             throw BusinessException(ErrorCode.DELIVERY_SLOT_NOT_APPLICABLE, "새벽배송 대상 상품이 없어 배송 슬롯을 선택할 수 없습니다.")
@@ -328,11 +334,7 @@ class OrderService(
             throw BusinessException(ErrorCode.DELIVERY_SLOT_SOLD_OUT, "선택한 배송 슬롯이 마감되었거나 정원이 초과되었습니다.")
         }
         subOrder.deliverySlotId = slotId
-        subOrder.deliveryFee = if (userId != null && membershipBenefitService.isFreeShippingActive(userId, now)) {
-            0
-        } else {
-            slot.extraFee
-        }
+        subOrder.deliveryFee = if (freeShipping) 0 else slot.extraFee
     }
 
     /** 요청의 슬롯 선택 목록을 sellerId 기준 맵으로 변환한다(같은 판매자 중복 선택은 뒤 항목이 덮어씀). */

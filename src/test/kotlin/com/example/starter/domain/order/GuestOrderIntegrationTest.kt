@@ -54,7 +54,7 @@ class GuestOrderIntegrationTest : AbstractIntegrationTest() {
             content = """{"ordererName":"비회원","ordererPhone":"010-1111-2222","ordererEmail":"guest@e.com",$address,"items":[{"optionId":$optionId,"quantity":2}]}"""
         }.andExpect {
             status { isOk() }
-            jsonPath("$.data.payableAmount") { value(20_000) }
+            jsonPath("$.data.payableAmount") { value(23_000) } // 상품 20000 + 배송비 3000
             jsonPath("$.data.orderNumber") { exists() }
             jsonPath("$.data.shippingAddress.receiverName") { value("수령인") }
         }.andReturn().response.contentAsString
@@ -205,7 +205,7 @@ class GuestOrderIntegrationTest : AbstractIntegrationTest() {
         val first = payGuest(orderNumber, "010-5555-6666").andExpect {
             status { isOk() }
             jsonPath("$.data.status") { value("PAID") }
-            jsonPath("$.data.amount") { value(10_000) }
+            jsonPath("$.data.amount") { value(13_000) } // 상품 10000 + 배송비 3000
         }.andReturn().response.contentAsString
         val paymentId = Regex(""""paymentId":(\d+)""").find(first)!!.groupValues[1].toInt()
 

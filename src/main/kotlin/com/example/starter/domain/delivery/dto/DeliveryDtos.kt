@@ -86,3 +86,15 @@ data class DeliveryRegionResponse(
         )
     }
 }
+
+/** 기본 배송비 정책 응답. [baseFee] 는 판매자(SubOrder) 단위 금액(원). */
+data class ShippingPolicyResponse(
+    val baseFee: Long,
+)
+
+/** 기본 배송비 변경 요청(관리자). */
+data class UpdateShippingPolicyRequest(
+    @field:NotNull
+    @field:PositiveOrZero
+    val baseFee: Long? = null,
+)

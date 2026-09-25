@@ -161,7 +161,7 @@ class DeliverySubscriptionCycleService(
         paymentRepository.save(payment)
         order.status = OrderStatus.PAID
         order.subOrders.forEach { it.status = SubOrderStatus.PAID }
-        pointService.earn(subscription.userId, order.payableAmount, orderId) // 일반 결제와 동일 포인트 적립 정책
+        pointService.earn(subscription.userId, order.merchandisePayable, orderId) // 일반 결제와 동일 포인트 적립 정책
 
         subscription.recordOrderCreated()
         recordHistory(subscription, now, DeliverySubscriptionHistoryResult.ORDER_CREATED, orderId, null)

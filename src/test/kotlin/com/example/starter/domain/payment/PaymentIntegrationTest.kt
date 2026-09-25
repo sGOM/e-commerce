@@ -79,7 +79,7 @@ class PaymentIntegrationTest : AbstractIntegrationTest() {
         }.andExpect {
             status { isOk() }
             jsonPath("$.data.status") { value("PAID") }
-            jsonPath("$.data.amount") { value(20_000) }
+            jsonPath("$.data.amount") { value(23_000) } // 상품 20000 + 배송비 3000
             jsonPath("$.data.transactionId") { exists() }
         }
 
@@ -118,7 +118,7 @@ class PaymentIntegrationTest : AbstractIntegrationTest() {
     fun `결제 후 주문을 취소하면 환불되고 적립 포인트가 회수된다`() {
         val buyer = seedMember("pay-refund@example.com")
         val optionId = seedOption("PAY-SKU-REFUND")
-        val orderId = placeOrder(buyer, optionId, 1) // 결제금액 10,000
+        val orderId = placeOrder(buyer, optionId, 1) // 상품 10,000 + 배송비 3,000(적립은 상품가 기준)
 
         mockMvc.post("/api/payments/$orderId") { with(user(buyer)); with(csrf()) }
             .andExpect { status { isOk() } }

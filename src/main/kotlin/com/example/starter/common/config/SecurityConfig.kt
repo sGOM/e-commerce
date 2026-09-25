@@ -123,6 +123,7 @@ class SecurityConfig(
                 authorize("/api/flash-sales/**", permitAll)
                 // 배송 슬롯 조회는 공개(체크아웃 전 게스트도 조회). 개설/지역 관리는 /api/admin/delivery-*
                 authorize("/api/delivery-slots", permitAll)
+                authorize(HttpMethod.GET, "/api/shipping-policy", permitAll)
                 authorize("/api/delivery-slots/**", permitAll)
                 // 게스트 장바구니 계산/검증(localStorage 동반, 무상태) — 비회원 허용
                 authorize("/api/cart/guest", permitAll)

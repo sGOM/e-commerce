@@ -81,7 +81,7 @@ class OrderIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.data.status") { value("CREATED") }
             jsonPath("$.data.subOrders.length()") { value(1) }
             jsonPath("$.data.totalAmount") { value(36_000) } // (10000+2000)*3
-            jsonPath("$.data.payableAmount") { value(36_000) }
+            jsonPath("$.data.payableAmount") { value(39_000) } // + 배송비 3000
             jsonPath("$.data.orderNumber") { exists() }
         }
 

@@ -62,7 +62,7 @@ class SubOrder(
     @Column(name = "delivery_slot_id")
     var deliverySlotId: Long? = null
 
-    // 슬롯 이용 추가 배송비 스냅샷(원). 공통 배송비 모델 부재로 슬롯에 한해 결제금액에 반영한다
+    // 배송비 스냅샷(원) = 기본 배송비(ShippingPolicy, 판매자 단위) + 슬롯 추가요금. 멤버십 무료배송이면 0.
     // ([com.example.starter.domain.order.entity.Order.recalculateAmounts]/[distributePayable] 참고).
     // 정산(SettlementService) 은 subtotal 만 사용하므로 배송비는 셀러 매출/수수료 기준에서 제외된다.
     @Column(name = "delivery_fee", nullable = false)
