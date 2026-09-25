@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.Table
+import java.time.Instant
 
 /**
  * 사용자 계정.
@@ -49,6 +50,16 @@ class User(
         inverseJoinColumns = [JoinColumn(name = "role_id")],
     )
     val roles: MutableSet<Role> = mutableSetOf()
+
+    /** 탈퇴 시각(soft delete). 행과 주문·정산 이력은 남긴다. */
+    @Column(name = "withdrawn_at")
+    var withdrawnAt: Instant? = null
+        protected set
+
+    fun withdraw(now: Instant) {
+        status = UserStatus.WITHDRAWN
+        withdrawnAt = now
+    }
 
     /** 소셜 전용 계정 여부 (비밀번호 미설정) */
     val isSocialOnly: Boolean

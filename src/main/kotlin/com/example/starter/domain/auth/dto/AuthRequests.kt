@@ -64,3 +64,8 @@ data class LoginRequest(
     @field:NotBlank
     val password: String,
 )
+
+/** 회원 탈퇴 요청. 비밀번호가 있는 계정은 본인 확인용 [password] 가 필요하고, 소셜 전용 계정은 생략한다. */
+data class WithdrawRequest(
+    val password: String? = null,
+)

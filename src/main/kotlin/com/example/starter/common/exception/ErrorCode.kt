@@ -31,6 +31,8 @@ enum class ErrorCode(
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER-002", "이미 사용 중인 이메일입니다."),
     USER_INACTIVE(HttpStatus.FORBIDDEN, "USER-003", "비활성화된 계정입니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "USER-004", "현재 비밀번호가 일치하지 않습니다."),
+    WITHDRAWAL_ORDERS_IN_PROGRESS(HttpStatus.CONFLICT, "USER-005", "배송이 끝나지 않은 주문이 있어 탈퇴할 수 없습니다. 구매확정 또는 취소 후 다시 시도해 주세요."),
+    WITHDRAWAL_SELLER_NOT_ALLOWED(HttpStatus.CONFLICT, "USER-006", "판매자 계정은 직접 탈퇴할 수 없습니다. 관리자에게 문의해 주세요."),
 
     // 소셜 로그인 (OAUTH)
     UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "OAUTH-001", "지원하지 않는 소셜 로그인 제공자입니다."),
