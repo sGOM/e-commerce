@@ -20,6 +20,8 @@ interface OrderRepository : JpaRepository<Order, Long>, KotlinJdslJpqlExecutor {
 
     fun findByIdAndUserId(id: Long, userId: Long): Optional<Order>
 
+    fun findByUserIdAndStatus(userId: Long, status: OrderStatus): List<Order>
+
     /** 게스트 주문 조회(주문번호 + 연락처 검증과 함께 사용) */
     fun findByOrderNumber(orderNumber: String): Optional<Order>
 

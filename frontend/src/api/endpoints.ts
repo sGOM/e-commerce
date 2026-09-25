@@ -85,6 +85,8 @@ export const authApi = {
   requestPasswordReset: (email: string) => api.post<void>('/api/auth/password-reset/request', { email }),
   confirmPasswordReset: (token: string, newPassword: string) =>
     api.post<void>('/api/auth/password-reset/confirm', { token, newPassword }),
+  /** 회원 탈퇴(soft delete). 소셜 전용 계정은 password 없이 호출한다. 성공 시 서버 세션이 끝난다. */
+  withdraw: (password?: string) => api.post<void>('/api/auth/withdraw', { password }),
 }
 
 // ----- 내 쿠폰/포인트 -----

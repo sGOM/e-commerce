@@ -11,6 +11,13 @@ import java.util.Optional
 
 interface SubOrderRepository : JpaRepository<SubOrder, Long> {
 
+    /** 회원 주문 중 결제 후 아직 배송이 끝나지 않은(PAID/PREPARING/SHIPPED) 하위 주문이 있는지 — 탈퇴 가능 여부. */
+    @Query("select count(s) > 0 from SubOrder s where s.order.userId = :userId and s.status in :statuses")
+    fun existsByUserIdAndStatusIn(
+        @Param("userId") userId: Long,
+        @Param("statuses") statuses: Collection<SubOrderStatus>,
+    ): Boolean
+
     /** 판매자 본인 판매분만 조회(소유권 격리). 발송 처리용으로 주문/항목/배송을 함께 로딩. */
     @EntityGraph(attributePaths = ["order", "items", "shipment"])
     fun findWithDetailsByIdAndSellerId(id: Long, sellerId: Long): Optional<SubOrder>

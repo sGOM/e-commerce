@@ -6,6 +6,7 @@ import com.example.starter.common.response.ApiResponse
 import com.example.starter.domain.auth.dto.ChangePasswordRequest
 import com.example.starter.domain.auth.dto.LoginRequest
 import com.example.starter.domain.auth.dto.SignupRequest
+import com.example.starter.domain.auth.dto.WithdrawRequest
 import com.example.starter.domain.user.dto.UserResponse
 import com.example.starter.domain.user.repository.UserRepository
 import com.example.starter.security.oauth.CustomOAuth2User
@@ -43,6 +44,7 @@ class AuthController(
     private val authenticationManager: AuthenticationManager,
     private val securityContextRepository: SecurityContextRepository,
     private val userRepository: UserRepository,
+    private val withdrawalService: WithdrawalService,
 ) {
 
     @PostMapping("/signup")
@@ -85,6 +87,20 @@ class AuthController(
         val userId = principal?.userId ?: throw BusinessException(ErrorCode.UNAUTHENTICATED)
         authService.changePassword(userId, request)
         return ApiResponse.success("비밀번호를 변경했습니다.")
+    }
+
+    /** 회원 탈퇴(soft delete). 성공하면 현재 세션도 끝낸다. */
+    @PostMapping("/withdraw")
+    fun withdraw(
+        @AuthenticationPrincipal principal: CustomUserDetails?,
+        @RequestBody request: WithdrawRequest,
+        httpRequest: HttpServletRequest,
+    ): ApiResponse<Unit> {
+        val userId = principal?.userId ?: throw BusinessException(ErrorCode.UNAUTHENTICATED)
+        withdrawalService.withdraw(userId, request.password)
+        httpRequest.getSession(false)?.invalidate()
+        SecurityContextHolder.clearContext()
+        return ApiResponse.success("탈퇴되었습니다. 그동안 이용해 주셔서 감사합니다.")
     }
 
     @PostMapping("/logout")

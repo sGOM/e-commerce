@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authApi, meApi } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
 import type { IssuedCoupon, PointSummary, PointTransactionType } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -89,6 +91,7 @@ export default function MyPage() {
       </section>
 
       <PasswordChangeSection />
+      <WithdrawSection />
     </div>
   )
 }
@@ -151,6 +154,62 @@ function PasswordChangeSection() {
           )}
           <Button type="submit" disabled={saving} className="justify-self-start">
             {saving ? '변경 중…' : '비밀번호 변경'}
+          </Button>
+        </form>
+      </Card>
+    </section>
+  )
+}
+
+/**
+ * 회원 탈퇴(soft delete). 배송이 끝나지 않은 주문이 있거나 판매자 계정이면 서버가 거부하고 그 이유를 보여준다.
+ * 성공하면 세션이 끝나므로 인증 상태를 다시 불러와 홈으로 보낸다.
+ */
+function WithdrawSection() {
+  const { refresh } = useAuth()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!confirm('정말 탈퇴하시겠습니까? 보유한 쿠폰·포인트는 사라지고 멤버십·정기배송은 해지됩니다.')) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await authApi.withdraw(password || undefined)
+      await refresh()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '탈퇴하지 못했습니다.')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section>
+      <h2 className="mb-4 text-xl font-bold">회원 탈퇴</h2>
+      <Card className="p-5">
+        <form onSubmit={submit} className="grid gap-3 sm:max-w-sm">
+          <p className="text-sm text-muted-foreground">
+            탈퇴하면 다시 로그인할 수 없습니다. 주문 내역은 법령에 따른 보관을 위해 남습니다.
+          </p>
+          <Input
+            type="password"
+            autoComplete="current-password"
+            placeholder="비밀번호 (소셜 로그인 전용 계정은 비워 두세요)"
+            aria-label="탈퇴 확인 비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="destructive" disabled={submitting} className="justify-self-start">
+            {submitting ? '처리 중…' : '회원 탈퇴'}
           </Button>
         </form>
       </Card>
