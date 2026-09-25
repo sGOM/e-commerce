@@ -123,6 +123,8 @@ if (order.isFullyCanceled) { /* 쿠폰/포인트 복원 + 적립 회수 + 결제
 ## 4. 금액 계산 파이프라인 — 전부 서버 계산
 
 클라이언트가 보낸 금액은 절대 신뢰하지 않는다. 순서가 정해져 있다: **상품합계 → 쿠폰 할인 → 포인트 사용 → 재계산**.
+배송비는 주문 조립 때 판매자(SubOrder)마다 `ShippingPolicy.baseFee`(기본 3,000원) + 배송 슬롯 추가요금으로 스냅샷되고
+(멤버십 무료배송이면 0), 쿠폰·포인트 대상이 아니라 결제금액에 그대로 더해진다.
 
 ```kotlin
 // OrderService.createFromCart
@@ -132,11 +134,12 @@ if (request.usePoint > 0) {
     pointService.use(userId, request.usePoint, orderId, maxUsable)
     order.pointUsed = request.usePoint
 }
-order.recalculateAmounts()   // payableAmount = 합계 - 할인 - 포인트
+order.recalculateAmounts()   // payableAmount = 합계 + 배송비 - 할인 - 포인트
 order.distributePayable()    // SubOrder별 배분
 ```
 
 결제 시에도 게이트웨이에 넘기는 금액은 `order.payableAmount`(서버 계산본)이고, 클라이언트가 보낸 값이 아니다.
+포인트 적립·로열티 등급 산정은 배송비를 뺀 상품 결제액(`Order.merchandisePayable`)을 기준으로 한다.
 
 ---
 
@@ -341,10 +344,19 @@ try {
 
 | 설정 키 | 효과 | 구현 |
 |---------|------|------|
+> 이 표는 `ConsistencyTest` 가 강제한다 — `@ConditionalOnProperty` 에 쓰인 키가 여기 없으면 CI 가 실패한다.
+
 | `payment.gateway` = `mock`/`toss` | 결제 게이트웨이 구현체 선택 | `@ConditionalOnProperty` |
+| `billing.gateway` = `mock` | 정기결제(빌링키) 게이트웨이 구현체(현재 mock 만) | `@ConditionalOnProperty` |
+| `spring.mail.host` 유무 | 이메일 발송: 있으면 SMTP, 없으면 로그만(`EmailSender`) | `@ConditionalOnProperty` |
+| `upload.storage` = `local`/`s3` | 업로드 이미지 저장소(디스크 / S3·MinIO), 공개 URL 은 동일 | `@ConditionalOnProperty` |
+| `delivery.tracker` = `mock`/`sweettracker` | 배송 조회 구현체(스마트택배 API 키 필요) | `@ConditionalOnProperty` |
 | `settlement.scheduler.enabled` | 주기 자동 정산 스케줄러 등록 여부 | `@ConditionalOnProperty` |
 | `settlement.scheduler.cron`/`zone` | 정산 주기/타임존 | `@Scheduled` placeholder |
-| `membership.billing.scheduler.enabled` | 멤버십/정기배송 정기결제 청구 스케줄러 | `@ConditionalOnProperty` |
+| `membership.scheduler.enabled` | 멤버십 정기결제 청구 스케줄러(기본 off, 수동 트리거) | `@ConditionalOnProperty` |
+| `delivery-subscription.scheduler.enabled` | 정기배송 회차 생성·청구 스케줄러(기본 off) | `@ConditionalOnProperty` |
+| `gift.scheduler.enabled` | 선물 미수락 만료 스케줄러(기본 off) | `@ConditionalOnProperty` |
+| `order.unpaid-expiry.scheduler.enabled` | 미결제 주문 자동 만료 스케줄러(기본 off, `order.unpaid-expiry.ttl` 기본 30분) | `@ConditionalOnProperty` |
 | `loyalty.scheduler.enabled` | 로열티 등급 주기 재계산 스케줄러(기본 off, 수동 트리거) | `@ConditionalOnProperty` |
 | `cart-reminder.scheduler.enabled` | 장바구니 이탈 리마인드 발송 스케줄러(기본 off) | `@ConditionalOnProperty` |
 | `loyalty.silverThreshold`/`goldThreshold`/`vipThreshold` | 등급 임계 순구매액(원) | `@ConfigurationProperties(loyalty)` |
@@ -352,7 +364,7 @@ try {
 | `cart-reminder.inactivityHours` | 이탈 판정 미활동 시간(기본 24h) | `@ConfigurationProperties(cart-reminder)` |
 | OAuth2 client registration 유무 | 소셜 로그인 활성화 | 런타임 `ClientRegistrationRepository` 존재 검사 |
 | `app.audit.*` | 감사 로그 on/off·제외경로·마스킹 키·본문 길이 | `@ConfigurationProperties` |
-| 적립률·유효기간·수수료율·리뷰적립 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`) |
+| 적립률·유효기간·수수료율·리뷰적립·기본 배송비 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`, `ShippingPolicy`) |
 
 ---
 

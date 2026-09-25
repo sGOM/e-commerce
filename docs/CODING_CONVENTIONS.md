@@ -5,6 +5,7 @@
 - **기계적 규칙**(들여쓰기·줄바꿈·import 순서·따옴표)은 도구가 정하고 CI 가 막는다. 사람이 외우지 않는다 → [1. 포맷](#1-포맷--도구가-정한다)
 - **판단 규칙**(레이어·트랜잭션·예외·테스트 모양)은 이 문서에 둔다. 각 규칙의 `예:` 파일이 기준 구현이다.
 - 규칙과 다르게 써야 할 이유가 생기면 코드보다 **이 문서를 먼저 고친다**(같은 PR 에서).
+- 판정이 기계적인 규칙은 `src/test/.../architecture/ConsistencyTest.kt` 가 CI 에서 강제한다: §3.1 역할별 컨트롤러 분리, §3.5 DTO 위치, 설정 토글 키의 `SERVER_ARCHITECTURE.md` §11 기재.
 - 도메인 불변식(금액 서버 계산·원자적 재고·Flyway)은 [`CLAUDE.md`](../CLAUDE.md), 커밋/PR 규칙은 [`GIT_CONVENTIONS.md`](GIT_CONVENTIONS.md), 비CRUD 설계 이유는 [`SERVER_ARCHITECTURE.md`](SERVER_ARCHITECTURE.md).
 
 ---
@@ -33,7 +34,7 @@
 
 ### 3.1 패키지·파일
 - `domain/<도메인>/` 아래 `XxxController`, `XxxService`, `dto/`, `entity/`, `repository/` (+ 필요 시 `gateway/`). 예: `domain/coupon/`
-- 역할별 API 는 같은 도메인 패키지에 접두어로 나눈다: `AdminXxxController`/`AdminXxxService`, `SellerXxx…`. 예: `order/AdminOrderController.kt`
+- 역할별 API 는 같은 도메인 패키지에 접두어로 나눈다: `AdminXxxController`/`AdminXxxService`, `SellerXxx…`. 공개·회원(`/api/me`)·판매자·관리자 경로를 한 컨트롤러에 섞지 않는다. 예: `order/AdminOrderController.kt`, `qna/`(`ProductFaq`·`MyInquiry`·`SellerQna` 컨트롤러)
 - 도메인 공통이 아닌 코드만 `common/`(응답·예외·설정)·`security/` 에 둔다.
 
 ### 3.2 컨트롤러
@@ -118,3 +119,4 @@
 - [ ] 프론트 서버 호출은 `endpoints.ts` 경유
 - [ ] 비자명한 결정에 "왜" 주석(+ 커밋 본문)
 - [ ] 규칙과 다르게 썼다면 이 문서도 수정
+- [ ] 이번 변경과 **모순되는 문서를 검색**했다(예: 바꾼 개념·정책 이름으로 `docs/`·README·PRD grep — 특히 `SERVER_ARCHITECTURE.md` 와 `docs/planning/` 의 "부재"·"추후" 서술)

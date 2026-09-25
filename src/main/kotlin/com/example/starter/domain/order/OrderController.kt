@@ -10,8 +10,8 @@ import com.example.starter.domain.order.dto.GuestOrderLookupRequest
 import com.example.starter.domain.order.dto.GuestOrderRequest
 import com.example.starter.domain.order.dto.OrderResponse
 import com.example.starter.domain.order.dto.OrderSummaryResponse
+import com.example.starter.domain.order.dto.TrackingResponse
 import com.example.starter.domain.order.tracking.DeliveryTrackingService
-import com.example.starter.domain.order.tracking.TrackingResponse
 import com.example.starter.security.userdetails.CustomUserDetails
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable

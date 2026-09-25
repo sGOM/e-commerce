@@ -28,6 +28,7 @@ cd frontend && npm test && npm run lint && npm run build   # 프론트 검증
 ```
 
 CI(`.github/workflows/ci.yml`)는 `ktlintCheck` + 백엔드 테스트, 프론트 lint/`format:check`/test/build(`tsc -b` 타입 체크 포함)를 돌린다.
+백엔드 테스트에는 코드↔문서 일관성 검사(`ConsistencyTest` — 컨트롤러 역할 분리, DTO 위치, 설정 키의 SERVER_ARCHITECTURE §11 기재)가 포함된다.
 
 ## 반드시 지킬 불변식
 

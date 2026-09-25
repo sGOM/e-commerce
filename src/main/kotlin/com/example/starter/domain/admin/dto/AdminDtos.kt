@@ -4,6 +4,7 @@ import com.example.starter.common.audit.AuditLog
 import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.entity.UserStatus
 import java.time.Instant
+import java.time.LocalDate
 
 /** 사용자 검색 조건 (모두 선택적 → 동적 쿼리) */
 data class UserSearchCondition(
@@ -95,3 +96,15 @@ data class PageResponse<T>(
         )
     }
 }
+
+/** 관리자 대시보드(ROADMAP 5.3) 일별 추이 */
+data class DailySales(val date: LocalDate, val orderCount: Long, val gmv: Long)
+
+data class AdminDashboardResponse(
+    val from: LocalDate,
+    val to: LocalDate,
+    val orderCount: Long,
+    val gmv: Long,
+    val newUserCount: Long,
+    val daily: List<DailySales>,
+)

@@ -3,6 +3,8 @@ package com.example.starter.domain.admin
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
 import com.example.starter.common.response.ApiResponse
+import com.example.starter.domain.admin.dto.AdminDashboardResponse
+import com.example.starter.domain.admin.dto.DailySales
 import com.example.starter.domain.order.entity.SubOrderStatus
 import com.example.starter.domain.order.repository.SubOrderRepository
 import com.example.starter.domain.user.repository.UserRepository
@@ -17,17 +19,6 @@ import java.sql.Date
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-
-data class DailySales(val date: LocalDate, val orderCount: Long, val gmv: Long)
-
-data class AdminDashboardResponse(
-    val from: LocalDate,
-    val to: LocalDate,
-    val orderCount: Long,
-    val gmv: Long,
-    val newUserCount: Long,
-    val daily: List<DailySales>,
-)
 
 /**
  * 관리자 대시보드 API (ROADMAP 5.3). 기간은 한국 시간 날짜(`yyyy-MM-dd`), 생략 시 오늘까지 최근 30일, 최대 366일.

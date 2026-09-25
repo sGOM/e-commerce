@@ -3,6 +3,7 @@ package com.example.starter.domain.upload
 import com.example.starter.common.exception.BusinessException
 import com.example.starter.common.exception.ErrorCode
 import com.example.starter.common.response.ApiResponse
+import com.example.starter.domain.upload.dto.UploadResponse
 import org.springframework.core.io.Resource
 import org.springframework.http.CacheControl
 import org.springframework.http.MediaType
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.time.Duration
 import java.util.UUID
-
-data class UploadResponse(val url: String)
 
 /**
  * 이미지 업로드/조회 API (ROADMAP 2.1). 상품 대표 이미지와 리뷰 사진이 공용으로 쓴다.
