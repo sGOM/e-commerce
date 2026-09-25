@@ -128,6 +128,7 @@ export const notificationTypeIcon: Partial<Record<NotificationType, string>> = {
   PRICE_DROP: '💰',
   CART_REMINDER: '🛒',
   LOW_STOCK: '⚠️',
+  PRODUCT_QNA: '💬',
 }
 
 export const userStatusLabel: Record<UserStatus, string> = {

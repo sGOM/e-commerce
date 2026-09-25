@@ -129,6 +129,9 @@ export default function SellerLayout() {
         <NavLink to="/seller/flash-sales" className={tab}>
           타임딜
         </NavLink>
+        <NavLink to="/seller/inquiries" className={tab}>
+          문의·FAQ
+        </NavLink>
       </nav>
       {error && (
         <p role="alert" className="mb-4 text-sm text-destructive">

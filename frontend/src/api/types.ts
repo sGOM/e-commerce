@@ -556,6 +556,7 @@ export type NotificationType =
   | 'PRICE_DROP'
   | 'CART_REMINDER'
   | 'LOW_STOCK'
+  | 'PRODUCT_QNA'
   | string
 
 export interface AppNotification {
@@ -705,4 +706,24 @@ export interface PointPolicy {
 /** 기본 배송비 정책(판매자 단위, 원) */
 export interface ShippingPolicy {
   baseFee: number
+}
+
+// ----- 상품 Q&A (docs/planning/product-qna.md) -----
+/** 비밀 문의 — 작성자 본인과 상품 판매자에게만 내려온다 */
+export interface Inquiry {
+  inquiryId: number
+  productId: number
+  productName: string
+  question: string
+  answer: string | null
+  answeredAt: string | null
+  createdAt: string
+}
+
+/** 판매자가 공개하는 자주 묻는 질문 */
+export interface Faq {
+  faqId: number
+  question: string
+  answer: string
+  sortOrder: number
 }

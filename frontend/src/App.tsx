@@ -37,6 +37,7 @@ const SellerProductsPage = lazy(() => import('./pages/seller/SellerProductsPage'
 const SellerOrdersPage = lazy(() => import('./pages/seller/SellerOrdersPage'))
 const SellerSettlementsPage = lazy(() => import('./pages/seller/SellerSettlementsPage'))
 const SellerFlashSalesPage = lazy(() => import('./pages/seller/SellerFlashSalesPage'))
+const SellerInquiriesPage = lazy(() => import('./pages/seller/SellerInquiriesPage'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'))
 const AdminSellersPage = lazy(() => import('./pages/admin/AdminSellersPage'))
@@ -193,6 +194,7 @@ export default function App() {
                     <Route path="orders" element={<SellerOrdersPage />} />
                     <Route path="settlements" element={<SellerSettlementsPage />} />
                     <Route path="flash-sales" element={<SellerFlashSalesPage />} />
+                    <Route path="inquiries" element={<SellerInquiriesPage />} />
                   </Route>
                   {/* 관리자 백오피스 (로그인 필요, 레이아웃이 ROLE_ADMIN 게이트) */}
                   <Route

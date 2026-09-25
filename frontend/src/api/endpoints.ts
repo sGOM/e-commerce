@@ -69,6 +69,8 @@ import type {
   UserStatus,
   WishlistResponse,
   ShippingPolicy,
+  Faq,
+  Inquiry,
 } from './types'
 
 // ----- 인증 -----
@@ -359,6 +361,25 @@ export const sellerApi = {
       trackingNumber,
     }),
   settlements: () => api.get<Settlement[]>('/api/seller/settlements'),
+}
+
+// ----- 상품 Q&A: 고객 문의는 비밀(본인·판매자만), 공개는 판매자 FAQ -----
+export interface SaveFaqBody {
+  question: string
+  answer: string
+  sortOrder: number
+}
+
+export const qnaApi = {
+  faqs: (productId: number) => api.get<Faq[]>(`/api/products/${productId}/faqs`),
+  ask: (productId: number, question: string) => api.post<Inquiry>('/api/me/inquiries', { productId, question }),
+  mine: (productId?: number) => api.get<Inquiry[]>(`/api/me/inquiries${productId ? `?productId=${productId}` : ''}`),
+  sellerList: (answered?: boolean) =>
+    api.get<Inquiry[]>(`/api/seller/inquiries${answered === undefined ? '' : `?answered=${answered}`}`),
+  answer: (inquiryId: number, answer: string) =>
+    api.put<Inquiry>(`/api/seller/inquiries/${inquiryId}/answer`, { answer }),
+  addFaq: (productId: number, body: SaveFaqBody) => api.post<Faq>(`/api/seller/products/${productId}/faqs`, body),
+  deleteFaq: (faqId: number) => api.del<void>(`/api/seller/faqs/${faqId}`),
 }
 
 // ----- 타임딜(판매자) -----
