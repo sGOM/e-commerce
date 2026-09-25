@@ -139,6 +139,9 @@ data class SubOrderResponse(
     val deliverySlotId: Long?,
     val deliveryFee: Long,
     val items: List<OrderItemResponse>,
+    // 발송 후에만 채워진다(배송 조회는 GET /api/orders/sub-orders/{id}/tracking)
+    val courier: String? = null,
+    val trackingNumber: String? = null,
 ) {
     companion object {
         fun from(subOrder: SubOrder) = SubOrderResponse(
@@ -150,6 +153,8 @@ data class SubOrderResponse(
             deliverySlotId = subOrder.deliverySlotId,
             deliveryFee = subOrder.deliveryFee,
             items = subOrder.items.map { OrderItemResponse.from(it) },
+            courier = subOrder.shipment?.courier,
+            trackingNumber = subOrder.shipment?.trackingNumber,
         )
     }
 }
