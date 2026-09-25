@@ -42,13 +42,16 @@ class OrderConcurrencyIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var cartRepository: CartRepository
     @Autowired lateinit var orderRepository: OrderRepository
 
+    private val createdUserIds = mutableListOf<Long>()
+
+    /**
+     * 이 테스트가 만든 주문·장바구니만 지운다. 공유 DB 의 다른 테스트 데이터(주문을 참조하는 선물 링크, 사용자를 참조하는
+     * 비동기 알림 등)까지 전부 지우면 FK 위반으로 실행 순서에 따라 깨진다. 사용자·상품은 고유 이름이라 남겨도 무방하다.
+     */
     @AfterEach
     fun cleanup() {
-        orderRepository.deleteAll()
-        cartRepository.deleteAll()
-        productRepository.deleteAll() // options/inventories cascade
-        sellerRepository.deleteAll()
-        userRepository.deleteAll()
+        orderRepository.deleteAll(orderRepository.findAll().filter { it.userId in createdUserIds })
+        cartRepository.deleteAll(cartRepository.findAll().filter { it.userId in createdUserIds })
     }
 
     @Test
@@ -74,6 +77,7 @@ class OrderConcurrencyIntegrationTest : AbstractIntegrationTest() {
             )
             user.id!!
         }
+        createdUserIds += userIds
 
         val req = CreateOrderRequest(
             ordererName = "홍길동",
