@@ -35,6 +35,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액을 토스 `/v1/payments/{paymentKey}/cancel` 로, 결정적 `Idempotency-Key`, PG 거절 시 전체 롤백),
 결제 웹훅(`POST /api/payments/webhook/toss` — 서명 없는 PAYMENT_STATUS_CHANGED 를 PG 재조회로 검증, PG 전액 취소를 주문에 반영),
 토스 결제창 프론트 연동(`VITE_TOSS_CLIENT_KEY` 설정 시 SDK v2 결제창 → `/payments/toss/success` 에서 `paymentKey` 로 서버 승인, 회원·비회원·주문 상세 재결제, 키 없으면 Mock PG),
+상품 Q&A(`docs/planning/product-qna.md` — 고객 문의는 비밀(작성자·판매자만), 공개는 판매자 FAQ, 문의·답변 인앱 알림 `PRODUCT_QNA`, 판매자 `/seller/inquiries`),
 회원 탈퇴(`POST /api/auth/withdraw` — soft delete: `WITHDRAWN`·`withdrawn_at`, 비밀번호 확인, 배송 중 주문·판매자 거부, 미결제 주문·멤버십·정기배송 해지와 빌링키 삭제, 소셜 로그인도 차단),
 인센티브 어뷰징 방지 원칙 확정(`docs/planning/README.md` 공통 오픈 이슈 5 — 1인 1회·자기추천 차단·구매확정 후 지급/회수·월 상한),
 기본 배송비(판매자 단위 3,000원 — `shipping_policies` 정책 행, `GET /api/shipping-policy`·`PATCH /api/admin/shipping-policy`, 멤버십 무료배송 면제, 포인트 적립·로열티 산정은 배송비 제외),
@@ -51,12 +52,6 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
 | 1.5 | **반품·교환 상태 머신** | 🟢 | L | - | 현재는 관리자 환불로 대체. 반품 요청→회수→검수→환불 흐름 |
-
-## 2. 상품 / 카탈로그
-
-| # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
-|---|------|:------:|:----:|------|------|
-| 2.4 | **상품 Q&A** | 🟢 | M | - | 상품 문의/답변, 판매자 알림 |
 
 ## 6. 알림 / 메시징
 
@@ -91,7 +86,6 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 | 외부 연동 키 | (실발송만) | 6.1·3.1 코드는 완료 — 실제 메일 발송에만 SMTP 계정 필요(`MAIL_HOST` 등) |
 | 외부 연동 키 | 6.2, 6.3 | 택배사 API 계약 / 웹푸시 VAPID |
 | 정책 결정 | 7.3 | 배송비를 판매자 정산에 포함할지 |
-| 정책 결정 | 2.4 | 상품 Q&A 공개 문의 vs 비밀 문의(스키마·알림이 갈림), `docs/planning/` 기획서 선행 |
 | 측정 결과 보류 | 8.3, 8.6, 8.8 | 현재 규모에서 이득이 확인되지 않음 |
 
 ## 추천 진행 순서

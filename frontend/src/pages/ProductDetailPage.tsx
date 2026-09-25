@@ -19,6 +19,7 @@ import { productStatusLabel } from '../labels'
 import type { FlashSale, ProductDetail, ProductStatus } from '../api/types'
 import { StarRatingDisplay } from '../components/StarRating'
 import ProductReviews from '../components/ProductReviews'
+import ProductQna from '../components/ProductQna'
 import WishlistButton from '../components/WishlistButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -311,6 +312,8 @@ export default function ProductDetailPage() {
       <div className="md:col-span-2">
         <Separator className="mb-8" />
         <ProductReviews productId={productId} />
+        <Separator className="my-8" />
+        <ProductQna productId={productId} />
       </div>
     </div>
   )

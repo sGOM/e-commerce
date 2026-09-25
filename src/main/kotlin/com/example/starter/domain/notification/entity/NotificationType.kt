@@ -25,4 +25,7 @@ enum class NotificationType {
 
     /** 주문 예약으로 옵션 가용재고가 임계치 이하로 내려감(판매자 대상, ROADMAP 4.3) */
     LOW_STOCK,
+
+    /** 상품 비밀 문의 접수(판매자 대상)와 답변 등록(작성자 대상) - docs/planning/product-qna.md AC3 */
+    PRODUCT_QNA,
 }

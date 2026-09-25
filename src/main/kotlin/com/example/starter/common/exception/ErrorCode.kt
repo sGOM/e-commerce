@@ -90,6 +90,10 @@ enum class ErrorCode(
     REVIEW_PERIOD_EXPIRED(HttpStatus.CONFLICT, "REVIEW-004", "리뷰 작성 가능 기간이 지났습니다."),
     INVALID_REVIEW_STATUS(HttpStatus.BAD_REQUEST, "REVIEW-005", "허용되지 않는 리뷰 상태 변경입니다."),
 
+    // 상품 Q&A (QNA)
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "QNA-001", "문의를 찾을 수 없습니다."),
+    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "QNA-002", "자주 묻는 질문을 찾을 수 없습니다."),
+
     // 재입고 알림 (RESTOCK)
     RESTOCK_ALERT_NOT_FOUND(HttpStatus.NOT_FOUND, "RESTOCK-001", "재입고 알림 신청 내역을 찾을 수 없습니다."),
     RESTOCK_ALERT_ALREADY_EXISTS(HttpStatus.CONFLICT, "RESTOCK-002", "이미 재입고 알림을 신청한 옵션입니다."),
