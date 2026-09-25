@@ -35,6 +35,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액을 토스 `/v1/payments/{paymentKey}/cancel` 로, 결정적 `Idempotency-Key`, PG 거절 시 전체 롤백),
 결제 웹훅(`POST /api/payments/webhook/toss` — 서명 없는 PAYMENT_STATUS_CHANGED 를 PG 재조회로 검증, PG 전액 취소를 주문에 반영),
 토스 결제창 프론트 연동(`VITE_TOSS_CLIENT_KEY` 설정 시 SDK v2 결제창 → `/payments/toss/success` 에서 `paymentKey` 로 서버 승인, 회원·비회원·주문 상세 재결제, 키 없으면 Mock PG),
+업로드 저장소 추상화(`ImageStorage` — `upload.storage=local|s3`, S3/MinIO 호환, 공개 URL `/api/uploads/{name}` 유지),
 상품 Q&A(`docs/planning/product-qna.md` — 고객 문의는 비밀(작성자·판매자만), 공개는 판매자 FAQ, 문의·답변 인앱 알림 `PRODUCT_QNA`, 판매자 `/seller/inquiries`),
 회원 탈퇴(`POST /api/auth/withdraw` — soft delete: `WITHDRAWN`·`withdrawn_at`, 비밀번호 확인, 배송 중 주문·판매자 거부, 미결제 주문·멤버십·정기배송 해지와 빌링키 삭제, 소셜 로그인도 차단),
 인센티브 어뷰징 방지 원칙 확정(`docs/planning/README.md` 공통 오픈 이슈 5 — 1인 1회·자기추천 차단·구매확정 후 지급/회수·월 상한),
@@ -90,6 +91,6 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 
 ## 추천 진행 순서
 
-1. **결제 실검증** — Toss 테스트 키로 결제·취소·웹훅 확인(키 발급은 사용자 작업) (키 없이 코드·테스트, 실결제 확인만 키 필요)
-2. **상품 완성도** — 업로드 저장소를 S3/영속 볼륨으로 교체(운영 배포 전)
+1. **결제 실검증** — Toss 테스트 키로 결제·취소·웹훅 확인(키 발급은 사용자 작업)
+2. **배송 추적(6.2)** — 택배사 조회 인터페이스 + Mock, 실 API 키는 설정만
 3. **정책 확정 후** — 7.3 배송비 정산 귀속

@@ -71,6 +71,15 @@ class ImageUploadIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `서버가 만든 이름 형식이 아니면 저장소를 보지 않고 거부한다`() {
+        listOf("photo.png", "00000000-0000-0000-0000-000000000000.svg").forEach { name ->
+            mockMvc.get("/api/uploads/$name").andExpect { status { isNotFound() } }
+        }
+        // 인코딩된 경로 구분자는 보안 필터(StrictHttpFirewall)가 먼저 400 으로 막는다
+        mockMvc.get("/api/uploads/..%2Fapplication.yml").andExpect { status { is4xxClientError() } }
+    }
+
+    @Test
     fun `비로그인 사용자는 업로드할 수 없다`() {
         mockMvc.multipart("/api/uploads") {
             file(MockMultipartFile("file", "photo.png", "image/png", png))
