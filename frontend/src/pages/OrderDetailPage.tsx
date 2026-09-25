@@ -190,7 +190,12 @@ export default function OrderDetailPage() {
 
       {order.isGift && <GiftStatusCard order={order} shareToken={location.state?.giftClaimToken} />}
 
-      <OrderView order={order} onConfirmDelivery={confirmDelivery} confirmingSubOrderId={confirmingSubOrderId} />
+      <OrderView
+        order={order}
+        onConfirmDelivery={confirmDelivery}
+        confirmingSubOrderId={confirmingSubOrderId}
+        trackable
+      />
 
       {error && (
         <p role="alert" className="text-sm text-destructive">

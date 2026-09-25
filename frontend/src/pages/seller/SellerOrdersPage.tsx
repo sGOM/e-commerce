@@ -96,10 +96,17 @@ function SellerOrderCard({ order, onShipped }: { order: SellerSubOrder; onShippe
               required
               placeholder="택배사"
               aria-label="택배사"
+              list="couriers"
               value={courier}
               onChange={(e) => setCourier(e.target.value)}
               className="w-28"
             />
+            {/* 배송 조회를 지원하는 택배사 이름(서버 SweetTrackerDeliveryTracker.COURIER_CODES 와 동일) */}
+            <datalist id="couriers">
+              {['CJ대한통운', '우체국택배', '한진택배', '롯데택배', '로젠택배'].map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
             <Input
               required
               placeholder="송장번호"

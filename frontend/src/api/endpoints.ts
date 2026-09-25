@@ -71,6 +71,7 @@ import type {
   ShippingPolicy,
   Faq,
   Inquiry,
+  Tracking,
 } from './types'
 
 // ----- 인증 -----
@@ -573,6 +574,8 @@ export const orderApi = {
     api.post<Order>('/api/orders/claim', { orderNumber, ordererPhone }),
   myOrders: (page = 0, size = 20) => api.get<PageResponse<OrderSummary>>(`/api/orders?page=${page}&size=${size}`),
   detail: (orderId: number) => api.get<Order>(`/api/orders/${orderId}`),
+  // 배송 조회(회원 본인 주문의 발송된 하위 주문)
+  tracking: (subOrderId: number) => api.get<Tracking>(`/api/orders/sub-orders/${subOrderId}/tracking`),
   cancel: (orderId: number) => api.post<Order>(`/api/orders/${orderId}/cancel`),
   // paymentKey 는 토스 결제창 승인 시에만(Mock PG 는 생략)
   pay: (orderId: number, paymentKey?: string) =>
