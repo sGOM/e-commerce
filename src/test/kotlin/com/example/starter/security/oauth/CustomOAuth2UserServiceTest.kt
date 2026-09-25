@@ -5,6 +5,7 @@ import com.example.starter.domain.user.entity.OAuthAccount
 import com.example.starter.domain.user.entity.OAuthProvider
 import com.example.starter.domain.user.entity.Role
 import com.example.starter.domain.user.entity.User
+import com.example.starter.domain.user.entity.UserStatus
 import com.example.starter.domain.user.repository.OAuthAccountRepository
 import com.example.starter.domain.user.repository.RoleRepository
 import com.example.starter.domain.user.repository.UserRepository
@@ -79,6 +80,17 @@ class CustomOAuth2UserServiceTest {
         every { oAuthAccountRepository.findByProviderAndProviderId(any(), any()) } returns null
 
         assertThatThrownBy { service.resolveUser(OAuthProvider.GOOGLE, info(email = null)) }
+            .isInstanceOf(OAuth2AuthenticationException::class.java)
+    }
+
+    @Test
+    fun `탈퇴하거나 잠긴 계정은 소셜 로그인도 거부한다`() {
+        val withdrawn = User(email = "u@example.com", password = null, name = "유저", status = UserStatus.WITHDRAWN)
+        every { oAuthAccountRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "g-1") } returns
+            OAuthAccount(user = withdrawn, provider = OAuthProvider.GOOGLE, providerId = "g-1", email = "u@example.com")
+        every { userRepository.findWithRolesByEmail("u@example.com") } returns withdrawn
+
+        assertThatThrownBy { service.resolveUser(OAuthProvider.GOOGLE, info()) }
             .isInstanceOf(OAuth2AuthenticationException::class.java)
     }
 }

@@ -40,7 +40,15 @@ class CustomOAuth2UserService(
         return CustomOAuth2User(user, oAuth2User.attributes, info.providerId)
     }
 
-    internal fun resolveUser(provider: OAuthProvider, info: OAuthUserInfo): User {
+    /** 소셜 계정으로 사용자를 찾거나 만든다. 탈퇴·잠금 등 로그인 불가 계정이면 자체 로그인과 똑같이 거부한다. */
+    internal fun resolveUser(provider: OAuthProvider, info: OAuthUserInfo): User =
+        findOrCreateUser(provider, info).also {
+            if (!it.status.canLogin) {
+                throw OAuth2AuthenticationException(OAuth2Error("account_disabled", "로그인할 수 없는 계정입니다.", null))
+            }
+        }
+
+    private fun findOrCreateUser(provider: OAuthProvider, info: OAuthUserInfo): User {
         // 1) 이미 연동된 소셜 계정
         oAuthAccountRepository.findByProviderAndProviderId(provider, info.providerId)?.let { account ->
             return userRepository.findWithRolesByEmail(account.user.email)
