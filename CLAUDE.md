@@ -27,7 +27,7 @@ cd frontend && npm run format    # 프론트 포맷(prettier). Edit/Write 한 �
 cd frontend && npm test && npm run lint && npm run build   # 프론트 검증
 ```
 
-CI(`.github/workflows/ci.yml`)는 `ktlintCheck` + 백엔드 테스트, 프론트 lint/`format:check`/test 를 돌린다. `build` 는 CI 에 없으니 로컬에서 확인한다.
+CI(`.github/workflows/ci.yml`)는 `ktlintCheck` + 백엔드 테스트, 프론트 lint/`format:check`/test/build(`tsc -b` 타입 체크 포함)를 돌린다.
 
 ## 반드시 지킬 불변식
 
@@ -44,8 +44,8 @@ CI(`.github/workflows/ci.yml`)는 `ktlintCheck` + 백엔드 테스트, 프론트
 1. `docs/ROADMAP.md` 에서 항목 선택 → `main` 최신에서 `<type>/<slug>` 브랜치.
 2. TDD: 실패하는 테스트 먼저(통합 테스트는 `AbstractIntegrationTest` 상속, 외부 빈은 `@MockkBean`).
    - 통합 테스트는 DB 컨테이너를 공유한다. 롤백 검증 등으로 `@Transactional` 을 뺀 테스트는 데이터가 커밋되므로
-     정산 대상 상태(PAID 등) 주문이나 `orders` 를 참조하는 행(`gift_claims` 등)을 남기지 않게 정리한다 —
-     정산 테스트는 전역 집계, `OrderConcurrencyIntegrationTest` 는 `orders` 전체 삭제를 한다.
+     정산 대상 상태(PAID 등) 주문을 남기지 않게 정리한다(정산 테스트가 전역 집계). 정리는 **자기가 만든 행만** —
+     `deleteAll()` 같은 전역 삭제는 다른 테스트 데이터의 FK 에 걸려 실행 순서에 따라 깨진다.
    - 배치의 건별 격리는 **별도 빈 + `REQUIRES_NEW`** 로 한다(같은 클래스 자기 호출엔 `@Transactional` 미적용).
 3. Kotlin 을 고쳤다면 `./gradlew ktlintFormat`, 프론트를 고쳤다면 `cd frontend && npm run format` 후 백엔드 전체 테스트 + 프론트 test/lint/build 통과 확인. [`CODING_CONVENTIONS.md` §5 자가 점검](docs/CODING_CONVENTIONS.md#5-pr-전-자가-점검)을 훑는다.
 4. 커밋은 GIT_CONVENTIONS 규칙(원자적, 마이그레이션은 사용 코드와 같은 커밋, 비자명한 결정은 본문에 "왜"+공식 문서 링크).

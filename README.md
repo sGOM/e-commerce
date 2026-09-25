@@ -12,7 +12,7 @@ Kotlin + Spring Boot 백엔드와 React 고객 스토어프론트로 구성된 *
 ## 이커머스 핵심 개념
 - **마켓플레이스(멀티 셀러)**: 한 주문에 여러 판매자 상품이 섞이면 **SubOrder(판매자 단위)** 로 분리된다. 결제는 Order 단위 1건, 배송·취소·정산은 SubOrder 단위.
 - **재고 정합성**: 초과 판매 0건이 최우선. **원자적 UPDATE**(`UPDATE ... WHERE quantity - reserved >= qty`)로 동시 주문에도 오버셀링을 막는다.
-- **금액은 전부 서버 계산**: 상품합계 − 쿠폰할인 − 포인트사용 = 결제금액. 클라이언트 금액은 신뢰하지 않는다.
+- **금액은 전부 서버 계산**: 상품합계 − 쿠폰할인 − 포인트사용 + 배송비(판매자당 기본 3,000원, 멤버십 무료배송 면제) = 결제금액. 클라이언트 금액은 신뢰하지 않는다.
 - **게스트 주문**: 비회원도 주문/결제 가능(주문번호+연락처로 조회). 장바구니·쿠폰·포인트는 회원 전용.
 - **관리자 설정값**: 포인트 적립률/유효기간, 정산 수수료율은 코드 상수가 아니라 DB 정책 행으로 런타임 변경한다.
 
@@ -287,6 +287,7 @@ frontend/src
 | POST | `/api/admin/categories` | 카테고리 등록 |
 | POST | `/api/admin/coupons` | 쿠폰 발행 + 회원 지급 |
 | GET · PATCH | `/api/admin/point-policy` | 적립률·유효기간 정책 |
+| PATCH | `/api/admin/shipping-policy` | 기본 배송비(판매자 단위) 변경 — 조회는 공개 `GET /api/shipping-policy` |
 | POST | `/api/admin/points/expire` | 포인트 만료 트리거 |
 | POST · PATCH | `/api/admin/settlements` · `/api/admin/settlements/{id}/pay` | 정산 생성/지급 |
 | GET · PATCH | `/api/admin/settlements/policy` | 수수료율 정책 |
