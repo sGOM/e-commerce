@@ -250,6 +250,7 @@ frontend/src
 | POST | `/api/orders/claim` | 게스트 주문을 회원 계정에 연결(주문번호+연락처) | 회원 |
 | POST | `/api/orders/{id}/cancel` | 주문 전체 취소 | 회원 |
 | POST | `/api/orders/sub-orders/{id}/cancel` | SubOrder 부분 취소/환불 | 회원 |
+| GET | `/api/orders/sub-orders/{id}/tracking` | 배송 조회(발송된 하위 주문) | 회원 |
 | POST | `/api/payments/{orderId}` | 결제 요청(멱등, 실 PG는 `paymentKey` 동반) | 회원 |
 | POST | `/api/payments/guest` | 비회원 결제(주문번호+연락처 확인) | 불필요 |
 | POST | `/api/payments/webhook/toss` | 토스 결제 웹훅(PG 재조회로 검증, CSRF 제외) | 불필요 |
