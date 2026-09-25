@@ -65,6 +65,7 @@ enum class ErrorCode(
     SUB_ORDER_NOT_DELIVERABLE(HttpStatus.CONFLICT, "ORDER-008", "발송 상태에서만 수령 확인(구매확정)할 수 있습니다."),
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-009", "주문 항목을 찾을 수 없습니다."),
     ORDER_SHIPPING_ADDRESS_REQUIRED(HttpStatus.BAD_REQUEST, "ORDER-010", "배송지를 입력해 주세요."),
+    SHIPMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-011", "아직 발송되지 않은 주문입니다."),
 
     // 결제 (PAYMENT)
     PAYMENT_FAILED(HttpStatus.PAYMENT_REQUIRED, "PAYMENT-001", "결제가 거절되었습니다."),

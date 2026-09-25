@@ -10,6 +10,8 @@ import com.example.starter.domain.order.dto.GuestOrderLookupRequest
 import com.example.starter.domain.order.dto.GuestOrderRequest
 import com.example.starter.domain.order.dto.OrderResponse
 import com.example.starter.domain.order.dto.OrderSummaryResponse
+import com.example.starter.domain.order.tracking.DeliveryTrackingService
+import com.example.starter.domain.order.tracking.TrackingResponse
 import com.example.starter.security.userdetails.CustomUserDetails
 import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController
 class OrderController(
     private val orderService: OrderService,
     private val giftOrderService: GiftOrderService,
+    private val deliveryTrackingService: DeliveryTrackingService,
 ) {
 
     @PostMapping
@@ -90,6 +93,13 @@ class OrderController(
         )
 
     /** 하위 주문(판매자 단위) 수령 확인(구매확정). SHIPPED → DELIVERED. 이후 해당 항목에 리뷰를 쓸 수 있다. */
+    /** 배송 조회(ROADMAP 6.2) — 본인 주문의 발송된 하위 주문만. */
+    @GetMapping("/sub-orders/{subOrderId}/tracking")
+    fun tracking(
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable subOrderId: Long,
+    ): ApiResponse<TrackingResponse> = ApiResponse.success(deliveryTrackingService.track(principal.userId, subOrderId))
+
     @PostMapping("/sub-orders/{subOrderId}/confirm-delivery")
     fun confirmDelivery(
         @AuthenticationPrincipal principal: CustomUserDetails,

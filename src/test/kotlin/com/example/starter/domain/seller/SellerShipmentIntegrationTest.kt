@@ -143,4 +143,35 @@ class SellerShipmentIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.code") { value("ORDER-006") }
         }
     }
+
+    @Test
+    fun `구매자는 발송된 하위 주문의 송장과 배송 조회 결과를 보고, 남의 주문·미발송 주문은 404 다`() {
+        val (seller, optionId) = seedSeller("TRACK-SKU-1")
+        val buyer = seedBuyer("track-buyer-1@example.com")
+        val shipped = placePaidOrder(buyer, optionId)
+        val notShipped = placePaidOrder(buyer, optionId)
+        mockMvc.post("/api/seller/orders/$shipped/ship") {
+            with(user(seller)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"courier":"CJ대한통운","trackingNumber":"555"}"""
+        }.andExpect { status { isOk() } }
+        val orderId = subOrderRepository.findById(shipped).get().order.id!!
+
+        mockMvc.get("/api/orders/$orderId") { with(user(buyer)) }.andExpect {
+            jsonPath("$.data.subOrders[0].courier") { value("CJ대한통운") }
+            jsonPath("$.data.subOrders[0].trackingNumber") { value("555") }
+        }
+        mockMvc.get("/api/orders/sub-orders/$shipped/tracking") { with(user(buyer)) }.andExpect {
+            status { isOk() }
+            jsonPath("$.data.trackingNumber") { value("555") }
+            jsonPath("$.data.supported") { value(true) }
+            jsonPath("$.data.events[0].description") { value("송장이 등록되었습니다") } // 기본 Mock 조회기
+        }
+        mockMvc.get("/api/orders/sub-orders/$shipped/tracking") { with(user(seedBuyer("track-stranger@example.com"))) }
+            .andExpect { status { isNotFound() } }
+        mockMvc.get("/api/orders/sub-orders/$notShipped/tracking") { with(user(buyer)) }.andExpect {
+            status { isNotFound() }
+            jsonPath("$.code") { value("ORDER-011") }
+        }
+    }
 }

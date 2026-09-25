@@ -1,6 +1,8 @@
-import { formatKRW } from '../api/client'
+import { useState } from 'react'
+import { ApiError, formatKRW } from '../api/client'
+import { orderApi } from '../api/endpoints'
 import { orderStatusLabel, subOrderStatusLabel } from '../labels'
-import type { Order } from '../api/types'
+import type { Order, SubOrder, Tracking } from '../api/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -9,10 +11,12 @@ interface Props {
   /** 하위 주문 수령 확인(구매확정) 콜백. 회원 주문 상세에서만 전달 — 미전달 시 버튼을 노출하지 않는다. */
   onConfirmDelivery?: (subOrderId: number) => void
   confirmingSubOrderId?: number | null
+  /** 배송 조회 버튼 노출(회원 본인 주문 상세에서만 — 게스트 조회는 송장번호만 보여준다) */
+  trackable?: boolean
 }
 
 /** 주문 상세 표시(주문 헤더·판매자별 하위주문·배송지·결제정보). 회원 상세/게스트 조회 공용. */
-export default function OrderView({ order, onConfirmDelivery, confirmingSubOrderId }: Props) {
+export default function OrderView({ order, onConfirmDelivery, confirmingSubOrderId, trackable }: Props) {
   return (
     <div className="space-y-6">
       <Card>
@@ -69,6 +73,7 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
                 </li>
               ))}
             </ul>
+            {sub.trackingNumber && <ShipmentInfo sub={sub} trackable={trackable} />}
             {sub.status === 'SHIPPED' && onConfirmDelivery && (
               <Button
                 type="button"
@@ -154,6 +159,58 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
           </div>
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+/** 송장 정보와(회원이면) 배송 조회 결과(ROADMAP 6.2). */
+function ShipmentInfo({ sub, trackable }: { sub: SubOrder; trackable?: boolean }) {
+  const [tracking, setTracking] = useState<Tracking | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = async () => {
+    setError(null)
+    try {
+      setTracking(await orderApi.tracking(sub.subOrderId))
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : '배송 정보를 불러오지 못했습니다.')
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-lg bg-muted/50 p-3 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          📦 {sub.courier} <span className="font-mono">{sub.trackingNumber}</span>
+        </span>
+        {trackable && !tracking && (
+          <Button type="button" size="sm" variant="outline" onClick={load}>
+            배송 조회
+          </Button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="mt-2 text-destructive">
+          {error}
+        </p>
+      )}
+      {tracking &&
+        (tracking.supported ? (
+          <ol className="mt-2 space-y-1 text-xs text-muted-foreground">
+            {tracking.events.map((e, i) => (
+              <li key={i}>
+                {e.time && `${e.time} · `}
+                {e.location && `${e.location} · `}
+                <span className="text-foreground">{e.description}</span>
+              </li>
+            ))}
+            {tracking.delivered && <li className="font-semibold text-success">배송 완료</li>}
+          </ol>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            이 택배사는 조회를 지원하지 않습니다. 택배사 사이트에서 확인해 주세요.
+          </p>
+        ))}
     </div>
   )
 }

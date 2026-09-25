@@ -125,6 +125,18 @@ export interface SubOrder {
   deliverySlotId: number | null
   deliveryFee: number
   items: OrderItem[]
+  // 발송 후에만 채워진다
+  courier?: string | null
+  trackingNumber?: string | null
+}
+
+/** 배송 조회 결과. supported=false 면 택배사 조회 미지원(송장번호만 표시) */
+export interface Tracking {
+  courier: string
+  trackingNumber: string
+  supported: boolean
+  delivered: boolean
+  events: { time: string; location: string; description: string }[]
 }
 
 export interface ShippingAddress {

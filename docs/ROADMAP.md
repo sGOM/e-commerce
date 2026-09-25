@@ -35,6 +35,7 @@ Prometheus 메트릭(`/actuator/prometheus` — JVM·HTTP·Hikari·`@Scheduled` 
 PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액을 토스 `/v1/payments/{paymentKey}/cancel` 로, 결정적 `Idempotency-Key`, PG 거절 시 전체 롤백),
 결제 웹훅(`POST /api/payments/webhook/toss` — 서명 없는 PAYMENT_STATUS_CHANGED 를 PG 재조회로 검증, PG 전액 취소를 주문에 반영),
 토스 결제창 프론트 연동(`VITE_TOSS_CLIENT_KEY` 설정 시 SDK v2 결제창 → `/payments/toss/success` 에서 `paymentKey` 로 서버 승인, 회원·비회원·주문 상세 재결제, 키 없으면 Mock PG),
+배송 조회(`GET /api/orders/sub-orders/{id}/tracking` — `DeliveryTracker` Mock 기본·스마트택배 어댑터, 주문 상세에 송장·조회 이력),
 업로드 저장소 추상화(`ImageStorage` — `upload.storage=local|s3`, S3/MinIO 호환, 공개 URL `/api/uploads/{name}` 유지),
 상품 Q&A(`docs/planning/product-qna.md` — 고객 문의는 비밀(작성자·판매자만), 공개는 판매자 FAQ, 문의·답변 인앱 알림 `PRODUCT_QNA`, 판매자 `/seller/inquiries`),
 회원 탈퇴(`POST /api/auth/withdraw` — soft delete: `WITHDRAWN`·`withdrawn_at`, 비밀번호 확인, 배송 중 주문·판매자 거부, 미결제 주문·멤버십·정기배송 해지와 빌링키 삭제, 소셜 로그인도 차단),
@@ -58,7 +59,6 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 
 | # | 항목 | 우선순위 | 작업량 | 선행조건 | 메모 |
 |---|------|:------:|:----:|------|------|
-| 6.2 | **배송 추적 연동** | 🟢 | M | - | 택배사 API, 배송 상태 노출 |
 | 6.3 | **웹 푸시** | 🟢 | L | 6.1 | |
 
 ## 7. 정책 선행 과제 (기획 오픈 이슈)
@@ -85,12 +85,11 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 |------|------|-----------|
 | 외부 연동 키(실검증만) | 1.5 | 결제 1.2~1.4 는 코드·테스트 완료. 실결제 확인에만 Toss 테스트 키(클라이언트/시크릿)와 웹훅 URL 등록 필요 |
 | 외부 연동 키 | (실발송만) | 6.1·3.1 코드는 완료 — 실제 메일 발송에만 SMTP 계정 필요(`MAIL_HOST` 등) |
-| 외부 연동 키 | 6.2, 6.3 | 택배사 API 계약 / 웹푸시 VAPID |
+| 외부 연동 키 | 6.3 | 웹푸시 VAPID (6.2 배송 조회는 코드 완료 — 실조회에만 스마트택배 API 키 필요) |
 | 정책 결정 | 7.3 | 배송비를 판매자 정산에 포함할지 |
 | 측정 결과 보류 | 8.3, 8.6, 8.8 | 현재 규모에서 이득이 확인되지 않음 |
 
 ## 추천 진행 순서
 
 1. **결제 실검증** — Toss 테스트 키로 결제·취소·웹훅 확인(키 발급은 사용자 작업)
-2. **배송 추적(6.2)** — 택배사 조회 인터페이스 + Mock, 실 API 키는 설정만
-3. **정책 확정 후** — 7.3 배송비 정산 귀속
+2. **정책 확정 후** — 7.3 배송비 정산 귀속

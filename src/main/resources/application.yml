@@ -42,6 +42,11 @@ notification:
   email:
     from: ${MAIL_FROM:no-reply@example.com}
 
+# 배송 조회(기본 mock — 송장 등록 사실만 표시). 스마트택배 실조회:
+#   DELIVERY_TRACKER=sweettracker, DELIVERY_SWEETTRACKER_API_KEY=...
+delivery:
+  tracker: ${DELIVERY_TRACKER:mock}
+
 # 업로드 이미지 저장소. 기본은 로컬 디스크(UPLOAD_DIR). 다중 인스턴스·재배포 환경은 S3(또는 MinIO 등 S3 호환):
 #   UPLOAD_STORAGE=s3, UPLOAD_S3_BUCKET=..., (UPLOAD_S3_REGION, UPLOAD_S3_ENDPOINT) + AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
 # 공개 URL 은 저장소와 무관하게 /api/uploads/{name} 이라 전환해도 기존 이미지 URL 이 유지된다(파일은 옮겨야 한다).
