@@ -183,6 +183,7 @@ docker compose up -d
 | GET | `/api/auth/me` | 내 정보(DB 역할로 세션 권한 갱신) | 세션 |
 | PATCH | `/api/auth/password` | 비밀번호 변경 | 세션 |
 | POST | `/api/auth/password-reset/request` · `/confirm` | 비밀번호 분실 재설정(메일 토큰) | 불필요 |
+| POST | `/api/auth/withdraw` | 회원 탈퇴(soft delete, 비밀번호 확인) | 세션 |
 
 > **CSRF**: 세션 기반 + SPA 친화로 쿠키 토큰 방식을 쓴다. 클라이언트는 GET 요청 후 받은
 > `XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더에 실어 상태 변경 요청을 보낸다.
