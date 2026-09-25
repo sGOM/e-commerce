@@ -15,6 +15,7 @@ vi.mock('../api/endpoints', () => ({
   meApi: { coupons: vi.fn(), points: vi.fn() },
   membershipApi: { my: vi.fn() },
   orderApi: { create: vi.fn(), createGuest: vi.fn(), pay: vi.fn(), payGuest: vi.fn() },
+  shippingPolicyApi: { get: vi.fn(() => Promise.resolve({ baseFee: 3000 })) },
 }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 
@@ -114,7 +115,7 @@ describe('CheckoutPage', () => {
     fireEvent.change(screen.getByLabelText('쿠폰'), { target: { value: '5' } })
 
     expect(await screen.findByText('-2,000원')).toBeTruthy()
-    expect(screen.getByText('18,000원')).toBeTruthy()
+    expect(screen.getByText('21,000원')).toBeTruthy() // 20,000 - 2,000 + 배송비 3,000
   })
 
   it('비회원 주문은 주문 생성·결제 후 장바구니를 비우고 주문 조회로 이동한다', async () => {
@@ -166,5 +167,23 @@ describe('CheckoutPage', () => {
 
     expect(await screen.findByText('주문 상세 화면')).toBeTruthy()
     expect(orderApi.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('판매자마다 기본 배송비를 미리보기에 더하고, 멤버십 무료배송이면 0원이다', async () => {
+    asMember()
+    renderPage()
+    expect(await screen.findByText('+3,000원')).toBeTruthy()
+    expect(screen.getByText('23,000원')).toBeTruthy()
+
+    cleanup()
+    asMember()
+    vi.mocked(membershipApi.my).mockResolvedValue({
+      benefitActive: true,
+      benefits: { freeShipping: true, pointEarnMultiplierBp: 10_000 },
+    } as never)
+    renderPage()
+    expect(await screen.findByText(/무료배송 적용됨/)).toBeTruthy()
+    expect(screen.queryByText('+3,000원')).toBeNull()
+    expect(screen.getAllByText('20,000원')).toHaveLength(2) // 상품금액 = 결제금액
   })
 })

@@ -110,13 +110,13 @@ class PaymentCancelIntegrationTest : AbstractIntegrationTest() {
         mockMvc.post("/api/orders/sub-orders/$subOrderA/cancel") { with(user(buyer)); with(csrf()) }
             .andExpect { status { isOk() } }
         verify(exactly = 1) {
-            paymentGateway.cancel(PaymentCancelCommand("TX-PG", 20_000, "부분 취소", "cancel-sub-$subOrderA"))
+            paymentGateway.cancel(PaymentCancelCommand("TX-PG", 23_000, "부분 취소", "cancel-sub-$subOrderA"))
         }
 
         mockMvc.post("/api/orders/$orderId/cancel") { with(user(buyer)); with(csrf()) }
             .andExpect { status { isOk() } }
         verify(exactly = 1) {
-            paymentGateway.cancel(PaymentCancelCommand("TX-PG", 30_000, "주문 취소", "cancel-order-$orderId"))
+            paymentGateway.cancel(PaymentCancelCommand("TX-PG", 33_000, "주문 취소", "cancel-order-$orderId"))
         }
         assertEquals(PaymentStatus.CANCELED, paymentRepository.findByOrderId(orderId).get().status)
     }

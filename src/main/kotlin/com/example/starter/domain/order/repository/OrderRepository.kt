@@ -38,13 +38,13 @@ interface OrderRepository : JpaRepository<Order, Long>, KotlinJdslJpqlExecutor {
      * (`LoyaltyTierBatchService`). [com.example.starter.domain.catalog.repository.ProductRepository.findPopularProductRows]
      * 와 같은 유효 판매 상태(PAID/PREPARING/SHIPPED/DELIVERED, CREATED·CANCELED 제외)의 하위 주문
      * 결제기여액([com.example.starter.domain.order.entity.SubOrder.payableShare])을 회원별로 합산한다.
-     * 배송비([SubOrder.deliveryFee])가 포함된 금액이지만, 등급 산정 목적상 상품가와 분리할 실익이
-     * 낮아 단순화했다(추후 필요 시 재검토).
+     * 기본 배송비 도입(ROADMAP 7.1) 이후로는 배송비([SubOrder.deliveryFee])를 빼고 상품 결제액만 합산한다
+     * — 판매자 수가 많은 주문일수록 등급이 오르는 왜곡을 막는다.
      */
     @Query(
         nativeQuery = true,
         value = """
-            SELECT o.user_id, SUM(so.payable_share)
+            SELECT o.user_id, SUM(so.payable_share - so.delivery_fee)
             FROM sub_orders so
             JOIN orders o ON o.id = so.order_id
             WHERE o.user_id IS NOT NULL

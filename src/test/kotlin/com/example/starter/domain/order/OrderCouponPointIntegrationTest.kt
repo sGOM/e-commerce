@@ -102,7 +102,7 @@ class OrderCouponPointIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.data.totalAmount") { value(20_000) }
             jsonPath("$.data.discountAmount") { value(2_000) }
             jsonPath("$.data.pointUsed") { value(1_000) }
-            jsonPath("$.data.payableAmount") { value(17_000) } // 20000 - 2000 - 1000
+            jsonPath("$.data.payableAmount") { value(20_000) } // 20000 - 2000 - 1000 + 배송비 3000
         }
 
         // 쿠폰 사용 처리, 포인트 차감 확인

@@ -701,3 +701,8 @@ export interface PointPolicy {
   earnRateBp: number
   expiryDays: number
 }
+
+/** 기본 배송비 정책(판매자 단위, 원) */
+export interface ShippingPolicy {
+  baseFee: number
+}

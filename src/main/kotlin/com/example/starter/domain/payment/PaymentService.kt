@@ -85,7 +85,7 @@ class PaymentService(
         paymentRepository.save(payment)
 
         // 결제 확정 → 정책 적립률만큼 포인트 적립(회원 주문 한정)
-        order.userId?.let { pointService.earn(it, order.payableAmount, orderId) }
+        order.userId?.let { pointService.earn(it, order.merchandisePayable, orderId) }
 
         return PaymentResponse.from(payment)
     }

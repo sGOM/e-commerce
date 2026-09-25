@@ -116,6 +116,10 @@ class Order(
         payableAmount = totalAmount + deliveryFeeTotal - discountAmount - pointUsed
     }
 
+    /** 배송비를 뺀 상품 결제액 — 포인트 적립 기준(배송비는 쿠폰·포인트·적립 대상이 아니다). */
+    val merchandisePayable: Long
+        get() = payableAmount - deliveryFeeTotal
+
     /** 하위 주문 중 하나라도 발송/배송 단계에 들어갔는지 — 배송 시작 후에는 취소 불가. */
     val hasShipmentStarted: Boolean
         get() = subOrders.any {

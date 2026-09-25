@@ -68,6 +68,7 @@ import type {
   UserAddress,
   UserStatus,
   WishlistResponse,
+  ShippingPolicy,
 } from './types'
 
 // ----- 인증 -----
@@ -245,6 +246,11 @@ export const flashSaleApi = {
 }
 
 // ----- 배송 슬롯(공개 조회) -----
+// 기본 배송비(판매자 단위) — 체크아웃 미리보기용. 최종 금액은 주문 생성 시 서버가 계산한다.
+export const shippingPolicyApi = {
+  get: () => api.get<ShippingPolicy>('/api/shipping-policy'),
+}
+
 export const deliverySlotApi = {
   // 인증 불필요 — 게스트도 체크아웃 전에 조회한다. date 없으면 서버가 오늘(KST)로 간주.
   list: (params: { postalCode?: string; date?: string }) => {

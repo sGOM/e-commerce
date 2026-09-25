@@ -143,7 +143,7 @@ export default function OrderView({ order, onConfirmDelivery, confirmingSubOrder
             )}
             {order.deliveryFeeTotal > 0 && (
               <div className="flex justify-between">
-                <span>배송비(새벽배송)</span>
+                <span>배송비</span>
                 <span>+{formatKRW(order.deliveryFeeTotal)}</span>
               </div>
             )}
