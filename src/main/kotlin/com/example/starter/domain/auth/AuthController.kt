@@ -14,6 +14,7 @@ import com.example.starter.security.userdetails.CustomUserDetails
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -22,6 +23,8 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
+import org.springframework.security.oauth2.client.registration.ClientRegistration
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.web.context.SecurityContextRepository
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -45,7 +48,16 @@ class AuthController(
     private val securityContextRepository: SecurityContextRepository,
     private val userRepository: UserRepository,
     private val withdrawalService: WithdrawalService,
+    private val clientRegistrationRepository: ObjectProvider<ClientRegistrationRepository>,
 ) {
+
+    /** 활성화된 소셜 로그인 제공자(registrationId). 로그인 화면이 버튼을 그린다. 시작 경로는 `/oauth2/authorization/{id}`. */
+    @GetMapping("/oauth2/providers")
+    fun oauth2Providers(): ApiResponse<List<String>> {
+        @Suppress("UNCHECKED_CAST")
+        val registrations = clientRegistrationRepository.ifAvailable as? Iterable<ClientRegistration>
+        return ApiResponse.success(registrations?.map { it.registrationId }?.sorted().orEmpty())
+    }
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)

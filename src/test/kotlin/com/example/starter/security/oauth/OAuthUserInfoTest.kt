@@ -51,6 +51,18 @@ class OAuthUserInfoTest {
     }
 
     @Test
+    fun `깃허브 속성은 id·이름(없으면 login)만 쓰고 이메일은 비워 둔다`() {
+        val attr = mapOf("id" to 583231, "login" to "octocat", "name" to null, "email" to "public@example.com")
+            .filterValues { it != null }.mapValues { it.value!! }
+
+        val info = OAuthUserInfo.of(OAuthProvider.GITHUB, attr)
+
+        assertThat(info.providerId).isEqualTo("583231")
+        assertThat(info.name).isEqualTo("octocat")
+        assertThat(info.email).isNull() // 검증 여부를 아는 /user/emails 로만 채운다(GithubEmailEnricher)
+    }
+
+    @Test
     fun `이메일이 없으면 email 은 null 로 파싱된다`() {
         val attr = mapOf("id" to 1L, "kakao_account" to mapOf<String, Any>())
 
