@@ -1,12 +1,24 @@
-import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { ApiError } from '../api/client'
+import { authApi } from '../api/endpoints'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+
+const PROVIDER_LABELS: Record<string, string> = { github: 'GitHub', google: 'Google', naver: '네이버', kakao: '카카오' }
+
+/** 실패 핸들러가 한 번 더 인코딩해 보내므로 남은 인코딩을 벗긴다. */
+const decodeOAuthError = (raw: string) => {
+  try {
+    return decodeURIComponent(raw.replace(/\+/g, ' '))
+  } catch {
+    return raw
+  }
+}
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -18,6 +30,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [providers, setProviders] = useState<string[]>([])
+  const [searchParams] = useSearchParams()
+  const oauthError = searchParams.get('error')
+
+  useEffect(() => {
+    authApi
+      .oauth2Providers()
+      .then(setProviders)
+      .catch(() => setProviders([]))
+  }, [])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +63,11 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
+            {oauthError && !error && (
+              <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                소셜 로그인에 실패했습니다: {decodeOAuthError(oauthError)}
+              </p>
+            )}
             {error && (
               <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
@@ -83,6 +110,15 @@ export default function LoginPage() {
               비밀번호를 잊으셨나요?
             </Link>
           </form>
+          {providers.length > 0 && (
+            <div className="mt-6 space-y-2 border-t pt-6">
+              {providers.map((id) => (
+                <Button key={id} asChild variant="outline" className="h-11 w-full">
+                  <a href={`/oauth2/authorization/${id}`}>{PROVIDER_LABELS[id] ?? id}로 로그인</a>
+                </Button>
+              ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="justify-center text-sm text-muted-foreground">
           계정이 없으신가요?

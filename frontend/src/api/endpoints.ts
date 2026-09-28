@@ -77,6 +77,8 @@ import type {
 // ----- 인증 -----
 export const authApi = {
   me: () => api.get<User>('/api/auth/me'),
+  /** 서버에 설정된 소셜 로그인 제공자(registrationId). 로그인 시작은 `/oauth2/authorization/{id}` 로 이동. */
+  oauth2Providers: () => api.get<string[]>('/api/auth/oauth2/providers'),
   login: (email: string, password: string) => api.post<User>('/api/auth/login', { email, password }),
   signup: (email: string, password: string, name: string) =>
     api.post<User>('/api/auth/signup', { email, password, name }),
