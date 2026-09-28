@@ -189,16 +189,18 @@ docker compose up -d
 > `XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더에 실어 상태 변경 요청을 보낸다.
 
 ### 소셜 로그인 (OAuth2)
-구글/네이버/카카오를 지원하며, **이메일 기준으로 자체 계정과 연동**된다(미존재 시 자동 회원가입).
-시크릿이 없으면 소셜 로그인은 비활성(앱은 정상 부팅)이며, 사용하려면 `oauth` 프로파일을 켜고 환경변수를 주입한다.
+GitHub/구글/네이버/카카오를 지원하며, **이메일 기준으로 자체 계정과 연동**된다(미존재 시 자동 회원가입).
+제공자별 프로파일(`oauth-github`·`oauth-google`·`oauth-naver`·`oauth-kakao`, 전부는 `oauth`)로 필요한 것만 켠다.
+켜지 않으면 소셜 로그인은 비활성(앱은 정상 부팅)이고, 켠 제공자의 키가 없으면 부팅이 실패한다.
 ```bash
-export SPRING_PROFILES_ACTIVE=local,oauth
-export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
-export NAVER_CLIENT_ID=...  NAVER_CLIENT_SECRET=...
-export KAKAO_CLIENT_ID=...  KAKAO_CLIENT_SECRET=...
+export SPRING_PROFILES_ACTIVE=local,oauth-github
+export GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=...
 ./gradlew bootRun
 ```
-- 로그인 시작: `GET /oauth2/authorization/{google|naver|kakao}`
+- 로그인 화면은 `GET /api/auth/oauth2/providers` 로 켜진 제공자만 버튼으로 보여준다. 시작: `GET /oauth2/authorization/{id}`
+- 제공자 콘솔에 등록할 콜백: 로컬 `http://localhost:5173/login/oauth2/code/{id}`(Vite 가 Host 를 유지해 프록시), 운영 `https://<도메인>/login/oauth2/code/{id}`
+- GitHub 는 `user:email` 스코프로 **기본·검증된 이메일**만 쓴다(없으면 신규 가입 거부 — 미검증 이메일로 기존 계정에 연동하지 않기 위해)
+- 제공자 추가: `OAuthProvider` 항목 → `OAuthUserInfo.of` 분기(컴파일러가 강제) → 필요 시 `OAuthUserInfoEnricher` 빈 → `application-oauth-<id>.yml`. 가입·연동·차단은 `CustomOAuth2UserService` 공통
 - 콜백: `/login/oauth2/code/{provider}` → 성공 시 `app.oauth2.success-redirect-uri` 로 이동
 - 한 사용자가 여러 소셜 계정을 연동 가능(`oauth_accounts` 테이블)
 

@@ -362,7 +362,7 @@ try {
 | `loyalty.silverThreshold`/`goldThreshold`/`vipThreshold` | 등급 임계 순구매액(원) | `@ConfigurationProperties(loyalty)` |
 | `loyalty-coupon.couponIdByTier` | 승급 시 발급할 등급별 쿠폰 매핑(미등록 시 미발급) | `@ConfigurationProperties(loyalty-coupon)` |
 | `cart-reminder.inactivityHours` | 이탈 판정 미활동 시간(기본 24h) | `@ConfigurationProperties(cart-reminder)` |
-| OAuth2 client registration 유무 | 소셜 로그인 활성화 | 런타임 `ClientRegistrationRepository` 존재 검사 |
+| 프로파일 `oauth-<id>`(`oauth` = 전부) | 제공자별 소셜 로그인 활성화(등록정보 `application-oauth-<id>.yml`, 켜진 목록 `GET /api/auth/oauth2/providers`) | 런타임 `ClientRegistrationRepository` 존재 검사 |
 | `app.audit.*` | 감사 로그 on/off·제외경로·마스킹 키·본문 길이 | `@ConfigurationProperties` |
 | 적립률·유효기간·수수료율·리뷰적립·기본 배송비 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`, `ShippingPolicy`) |
 
