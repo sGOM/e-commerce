@@ -1,0 +1,15 @@
+# GitHub 로그인. 프로파일 oauth-github + GITHUB_CLIENT_ID/SECRET.
+# 엔드포인트는 Spring 내장 기본값(CommonOAuth2Provider.GITHUB)을 쓴다. scope 를 지정하면 기본값(read:user)을
+# 대체하므로 둘 다 적는다 — user:email 은 비공개 이메일 조회(GithubEmailEnricher)에 필요하다.
+# 콜백 URL: {baseUrl}/login/oauth2/code/github (GitHub OAuth App 설정에 그대로 등록)
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope:
+              - read:user
+              - user:email

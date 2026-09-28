@@ -96,6 +96,7 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/api/auth/signup", permitAll)
                 authorize("/api/auth/login", permitAll)
+                authorize("/api/auth/oauth2/providers", permitAll)
                 // 비밀번호 분실 재설정(메일 토큰) - 비로그인 경로
                 authorize("/api/auth/password-reset/**", permitAll)
                 authorize("/actuator/health", permitAll)

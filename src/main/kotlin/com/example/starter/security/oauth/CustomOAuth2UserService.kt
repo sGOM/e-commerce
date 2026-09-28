@@ -22,19 +22,26 @@ import org.springframework.transaction.annotation.Transactional
  * 2. 없으면 이메일로 자체 계정 조회:
  *    - 있으면 → 해당 계정에 소셜 연동 추가 (자체 로그인과 통합)
  *    - 없으면 → 신규 사용자 자동 생성 후 연동
+ *
+ * 모든 제공자가 이 흐름을 공유한다. 제공자별 차이는 속성 정규화([OAuthUserInfo.of])와
+ * 추가 조회([OAuthUserInfoEnricher])에만 둔다.
  */
 @Service
 class CustomOAuth2UserService(
     private val userRepository: UserRepository,
     private val oAuthAccountRepository: OAuthAccountRepository,
     private val roleRepository: RoleRepository,
+    enrichers: List<OAuthUserInfoEnricher> = emptyList(),
 ) : DefaultOAuth2UserService() {
+
+    private val enrichers = enrichers.associateBy { it.provider }
 
     @Transactional
     override fun loadUser(userRequest: OAuth2UserRequest): OAuth2User {
         val oAuth2User = super.loadUser(userRequest)
         val provider = OAuthProvider.from(userRequest.clientRegistration.registrationId)
-        val info = OAuthUserInfo.of(provider, oAuth2User.attributes)
+        val parsed = OAuthUserInfo.of(provider, oAuth2User.attributes)
+        val info = enrichers[provider]?.enrich(parsed, userRequest) ?: parsed
 
         val user = resolveUser(provider, info)
         return CustomOAuth2User(user, oAuth2User.attributes, info.providerId)

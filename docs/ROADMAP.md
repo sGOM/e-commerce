@@ -41,7 +41,8 @@ PG 결제 취소 연동(`PaymentGateway.cancel` — 전체·부분 취소 금액
 회원 탈퇴(`POST /api/auth/withdraw` — soft delete: `WITHDRAWN`·`withdrawn_at`, 비밀번호 확인, 배송 중 주문·판매자 거부, 미결제 주문·멤버십·정기배송 해지와 빌링키 삭제, 소셜 로그인도 차단),
 인센티브 어뷰징 방지 원칙 확정(`docs/planning/README.md` 공통 오픈 이슈 5 — 1인 1회·자기추천 차단·구매확정 후 지급/회수·월 상한),
 기본 배송비(판매자 단위 3,000원 — `shipping_policies` 정책 행, `GET /api/shipping-policy`·`PATCH /api/admin/shipping-policy`, 멤버십 무료배송 면제, 포인트 적립·로열티 산정은 배송비 제외),
-미결제 주문 자동 만료(CREATED 30분 경과 시 취소·재고 복원, 결제와 주문 행 잠금으로 경합 차단, `order.unpaid-expiry.scheduler.enabled` 또는 `POST /api/admin/orders/expire-unpaid/run`).
+미결제 주문 자동 만료(CREATED 30분 경과 시 취소·재고 복원, 결제와 주문 행 잠금으로 경합 차단, `order.unpaid-expiry.scheduler.enabled` 또는 `POST /api/admin/orders/expire-unpaid/run`),
+GitHub 소셜 로그인(제공자별 프로파일 `oauth-<id>`, 기본·검증 이메일만 연동, 로그인 화면이 켜진 제공자만 버튼 표시).
 
 **5. 관리자 백오피스** 는 남은 항목이 없어 표를 제거했다(번호는 기존 항목 ID 유지를 위해 재사용하지 않는다).
 

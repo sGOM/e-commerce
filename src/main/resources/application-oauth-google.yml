@@ -1,0 +1,12 @@
+# Google 로그인. 프로파일 oauth-google + GOOGLE_CLIENT_ID/SECRET. 제공자별로 파일을 나눠 필요한 것만 켠다(application.yml 의 profiles.group 참고).
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email

@@ -10,6 +10,7 @@ import com.example.starter.domain.user.entity.OAuthProvider
  * - Google: 평탄 구조 (`sub`, `email`, `name`)
  * - Naver : `response` 하위에 중첩 (`id`, `email`, `name`)
  * - Kakao : `id`(최상위) + `kakao_account.email` + `kakao_account.profile.nickname`
+ * - GitHub: `id`(숫자) + `name`(없으면 `login`). 이메일은 비공개일 수 있어 [GithubEmailEnricher] 가 채운다.
  */
 data class OAuthUserInfo(
     val provider: OAuthProvider,
@@ -23,6 +24,7 @@ data class OAuthUserInfo(
                 OAuthProvider.GOOGLE -> google(attributes)
                 OAuthProvider.NAVER -> naver(attributes)
                 OAuthProvider.KAKAO -> kakao(attributes)
+                OAuthProvider.GITHUB -> github(attributes)
             }
 
         private fun google(attr: Map<String, Any>) = OAuthUserInfo(
@@ -56,6 +58,14 @@ data class OAuthUserInfo(
                 name = profile?.get("nickname") as? String ?: "kakao_user",
             )
         }
+
+        // /user 의 email 은 쓰지 않는다 — 이메일로 기존 계정에 연동하므로 검증 여부를 알 수 있는 /user/emails 만 신뢰한다.
+        private fun github(attr: Map<String, Any>) = OAuthUserInfo(
+            provider = OAuthProvider.GITHUB,
+            providerId = attr.requireString("id"),
+            email = null,
+            name = attr["name"] as? String ?: attr["login"] as? String ?: "github_user",
+        )
 
         private fun Map<String, Any>.requireString(key: String): String =
             this[key]?.toString() ?: throw oauthError("필수 속성 누락: $key")
