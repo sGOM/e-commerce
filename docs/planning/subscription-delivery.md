@@ -1,6 +1,8 @@
 # 정기배송 구독
 
 > 우선순위: **P2** (Could — 정기결제 인프라 공유, 배치 복잡도 높음)
+> 상태: ✅ 구현됨 — `domain/subscription/`. 아래 데이터 모델·API·화면은 기획 당시 개략이고 코드가 원천이다.
+> 오픈 이슈의 결정은 코드 KDoc 에 있다(`grep -rn "오픈 *이슈" src/main` → `subscription/` 등).
 > 관련 도메인: `order`(자동 주문 생성), `payment`(정기결제, `subscription-membership.md`와 공유),
 > `catalog`(재고 확인)
 

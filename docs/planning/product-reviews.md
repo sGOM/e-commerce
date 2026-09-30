@@ -1,6 +1,7 @@
 # 상품 리뷰 / 포토리뷰
 
 > 우선순위: **P0** (Must)
+> 상태: ✅ 구현됨 — `domain/review/`. 아래 데이터 모델·API·화면은 기획 당시 개략이고 코드가 원천이다.
 > 관련 도메인: `catalog`(Product), `order`(Order/OrderItem), `point`(리뷰 적립), `admin`
 
 ## 1. 개요 및 배경

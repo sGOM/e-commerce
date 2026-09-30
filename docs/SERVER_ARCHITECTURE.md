@@ -109,7 +109,7 @@ lines.groupBy { it.seller.id }.values.forEach { sellerLines ->
 
 ### payable 배분 — 부분 환불의 기반
 쿠폰/포인트는 Order 전체에 적용되지만 환불은 SubOrder 단위로 일어난다. 그래서 최종 결제금액을
-SubOrder별 `payableShare`로 **배분**(`order.distributePayable()`)해 둔다. SubOrder 하나를 부분 취소하면
+SubOrder별 `payableShare`로 **배분**(`order.distributePayable()`)해 둔다 — 상품 몫은 subtotal 비례, 나눗셈 잔액은 마지막 SubOrder 가 흡수하고, 배송비는 각 SubOrder 에 그대로 더한다. SubOrder 하나를 부분 취소하면
 그 `payableShare`만큼만 부분 환불하고, **모든 SubOrder가 취소된 시점**에 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
 
 ```kotlin
@@ -342,10 +342,10 @@ try {
 
 ## 11. 설정 기반 토글 한눈에
 
-| 설정 키 | 효과 | 구현 |
-|---------|------|------|
 > 이 표는 `ConsistencyTest` 가 강제한다 — `@ConditionalOnProperty` 에 쓰인 키가 여기 없으면 CI 가 실패한다.
 
+| 설정 키 | 효과 | 구현 |
+|---------|------|------|
 | `payment.gateway` = `mock`/`toss` | 결제 게이트웨이 구현체 선택 | `@ConditionalOnProperty` |
 | `billing.gateway` = `mock` | 정기결제(빌링키) 게이트웨이 구현체(현재 mock 만) | `@ConditionalOnProperty` |
 | `spring.mail.host` 유무 | 이메일 발송: 있으면 SMTP, 없으면 로그만(`EmailSender`) | `@ConditionalOnProperty` |
@@ -374,14 +374,7 @@ try {
 Hibernate는 `ddl-auto: validate`로 **매핑↔스키마 일치 검증만** 한다. 통합 테스트도 Testcontainers PostgreSQL에서
 같은 마이그레이션을 돌려 실 환경과 일치시킨다(H2 미사용 — JSONB/GIN 등 PostgreSQL 고유 기능 때문).
 
-```
-V1 init · V2 oauth · V3 audit_logs · V4 catalog · V5 cart · V6 order · V7 payment
-V8 coupon_point · V9 order_shipping_address · V10 shipment · V11 sub_order payable_share
-V12 point_expiry · V13 settlement · V14 sub_order_delivery · V15 reviews
-V16 restock_alert_and_notification · V17 collections · V18 flash_sales · V19 delivery_slots
-V20 memberships · V21 delivery_subscriptions · V22 gift_orders
-V23 wishlist · V24 loyalty_tier · V25 cart_reminder
-```
+버전 목록은 `ls src/main/resources/db/migration` 이 원천이다(파일명 = 버전·주제).
 
 ---
 
@@ -447,9 +440,9 @@ fun on(e: ProductPriceChangedEvent) { wishlistService.notifyPriceDrop(e.productI
 | `promotion` | 기획전/컬렉션 큐레이션 | `CollectionService` |
 | `flashsale` | 플래시세일/타임딜 | `FlashSaleService`(재고 원자성 재사용) |
 | `delivery` | 배송 권역·슬롯 예약 | `DeliverySlotService`(슬롯 정원 동시성) |
-| `membership`·`billing` | 유료 멤버십 + 정기결제 빌링 | `MembershipService`, `BillingScheduler`(빌링키 청구) |
-| `subscription` | 정기배송 구독 | `SubscriptionService`(반복 주문 생성) |
-| `gift` | 선물하기 + 기프트 클레임 | `GiftService`(토큰 수령·배송지 없는 결제) |
+| `membership`·`billing` | 유료 멤버십 + 정기결제 빌링 | `MembershipService`, `MembershipBillingScheduler`(빌링키 청구), `billing/gateway` |
+| `subscription` | 정기배송 구독 | `DeliverySubscriptionCycleService`(회차 처리, 건별 `REQUIRES_NEW`) |
+| `gift` | 선물하기 + 기프트 클레임 | `GiftClaimService`(토큰 수령), `GiftExpiryProcessor`(만료 건별 격리) |
 | `wishlist` | 위시리스트 + 가격 인하 알림 | `WishlistPriceAlertEventListener`(§13, restock 패턴 재사용) |
 | `loyalty` | 로열티 등급 + 승급 쿠폰 | `LoyaltyTierBatchService`, `LoyaltyTierBenefitService`(§13, 멱등 발급) |
 | `cart` | 장바구니 + 이탈 리마인드 | `CartReminderBatchService`(§13, dedup 발송) |

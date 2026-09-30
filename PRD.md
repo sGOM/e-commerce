@@ -1,16 +1,15 @@
 # 이커머스 플랫폼 PRD
 
 > Product Requirements Document
-> 작성일: 2026-06-27 (최종 갱신: 2026-07-05)
-> 상태: v0.3 — 마켓플레이스 MVP 완료 + 커머스 스위트·리텐션 기능 확장 반영
-> ※ §1~§10은 초기 MVP 범위(원안 유지). 확장 범위는 **§11** 참조.
+> 작성일: 2026-06-27 (최종 갱신: 2026-09-30)
+> 상태: v0.4 — 마켓플레이스 MVP(§1~§10) + 커머스 스위트·리텐션(§11) + 2026-09 정책 확정분(§11.5)을 **현재 구현 기준**으로 기술한다.
+> 남은 작업은 [`docs/ROADMAP.md`](docs/ROADMAP.md), 구현 원리는 [`docs/SERVER_ARCHITECTURE.md`](docs/SERVER_ARCHITECTURE.md).
 
 ## 1. 개요
 
 ### 1.1 목적
-Kotlin + Spring Boot 기반 `spring-starter-kit` 위에 **B2C 이커머스 백엔드**를 구축한다.
-스타터 킷이 이미 제공하는 인증/인가/감사로그/관리자 기반을 재사용하고, 그 위에 상품·주문·결제 등
-이커머스 핵심 도메인을 확장한다.
+Kotlin + Spring Boot 기반 `spring-starter-kit` 위에 **B2C 마켓플레이스 이커머스**를 구축한다.
+스타터 킷의 인증/인가/감사로그/관리자 기반을 재사용하고, 그 위에 상품·주문·결제 등 커머스 도메인을 확장한다.
 
 ### 1.2 스타터 킷에서 그대로 활용하는 것 (재구현 금지)
 | 기능 | 활용 방식 |
@@ -36,13 +35,16 @@ Kotlin + Spring Boot 기반 `spring-starter-kit` 위에 **B2C 이커머스 백�
 2. 재고가 정확하게 차감되고, 동시 주문 시 초과 판매가 발생하지 않는다.
 3. 판매자(또는 관리자)가 상품과 재고를 등록/관리할 수 있다.
 4. 관리자가 주문·회원·상품을 조회·관리할 수 있다.
-5. 결제는 외부 PG 연동을 가정하되, MVP는 **모의(Mock) 결제 어댑터**로 시작한다.
+5. 결제는 `PaymentGateway` 추상화 뒤에 둔다. 기본은 Mock PG, 설정으로 토스페이먼츠로 전환한다.
 
-### 2.2 비목표 (MVP 제외, 추후 단계)
-- 실제 PG사(토스/아임포트 등) 실연동 → MVP는 Mock PG. PG 어댑터 골격(`PaymentGateway` + Mock/Toss 스텁)은 구현, 실 승인/세금계산서는 추후
-- 쿠폰 엔진 고도화(복합·중첩 할인 규칙) → MVP는 단순 할인 쿠폰 + 포인트
-- 추천/검색 랭킹(ML), 리뷰·평점 상세
-- 다국가/다통화, 멀티 창고 물류
+### 2.2 비목표
+- 세금계산서 발행, 다국가/다통화, 멀티 창고 물류
+- 쿠폰 엔진 고도화(복합·중첩 할인 규칙) — 주문당 쿠폰 1장 + 포인트
+- 추천/검색 랭킹(ML) — 검색은 ILIKE 기반(고도화는 ROADMAP 8.8)
+- 반품·교환 상태 머신 — 관리자 환불로 대체(ROADMAP 1.5)
+- 실 PG 정기결제(빌링) — 빌링은 `billing.gateway=mock` 골격만
+
+> 초기 MVP 비목표였던 "리뷰·평점 상세"와 "실 PG 연동"은 이후 구현됐다(§11.1, §5.5).
 
 ## 3. 사용자 역할 (RBAC 확장)
 
@@ -56,8 +58,7 @@ Kotlin + Spring Boot 기반 `spring-starter-kit` 위에 **B2C 이커머스 백�
 | `ROLE_SELLER` | 입점 판매자 | 본인 Store 상품 등록/수정, 본인 판매분 주문 조회/배송, 재고 관리 |
 | `ROLE_ADMIN` | 운영 관리자 | 전체 상품/주문/회원/카테고리/셀러 관리, 쿠폰 발행, 환불 승인 |
 
-> 게스트 주문: 비회원도 주문/결제 가능. 주문 조회는 **주문번호 + 주문 시 입력한 연락처/이메일**로 인증.
-> 게스트는 포인트·쿠폰 미지원. 회원 전환 시 게스트 주문 연결은 추후 단계.
+> 게스트는 포인트·쿠폰 미지원. 로그인 후 `POST /api/orders/claim`(주문번호+연락처 확인)으로 게스트 주문을 계정에 연결한다.
 
 ## 4. 도메인 모델 (핵심 엔티티)
 
@@ -71,180 +72,135 @@ Cart ── CartItem ── (Product/Option 참조)          (회원 전용)
    │
 Order ── SubOrder(판매자 단위) ── OrderItem ── (주문 시점 상품 스냅샷)
    │         │
-   │      Shipment(배송) ── Address                (배송은 SubOrder 단위)
+   │      Shipment(배송) ── Address                (배송·배송비·정산은 SubOrder 단위)
    │
 Payment ── PaymentEvent(상태 이력)                 (Order 단위 1건)
    │
 Coupon / IssuedCoupon ── 할인 쿠폰
-PointAccount ── PointTransaction ── 적립/사용 이력   (회원 전용)
+PointAccount ── PointLot ── PointTransaction       (회원 전용, lot FIFO)
 ```
 
 ### 4.1 엔티티 요약
 - **Seller(Store)**: 입점 판매자. User(`ROLE_SELLER`)와 연결, 상점명·정산정보·상태(입점심사/영업중/정지)
 - **Category**: 계층형(부모-자식), 상품 분류 (플랫폼 공통)
-- **Product**: 상품 기본 정보(이름, 설명, 대표가격, 상태 DRAFT/ON_SALE/SOLD_OUT/HIDDEN). **소속 Store 필수**
+- **Product**: 상품 기본 정보(이름, 설명, 대표가격, 대표 이미지, 상태). **소속 Store 필수**
 - **ProductOption (SKU)**: 옵션 단위 판매(예: 색상/사이즈), 옵션별 가격·재고
-- **Inventory**: SKU별 가용 재고/예약 재고. 재고 차감의 **단일 진실 공급원**
-- **Cart / CartItem**: 회원당 1개 장바구니, 항목별 수량 (게스트 미지원)
+- **Inventory**: SKU별 수량/예약 수량. 재고 차감의 **단일 진실 공급원**
+- **Cart / CartItem**: 회원당 1개 장바구니, 항목별 수량 (게스트는 localStorage)
 - **Order**: 주문 헤더. 여러 판매자 상품을 한 번에 결제 → **SubOrder로 분리**. 게스트/회원 주문 모두 표현(주문자 연락처 보관)
-- **SubOrder**: 판매자 단위 하위 주문. 배송·정산·상태 전이의 단위
+- **SubOrder**: 판매자 단위 하위 주문. 배송·배송비·취소·정산·상태 전이의 단위
 - **OrderItem**: 주문 시점 가격/상품명/옵션 **스냅샷** 보관(원본 변경 무관). SubOrder에 소속
-- **Payment / PaymentEvent**: Order 단위 결제 본체 + 상태 전이 이력(READY/PAID/CANCELED/FAILED). 금액에 쿠폰/포인트 차감 반영
-- **Shipment / Address**: 배송 정보, 배송지. **SubOrder 단위**로 송장 발급
+- **Payment / PaymentEvent**: Order 단위 결제 본체 + 상태 전이 이력(READY/PAID/CANCELED/FAILED)
+- **Shipment / Address**: 송장·배송지. **SubOrder 단위**로 송장 발급. 회원은 배송지 주소록 보유
 - **Coupon / IssuedCoupon**: 쿠폰 정의(할인율/정액, 최소주문금액, 유효기간) + 회원에게 발급된 인스턴스(사용여부)
-- **PointAccount / PointTransaction**: 회원 포인트 잔액 + 적립/사용/만료 원장(이력 기반, 잔액은 합산 검증)
+- **PointAccount / PointLot / PointTransaction**: 잔액 + 만료일 단위 lot + 적립/사용/만료 원장
 
 ## 5. 핵심 기능 요구사항
 
 ### 5.1 상품 (Product)
-- **고객**: 카테고리/키워드 검색, 상품 상세, 옵션·재고 노출 (Kotlin JDSL 동적 검색)
-- **판매자/관리자**: 상품 CRUD, 옵션·재고 등록, 판매 상태 변경
+- **고객**: 키워드·카테고리(하위 포함)·판매자·가격 범위 검색과 정렬, 판매량 기반 인기 상품, 상세(옵션·재고) — Kotlin JDSL 동적 검색
+- **판매자/관리자**: 상품 CRUD, 옵션·재고 등록, 대표 이미지 업로드, 재고 CSV 일괄 수정, 판매 상태 변경
 - 품절 상품은 노출하되 구매 차단
 
 ### 5.2 장바구니 (Cart)
 - **회원**: 서버에 저장(회원당 1개). 항목 추가/수량변경/삭제/비우기. 담는 시점 재고/판매상태 검증
 - **게스트**: **localStorage(클라이언트)** 에 `{optionId, quantity}[]` 보관 → 서버 무상태.
-  표시·결제 직전 검증을 위해 서버는 **계산 전용 엔드포인트**(`POST /api/cart/guest`)로 현재가·재고·구매가능 여부·합계를 돌려준다(저장하지 않음)
+  서버는 **계산 전용 엔드포인트**(`POST /api/cart/guest`)로 현재가·재고·구매가능 여부·합계를 돌려준다(저장하지 않음)
 - 가격은 항상 조회 시점 현재가 기준(스냅샷 아님). 결제 직전 재검증
-- 로그인 시 localStorage 장바구니 → 서버 장바구니 병합은 추후 단계(merge API)
+- 로그인 시 localStorage 장바구니를 `POST /api/cart/merge` 로 서버 장바구니에 병합
 
 ### 5.3 주문 (Order) — 멀티셀러
-- 장바구니/직접 → 주문 생성 시: 재고 검증 → **재고 예약/차감** → 주문 확정
+- 주문 생성: 재고 검증 → **재고 예약(원자적)** → 주문 확정
 - 한 주문에 여러 판매자 상품이 섞이면 **SubOrder(판매자 단위)로 분리**. 결제는 Order 단위 1건, 배송·취소·정산은 SubOrder 단위
 - 상태 전이(SubOrder 기준): `CREATED → PAID → PREPARING → SHIPPED → DELIVERED` / `CANCELED`
 - 주문 항목은 생성 시점 가격·상품명·옵션 스냅샷
-- **회원**: 본인 주문 목록/상세 조회, 전체 취소(배송 전) + **SubOrder 단위 부분 취소**(`POST /api/orders/sub-orders/{id}/cancel`). 각 SubOrder에 결제금액 비례 배분(payable_share) → 부분 환불, 전체 취소 완료 시 쿠폰/포인트 복원·적립 회수·결제 취소
-- **게스트**: 주문번호 + 연락처/이메일로 단건 조회·취소
-- 금액 계산: 상품합계 − 쿠폰할인 − 포인트사용 = 최종 결제금액 (전부 서버 계산)
+- **회원**: 본인 주문 목록/상세, 전체 취소(배송 전) + **SubOrder 단위 부분 취소**. 결제금액을 SubOrder별로 비례 배분(`payable_share`)해 부분 환불하고, 모든 SubOrder가 취소되면 쿠폰/포인트 복원·적립 회수
+- **게스트**: 주문번호 + 연락처/이메일로 단건 조회·결제(`POST /api/payments/guest`)
+- **금액**: 상품합계 − 쿠폰할인 − 포인트사용 + 배송비 = 최종 결제금액 (전부 서버 계산)
+  - 배송비: SubOrder마다 기본 배송비(정책 행, 기본 3,000원) + 배송 슬롯 추가요금. 멤버십 무료배송이면 0원. 쿠폰·포인트 대상 아님
+- **미결제 만료**: `CREATED` 로 30분(설정값) 지나면 취소하고 재고를 푼다(스케줄러 또는 관리자 수동 실행)
 
 ### 5.4 재고 (Inventory) — 정합성 핵심
 - 동시 주문에도 **초과 판매 금지**가 최우선 요구사항
-- 전략: DB 비관적 락(`SELECT ... FOR UPDATE`) 또는 원자적 `UPDATE ... WHERE stock >= qty`
-- 주문 취소/결제 실패 시 재고 복원
+- 전략: 원자적 조건부 `UPDATE ... WHERE quantity - reserved >= qty`(§9-4, 락 없음)
+- 주문 취소/결제 실패/미결제 만료 시 재고 복원
+- 가용재고가 임계값(기본 5) 이하로 내려가면 판매자에게 저재고 알림
 - 재고 변동은 감사 가능해야 함(로그/이력)
 
 ### 5.5 결제 (Payment)
-- MVP: **Mock PG 어댑터** (결제요청 → 가상 승인/실패 콜백)
-- 인터페이스(`PaymentGateway`)로 추상화하여 추후 실 PG 교체 가능
-- 결제 성공 시 주문 PAID 전이 + 재고 확정, 실패 시 주문/재고 롤백
-- 멱등성: 동일 주문 중복 결제 방지
+- `PaymentGateway` 인터페이스 + 설정(`payment.gateway=mock|toss`)으로 구현 선택
+- 토스: 결제창이 발급한 `paymentKey` 를 서버가 confirm, 승인 금액이 서버 계산 금액과 다르면 거절
+- 결제 성공 시 주문 PAID 전이 + 포인트 적립, 실패 시 주문/재고 롤백
+- 멱등성: 동일 주문 중복 결제 방지(주문 ID 기준)
+- 취소·부분 취소·관리자 환불은 PG 취소 API로 환불(결정적 멱등키), 토스 웹훅은 PG 재조회로 검증 — [SERVER_ARCHITECTURE §6](docs/SERVER_ARCHITECTURE.md)
 
 ### 5.6 배송 (Shipment) — SubOrder 단위
-- 배송지 등록/선택, SubOrder에 배송지 연결 (한 주문이 여러 판매자면 판매자별 개별 배송)
-- **판매자**: 본인 SubOrder에 송장 등록 → SHIPPED 전이, 배송 상태 갱신
+- 배송지 등록/선택(주소록·기본 배송지), SubOrder에 배송지 연결 (여러 판매자면 판매자별 개별 배송)
+- **판매자**: 본인 SubOrder에 송장 등록 → SHIPPED 전이
+- **고객**: 발송된 SubOrder 배송 조회(`DeliveryTracker` — Mock 기본, 스마트택배 어댑터)
 
 ### 5.7 쿠폰 / 포인트
-- **쿠폰**: 관리자(또는 판매자)가 쿠폰 발행 → 회원이 수령(IssuedCoupon). 정률/정액, 최소주문금액, 유효기간, 1회용
-  - 주문 시 1개 적용(MVP는 중첩 불가). 결제 실패/주문 취소 시 미사용 상태로 복원
-- **포인트**: 회원별 PointAccount. 적립(주문 확정 시 일정 비율) / 사용(결제 시 차감) / **만료**
-  - **lot 기반 FIFO**: 적립마다 만료일을 가진 lot 생성, 사용은 만료 임박 순 차감, 만료는 lot 잔여만 소멸(이중 차감 방지). 원장(PointTransaction)으로 음수 방지
+- **쿠폰**: 관리자가 발행 → 회원이 수령(IssuedCoupon). 정률/정액, 최소주문금액, 유효기간, 1회용
+  - 주문 시 1개 적용(중첩 불가). 결제 실패/주문 취소 시 미사용 상태로 복원
+- **포인트**: 회원별 PointAccount. 적립(결제 확정 시 정책 비율, 배송비 제외 상품 결제액 기준) / 사용(주문 시 차감) / **만료**
+  - **lot 기반 FIFO**: 적립마다 만료일을 가진 lot 생성, 사용은 만료 임박 순 차감, 만료는 lot 잔여만 소멸(이중 차감 방지)
   - 주문 취소 시 사용 포인트 환원(새 lot), 적립 포인트 회수(해당 주문 lot 잔여)
-  - **적립률·유효기간 모두 관리자 설정값**(`point_policies`: earn_rate_bp 기본 100=1%, expiry_days 기본 365). `GET/PATCH /api/admin/point-policy` 부분 업데이트
-  - 만료 트리거: `POST /api/admin/points/expire`(수동) — 스케줄러 주기 실행도 가능
+  - **적립률·유효기간은 관리자 설정값**(`point_policies`: earn_rate_bp 기본 100=1%, expiry_days 기본 365). `GET/PATCH /api/admin/point-policy`
+  - 만료 트리거: `POST /api/admin/points/expire`(수동) + 스케줄러
 - 게스트는 쿠폰/포인트 미지원
 
 ### 5.8 판매자 (Seller) — 입점
-- 판매자 입점 신청 → 관리자 심사/승인 → `ROLE_SELLER` 부여 + Store 활성화
-- 본인 Store의 상품/옵션/재고 CRUD, 본인 판매분 SubOrder 조회·배송 처리
+- 입점 신청 → 관리자 심사/승인 → `ROLE_SELLER` 부여 + Store 활성화(재로그인 없이 `GET /api/auth/me` 가 권한 갱신)
+- 본인 Store의 상품/옵션/재고 CRUD, 본인 판매분 SubOrder 조회·배송 처리, 매출 대시보드
+
+### 5.9 관리자 (Admin) — 스타터 킷 관리자 확장
+- 셀러 입점 심사, 상품/카테고리 관리(계층·순환 차단), 전체 주문 검색(상태/기간/회원/판매자), 환불, 쿠폰 발행
+- 회원 상태·역할 관리, 포인트·배송비·수수료 정책, 감사 로그 검색, 대시보드(GMV·주문 수·신규 가입)
 
 ### 5.10 정산 (Settlement) — 셀러 정산
 - 미정산 SubOrder(취소 제외, 상태 PAID/PREPARING/SHIPPED/DELIVERED, `settlement_id IS NULL`)를 **판매자 단위로 집계**해 정산서 생성
 - 판매액(∑subtotal) − 플랫폼 수수료 = 지급액. 같은 SubOrder는 `settlement_id`로 표시해 **재정산 방지**
-- **수수료율은 관리자 설정값**(`settlement_policies.commission_rate_bp`, 기본 1000=10%). `GET/PATCH /api/admin/settlements/policy`
-- 관리자: `POST /api/admin/settlements`(생성), `PATCH /api/admin/settlements/{id}/pay`(지급 완료). 판매자: `GET /api/seller/settlements`(본인 정산 내역)
+- **수수료율은 관리자 설정값**(`settlement_policies.commission_rate_bp`, 기본 1000=10%)
+- 배송비는 정산(`subtotal`)에 포함되지 않는다 — 판매자 귀속 여부는 미결정(ROADMAP 7.3)
+- 관리자 수동 생성·지급 + 주기 스케줄러(`settlement.scheduler.enabled`), 판매자는 본인 정산 내역 조회
 
-### 5.9 관리자 (Admin) — 스타터 킷 관리자 확장
-- 셀러 입점 심사/관리, 상품/카테고리 관리, 전체 주문 검색(상태/기간/회원/판매자), 환불 처리, 쿠폰 발행
-- 기존 회원/권한/감사로그 검색 기능 그대로 유지
+## 6. API
 
-## 6. API 설계 개요 (공통 응답 규약 준수)
-
-> 모든 응답: `{ success, code, message, data }` / 상태변경 요청은 CSRF 토큰 필요
-
-### 공개/고객 API
-| 메서드 | 경로 | 설명 | 인증 |
-|--------|------|------|------|
-| GET | `/api/products?keyword=&categoryId=&sellerId=&page=` | 상품 검색 | 불필요 |
-| GET | `/api/products/{id}` | 상품 상세 | 불필요 |
-| GET | `/api/cart` | 내 장바구니(서버 저장) | 회원 |
-| POST | `/api/cart/guest` | 게스트 장바구니 계산/검증(localStorage 동반, 무상태) | 불필요 |
-| POST | `/api/cart/items` | 장바구니 담기 | 회원 |
-| PATCH | `/api/cart/items/{id}` | 수량 변경 | 회원 |
-| DELETE | `/api/cart/items/{id}` | 항목 삭제 | 회원 |
-| POST | `/api/orders` | 주문 생성(쿠폰/포인트 적용) | 회원 |
-| POST | `/api/orders/guest` | 게스트 주문 생성 | 불필요 |
-| GET | `/api/orders` | 내 주문 목록 | 회원 |
-| GET | `/api/orders/{id}` | 주문 상세 | 회원 |
-| POST | `/api/orders/guest/lookup` | 게스트 주문 조회(주문번호+연락처) | 불필요 |
-| POST | `/api/orders/{id}/cancel` | 주문/하위주문 취소 | 회원 |
-| POST | `/api/payments/{orderId}` | 결제 요청 | 회원/게스트 |
-| POST | `/api/payments/callback` | (Mock) PG 콜백 | 시스템 |
-| GET | `/api/me/coupons` | 내 쿠폰 목록 | 회원 |
-| GET | `/api/me/points` | 내 포인트 잔액/이력 | 회원 |
-
-### 판매자 API (`ROLE_SELLER`)
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| POST | `/api/seller/apply` | 입점 신청 |
-| POST | `/api/seller/products` | 상품 등록 |
-| PUT | `/api/seller/products/{id}` | 상품 수정 |
-| PATCH | `/api/seller/products/{id}/stock` | 재고 조정 |
-| GET | `/api/seller/orders?status=` | 본인 판매분 SubOrder 조회 |
-| POST | `/api/seller/orders/{subOrderId}/ship` | 송장 등록/발송 |
-
-### 관리자 API (`ROLE_ADMIN`)
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/api/admin/sellers?status=` | 입점 신청/셀러 검색 |
-| PATCH | `/api/admin/sellers/{id}/approve` | 입점 승인/거절 |
-| GET | `/api/admin/orders?status=&sellerId=&from=&to=` | 전체 주문 검색 |
-| POST | `/api/admin/orders/{id}/refund` | 환불 처리 |
-| POST | `/api/admin/categories` | 카테고리 등록 |
-| POST | `/api/admin/coupons` | 쿠폰 발행 |
-| POST | `/api/admin/settlements` | 정산서 생성(판매자별 집계) |
-| PATCH | `/api/admin/settlements/{id}/pay` | 정산 지급 완료 |
-| GET/PATCH | `/api/admin/settlements/policy` | 수수료율 정책 조회/변경 |
+> 모든 응답: `{ success, code, message, data }` / 상태변경 요청은 CSRF 토큰 필요.
+> 핵심 흐름 표는 [README "이커머스 API"](README.md#이커머스-api), 전체 목록·스키마는 앱 기동 후 `/swagger-ui/index.html`.
 
 ## 7. 비기능 요구사항
 - **정합성**: 재고/결제는 트랜잭션 경계 명확화, 초과판매 0건
-- **보안**: 본인 리소스만 접근(주문/장바구니 소유권 검증), 가격은 항상 서버 계산(클라이언트 금액 신뢰 금지)
-- **관측성**: 주문/결제 핵심 액션 감사 로그 기록(스타터 킷 AuditLog 활용)
+- **보안**: 본인 리소스만 접근(주문/장바구니 소유권 검증, 남의 리소스는 404로 존재 은닉), 가격은 항상 서버 계산(클라이언트 금액 신뢰 금지)
+- **관측성**: 주문/결제 핵심 액션 감사 로그(스타터 킷 AuditLog), Prometheus 메트릭(`/actuator/prometheus`)
 - **테스트**: 재고 동시성, 주문-결제 상태 전이는 통합 테스트(Testcontainers) 필수
 - **마이그레이션**: 모든 스키마 변경은 Flyway 버전 스크립트로
 
-## 8. 개발 단계 (로드맵)
+## 8. 개발 단계
 
-| 단계 | 내용 | 산출물 |
-|------|------|--------|
-| Phase 0 | PRD 확정, RBAC 역할 확장, 셀러/ERD/마이그레이션 설계 | 본 문서, Flyway 베이스 |
-| Phase 1 | 셀러(Store) + 카테고리·상품·옵션·재고 도메인 + 조회 API | 상품 카탈로그 |
-| Phase 2 | 장바구니 | 장바구니 API |
-| Phase 3 | 주문 생성(멀티셀러 SubOrder) + 재고 차감(동시성) | 주문 API + 동시성 테스트 |
-| Phase 4 | 쿠폰/포인트 적용 + 결제(Mock PG) + 상태 전이 | 결제 플로우 |
-| Phase 5 ✅ | 배송(SubOrder 단위 송장) + 게스트 주문/조회 + 배송지 + 결제후 취소/환불 | 배송/CS |
-| Phase 6 ✅ | 판매자 백오피스(입점신청·상품/재고 CRUD) + 관리자(셀러 심사·카테고리·쿠폰 발행·주문검색·환불) | 운영 백오피스 |
-| 추가 ✅ | 미룬 항목: SubOrder 부분 취소/환불 · 포인트 만료(lot FIFO) · PG 어댑터 골격 · **셀러 정산(수수료율 관리자 설정)** | 정산/CS 보강 |
-| Phase 7 ✅ | 테스트 보강(정산 엣지 케이스) / 문서화(README 이커머스 개편) — 75개 테스트 그린 | 안정화 |
+진행 이력은 [README "구현 현황"](README.md#구현-현황-이커머스)과 git 이력, 남은 작업은 [ROADMAP](docs/ROADMAP.md).
 
 ## 9. 핵심 결정 사항 (확정)
-1. **판매자 모델**: ✅ **마켓플레이스(멀티 셀러)**. 주문은 SubOrder로 판매자 단위 분리
-2. **쿠폰/포인트**: ✅ **MVP 포함**. 단순 할인 쿠폰 + 포인트 적립/사용(중첩·복합 규칙 제외)
-3. **게스트 주문**: ✅ **허용**. 주문번호+연락처 인증, 장바구니/쿠폰/포인트는 회원 전용
-4. **재고 동시성 전략**: ✅ **원자적 UPDATE** (`UPDATE inventories SET reserved = reserved + :qty WHERE option_id = :id AND quantity - reserved >= :qty`). 영향 행 0이면 재고 부족으로 처리. 락 경합·데드락이 적고 MVP에 단순
-5. **옵션 모델**: MVP는 **SKU 단위 단순화**(다축 옵션 조합 제외) 권장
-6. **결제 멱등성 키** 설계: 주문ID 기반 멱등 처리
+1. **판매자 모델**: **마켓플레이스(멀티 셀러)**. 주문은 SubOrder로 판매자 단위 분리
+2. **쿠폰/포인트**: 단순 할인 쿠폰 + 포인트 적립/사용(중첩·복합 규칙 제외)
+3. **게스트 주문**: **허용**. 주문번호+연락처 인증, 장바구니(서버)/쿠폰/포인트는 회원 전용
+4. **재고 동시성 전략**: **원자적 UPDATE** (`UPDATE inventories SET reserved = reserved + :qty WHERE option_id = :id AND quantity - reserved >= :qty`). 영향 행 0이면 재고 부족. 비관적 락보다 락 경합·데드락이 적고 단순
+5. **옵션 모델**: **SKU 단위 단순화**(다축 옵션 조합 제외)
+6. **결제 멱등성**: 주문 ID 기반. PG 취소는 `cancel-order-{id}`/`cancel-sub-{id}` 결정적 멱등키
+7. **실 PG**: **토스페이먼츠**(`payment.gateway=toss`)
+8. **정책값**: 포인트 적립률·유효기간, 수수료율, 리뷰 적립, 기본 배송비는 코드 상수가 아니라 DB 정책 행
 
 ## 10. 미해결 질문 (Open Questions)
-- [x] 셀러 정산 모델 → **구현 완료**. 수수료율은 관리자 설정값(`settlement_policies`, 기본 10%), 정산은 관리자 수동 트리거(`POST /api/admin/settlements`) + 주기 스케줄러(`settlement.scheduler.enabled`)
-- [x] 포인트 적립률 → **관리자 설정값**(`point_policies`, 기본 1%). 유효기간/만료 정책 수치는 추후
-- [x] 게스트 주문의 회원 전환 시 주문 연결 → **구현 완료**. `POST /api/orders/claim`(주문번호+연락처 확인 후 소유자 연결)
-- [x] 실 PG사 타깃 → **토스페이먼츠**. `TossPaymentGateway` 로 confirm 연동 완성(paymentKey 수신·금액 위변조 거절), `payment.gateway=toss` 로 전환
+- [ ] 배송비 정산 귀속 — 판매자에게 지급할지(ROADMAP 7.3)
+- [x] 셀러 정산 모델 → 관리자 설정 수수료율 + 수동/주기 정산
+- [x] 포인트 적립률·유효기간 → 관리자 설정값(기본 1%, 365일)
+- [x] 게스트 주문의 회원 전환 → `POST /api/orders/claim`
+- [x] 실 PG사 → 토스페이먼츠(승인·취소·웹훅)
 
-## 11. 확장 범위 (v0.3) — 커머스 스위트 & 리텐션
+## 11. 확장 범위 — 커머스 스위트 & 리텐션
 
-MVP(§1~§10) 완료 후, "산다"를 넘어 **탐색·신뢰·재방문·재구매**를 강화하는 기능을 마켓컬리 벤치마킹으로
-확장했다. 각 기능의 "무엇을·왜"와 수용기준은 `docs/planning/`의 개별 기획서에, 구현 아키텍처는
-`docs/SERVER_ARCHITECTURE.md` §13에 있다.
+MVP 이후 **탐색·신뢰·재방문·재구매**를 강화하는 기능을 마켓컬리 벤치마킹으로 확장했다. 각 기능의 "무엇을·왜"와
+수용기준은 [`docs/planning/`](docs/planning/README.md), 구현 패턴은 [SERVER_ARCHITECTURE §13](docs/SERVER_ARCHITECTURE.md).
 
 ### 11.1 커머스 스위트 (구현 완료)
 | 기능 | 도메인 | 핵심 | 마이그레이션 |
@@ -266,14 +222,22 @@ MVP(§1~§10) 완료 후, "산다"를 넘어 **탐색·신뢰·재방문·재구
 | 장바구니 이탈 리마인드 | `cart` | 24h 미활동·비어있지 않은 카트 스캔 → 리마인드 알림 1회(dedup). **자동 쿠폰 없음**(어뷰징 회피) | V25 |
 
 ### 11.3 확장에서 확정된 정책 결정
-1. **로열티 vs 유료 멤버십 충돌 회피**: 둘 다 "혜택"을 다루므로, 포인트 적립 배수는 **유료 멤버십 전용**,
-   로열티 등급 혜택은 **등급 전용 쿠폰**으로 분리해 개념 중복을 없앴다.
-2. **자동 인센티브 어뷰징 통제**: 카트 이탈 리마인드는 MVP에서 **쿠폰을 지급하지 않는다**(의도적 방치 후
-   쿠폰 수령 방지). 행동 기반 자동 쿠폰/포인트의 부정사용 방지 원칙은 공통 오픈 이슈로 남겨둔다.
-3. **알림 채널**: 모든 알림은 **인앱 알림함(`Notification`)** 이 기본이고, 이메일은 `EmailSender`(SMTP 설정 시 실발송, 없으면 로깅)로 병행한다. 푸시는 미구현.
+1. **로열티 vs 유료 멤버십 충돌 회피**: 포인트 적립 배수는 **유료 멤버십 전용**, 로열티 등급 혜택은 **등급 전용 쿠폰**으로 분리했다.
+2. **자동 인센티브 어뷰징 통제**: 카트 이탈 리마인드는 **쿠폰을 지급하지 않는다**(의도적 방치 후 쿠폰 수령 방지).
+   행동 기반 자동 보상의 공통 원칙(1인 1회·자기추천 차단·구매확정 후 지급/회수·월 상한)은 2026-09-25 확정 —
+   [planning/README 공통 오픈 이슈 5](docs/planning/README.md#공통-오픈-이슈-여러-기능에-걸침).
+3. **알림 채널**: 모든 알림은 **인앱 알림함(`Notification`)** 이 기본이고, 이메일은 `EmailSender`(SMTP 설정 시 실발송, 없으면 로깅)로 병행한다. 웹 푸시는 미구현(ROADMAP 6.3).
 
-### 11.4 확장 범위 비목표 (Out of scope, 추후)
+### 11.4 확장 범위 비목표
 - 게스트 위시리스트, 옵션(SKU) 단위 가격 추적
 - 위시리스트 기반 추천/세그먼트, "N명이 찜" 소셜프루프
-- 로열티 등급별 무료배송 등 쿠폰 외 혜택(배송비 모델은 2026-09-25 확정: 판매자 단위 3,000원, 멤버십 무료배송 면제)
-- 푸시 알림, 리퍼럴·리뷰 이벤트 등 자동 인센티브 기획(어뷰징 정책 확정 후)
+- 로열티 등급별 무료배송 등 쿠폰 외 혜택
+- 리퍼럴·리뷰 이벤트 등 자동 인센티브 기능(원칙은 확정, 기능 기획은 미착수)
+
+### 11.5 2026-09 정책 확정·구현분
+| 기능 | 결정 | 기획/근거 |
+|------|------|-----------|
+| 기본 배송비 | 3,000원(사용자 결정). 판매자(SubOrder) 단위 부과·멤버십 무료배송 면제는 구현 기본값, 금액은 `shipping_policies` 정책 행 | §5.3 |
+| 회원 탈퇴 | soft delete(`WITHDRAWN`), 비밀번호 확인, 배송 중 주문·판매자 거부, 멤버십·정기배송 해지 | `POST /api/auth/withdraw` |
+| 상품 Q&A | 고객 문의는 전부 비밀(작성자·판매자만), 공개는 판매자 FAQ | [product-qna.md](docs/planning/product-qna.md) |
+| 인센티브 어뷰징 방지 | 표준 방어(§11.3-2) | planning/README 오픈 이슈 5 |

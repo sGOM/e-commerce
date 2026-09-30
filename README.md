@@ -37,7 +37,7 @@ Kotlin + Spring Boot 백엔드와 React 고객 스토어프론트로 구성된 *
 └──────────────────────────┘                        │ JPA / 원자적 UPDATE
                                                      ▼
                                      ┌──────────────────────────────────────┐
-                                     │  PostgreSQL  (스키마: Flyway V1~V25)   │
+                                     │  PostgreSQL  (스키마: Flyway V*.sql)   │
                                      │  audit_logs JSONB(GIN) · 정책행 런타임  │
                                      └──────────────────────────────────────┘
                             결제: PaymentGateway 추상화 → Mock / Toss(@ConditionalOnProperty)
@@ -204,31 +204,14 @@ export GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=...
 - 콜백: `/login/oauth2/code/{provider}` → 성공 시 `app.oauth2.success-redirect-uri` 로 이동
 - 한 사용자가 여러 소셜 계정을 연동 가능(`oauth_accounts` 테이블)
 
-## 프론트엔드 (고객 스토어프론트)
-React + Vite SPA. 백엔드와 **세션 쿠키 + CSRF 쿠키토큰**으로 통신하며, fetch 래퍼가 상태 변경 요청에 `X-XSRF-TOKEN` 헤더를 자동 첨부한다.
+## 프론트엔드
+React + Vite SPA. 화면 목록·구조·백엔드 연동·토스 결제창 설정은 [`frontend/README.md`](frontend/README.md), UI 규칙은 [`docs/design/storefront-ui-spec.md`](docs/design/storefront-ui-spec.md).
 
 ```bash
 cd frontend
 npm install
 npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 프록시)
 ```
-
-주요 화면:
-- **고객**: 상품 목록(카테고리 필터·인기 상품)·상세(리뷰·찜), 장바구니, 체크아웃(쿠폰/포인트·배송슬롯 적용), 게스트 주문/조회, 선물하기/기프트 클레임, 마이페이지(주문·쿠폰·포인트·찜한 상품·내 등급·멤버십·정기배송·알림함)
-- **판매자 백오피스**: 상품 관리, 주문/송장, 정산 내역, 플래시세일 신청
-- **관리자 백오피스**: 셀러 심사, 주문/환불, 쿠폰 발행, 정산 관리, 컬렉션·플래시세일 편성, 배송 권역/슬롯, 멤버십, 리뷰 검수, 로열티 등급
-- **게스트 → 회원 전환**: 비회원 장바구니(localStorage)는 로그인 시 서버 장바구니로 병합(`/api/cart/merge`)
-
-```
-frontend/src
-├── api/         client(fetch+CSRF) · endpoints · types
-├── auth/        AuthContext(세션) · 게스트 장바구니 병합
-├── hooks/       useWishlist(찜 상태 컨텍스트) 등
-├── components/  Layout · ProtectedRoute · ProductCard · OrderView · WishlistButton · NotificationBell
-└── pages/       고객 화면(찜/등급/멤버십/알림함/선물하기 포함) + seller/* + admin/* 백오피스
-```
-
-> UI 리디자인(shadcn/ui + Tailwind v4 토큰, 라이트/다크)은 [`docs/design/storefront-ui-spec.md`](docs/design/storefront-ui-spec.md) 참조.
 
 ## 이커머스 API
 > 모든 응답은 공통 규약 `{ success, code, message, data }`. 상태 변경 요청은 CSRF 토큰 필요.
@@ -338,13 +321,7 @@ frontend/src
 - 실 PG(`payment.gateway=toss`): `TossPaymentGateway` 가 `/v1/payments/confirm` 으로 승인 확정.
   클라이언트 결제위젯이 발급한 `paymentKey` 를 `POST /api/payments/{orderId}` 본문으로 받아 전달하며,
   승인 응답의 `totalAmount` 가 서버 계산 금액과 다르면 위변조로 보고 거절한다.
-```yaml
-payment:
-  gateway: toss
-  toss:
-    base-url: https://api.tosspayments.com
-    secret-key: ${TOSS_SECRET_KEY}
-```
+- 환경변수: `PAYMENT_GATEWAY=toss`, `PAYMENT_TOSS_SECRETKEY=...`(예시는 `.env.example`). 프론트 결제창 키는 [`frontend/README.md`](frontend/README.md#결제-토스-결제창).
 
 ### 환경 주의
 1. **Gradle 런처 JDK**: 시스템 JDK가 26이면 Gradle 8.14.x의 내장 Kotlin 컴파일러가 깨진다.

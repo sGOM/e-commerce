@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Glob, Grep, WebFetch
 
 ## 대상 제품
 - 고객 스토어프론트 + 셀러/관리자 백오피스 (마켓플레이스형 이커머스).
-- 프론트: React 19 + Tailwind CSS 4. 스타일은 Tailwind 유틸리티/디자인 토큰 중심.
+- 프론트: React 19 + Tailwind CSS 4 + shadcn/ui. 토큰·컴포넌트·접근성 규칙은 `docs/design/storefront-ui-spec.md`(토큰 값 원천은 `frontend/src/index.css`).
 
 ## 책임 범위
 - 정보구조(IA)·화면 흐름·네비게이션 설계와 개선안 제시
