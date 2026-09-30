@@ -134,6 +134,80 @@ class OrderReturnIntegrationTest : AbstractIntegrationTest() {
         assert(payment.events.any { it.detail?.contains("환불 ${payableShare - returnFee}원") == true })
     }
 
+    private fun reservedOf(optionId: Long): Int {
+        em.flush(); em.clear()
+        return productRepository.findWithDetailById(
+            productRepository.findAll().first { p -> p.options.any { it.id == optionId } }.id!!,
+        ).get().options.first { it.id == optionId }.inventory!!.reserved
+    }
+
+    @Test
+    fun `부분 반품 후 관리자 전체 환불은 반품된 하위 주문을 다시 환불하거나 재고를 복원하지 않는다`() {
+        val (sellerA, optionA) = seedSeller("RET-10-A")
+        val (_, optionB) = seedSeller("RET-10-B")
+        val buyer = seedBuyer("ret-buyer-10@example.com")
+        val other = seedBuyer("ret-other-10@example.com")
+        // 다른 구매자의 A 예약 1개 — 이중 복원이 reserved >= qty 가드에 가려지지 않게 한다
+        mockMvc.post("/api/cart/items") {
+            with(user(other)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"optionId":$optionA,"quantity":1}"""
+        }.andExpect { status { isOk() } }
+        mockMvc.post("/api/orders") {
+            with(user(other)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"ordererName":"구매","ordererPhone":"010-1","ordererEmail":"o@e.com",$address}"""
+        }.andExpect { status { isOk() } }
+
+        listOf(optionA, optionB).forEach { optionId ->
+            mockMvc.post("/api/cart/items") {
+                with(user(buyer)); with(csrf())
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"optionId":$optionId,"quantity":1}"""
+            }.andExpect { status { isOk() } }
+        }
+        val res = mockMvc.post("/api/orders") {
+            with(user(buyer)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"ordererName":"구매","ordererPhone":"010-1","ordererEmail":"b@e.com",$address}"""
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val orderId = Regex(""""orderId":(\d+)""").find(res)!!.groupValues[1].toLong()
+        mockMvc.post("/api/payments/$orderId") { with(user(buyer)); with(csrf()) }.andExpect { status { isOk() } }
+        val order = orderRepository.findById(orderId).get()
+        val subA = order.subOrders.first { sub -> sub.items.any { it.optionId == optionA } }
+        val subB = order.subOrders.first { it.id != subA.id }
+        val subAId = subA.id!!
+        val shareA = subA.payableShare
+        val shareB = subB.payableShare
+        mockMvc.post("/api/seller/orders/$subAId/ship") {
+            with(user(sellerA)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"courier":"CJ","trackingNumber":"T-$subAId"}"""
+        }.andExpect { status { isOk() } }
+        assertEquals(2, reservedOf(optionA))
+
+        val returnId = returnIdOf(requestReturn(buyer, subAId).andReturn().response.contentAsString)
+        sellerAction(sellerA, returnId, "approve").andExpect { status { isOk() } }
+        sellerAction(sellerA, returnId, "complete").andExpect { status { isOk() } }
+
+        // 단순변심 반품은 재고로 돌아오고, B 가 남아 있어 주문·결제는 PAID 유지(부분 환불 기록)
+        assertEquals(1, reservedOf(optionA))
+        assertEquals(OrderStatus.PAID, orderRepository.findById(orderId).get().status)
+        val payment = paymentRepository.findByOrderId(orderId).get()
+        assertEquals(PaymentStatus.PAID, payment.status)
+        val returnFee = shippingPolicyService.returnFee()
+        assert(payment.events.any { it.detail == "부분 환불 ${shareA - returnFee}원" })
+
+        mockMvc.post("/api/admin/orders/$orderId/refund") { with(user("admin").roles("ADMIN")); with(csrf()) }
+            .andExpect { status { isOk() } }
+
+        assertEquals(1, reservedOf(optionA)) // 반품된 A 는 다시 복원하지 않는다
+        assertEquals(0, reservedOf(optionB))
+        val events = paymentRepository.findByOrderId(orderId).get().events
+        assertEquals(PaymentStatus.CANCELED, paymentRepository.findByOrderId(orderId).get().status)
+        assert(events.any { it.detail == "관리자 환불 (환불 ${shareB}원)" }) { events.map { it.detail } }
+    }
+
     @Test
     fun `상품 불량 반품은 반품 배송비 없이 전액 환불한다`() {
         val (seller, optionId) = seedSeller("RET-2")
