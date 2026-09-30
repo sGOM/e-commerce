@@ -209,6 +209,33 @@ class OrderReturnIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `반품 완료 건은 단순변심 반품 배송비만 판매자에게 정산되고 불량 반품은 정산할 것이 없다`() {
+        val (seller, optionId) = seedSeller("RET-11")
+        val (defectSeller, defectOption) = seedSeller("RET-11-D")
+        val buyer = seedBuyer("ret-buyer-11@example.com")
+        val returnFee = shippingPolicyService.returnFee()
+        listOf(
+            Triple(seller, optionId, "CHANGE_OF_MIND"),
+            Triple(defectSeller, defectOption, "DEFECTIVE"),
+        ).forEach { (s, option, reason) ->
+            val subOrderId = placeShippedOrder(buyer, s, option)
+            val returnId = returnIdOf(requestReturn(buyer, subOrderId, reason).andReturn().response.contentAsString)
+            sellerAction(s, returnId, "approve").andExpect { status { isOk() } }
+            sellerAction(s, returnId, "complete").andExpect { status { isOk() } }
+        }
+
+        val settlements = settlementService.generate()
+
+        // 판매자가 자기 택배사로 회수했으므로 고객이 낸 반품 배송비는 판매자 몫(수수료 없음), 상품 판매액은 0
+        val mine = settlements.single { it.storeName == "RET-11" }
+        assertEquals(0, mine.salesAmount)
+        assertEquals(returnFee, mine.deliveryFeeAmount)
+        assertEquals(returnFee, mine.payoutAmount)
+        // 불량 반품은 판매자 부담 — 받을 돈이 없어 정산서도 없다
+        assert(settlements.none { it.storeName == "RET-11-D" })
+    }
+
+    @Test
     fun `상품 불량 반품은 반품 배송비 없이 전액 환불한다`() {
         val (seller, optionId) = seedSeller("RET-2")
         val buyer = seedBuyer("ret-buyer-2@example.com")

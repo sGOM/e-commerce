@@ -156,7 +156,8 @@ export default function AdminSettlementsPage() {
                   <div>
                     <p className="font-medium">{s.storeName}</p>
                     <p className="text-xs text-muted-foreground">
-                      판매 {formatKRW(s.salesAmount)} · 수수료 {formatKRW(s.commissionAmount)} · {s.settledCount}건 ·{' '}
+                      판매 {formatKRW(s.salesAmount)} · 수수료 {formatKRW(s.commissionAmount)} · 배송비{' '}
+                      {formatKRW(s.deliveryFeeAmount)} · {s.settledCount}건 ·{' '}
                       {new Date(s.createdAt).toLocaleDateString('ko-KR')}
                     </p>
                   </div>

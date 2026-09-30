@@ -38,6 +38,7 @@ class SellerReturnService(
         orderService.completeReturn(
             request.subOrder,
             request.refundAmount,
+            sellerReturnFee = request.returnFee,
             restock = request.reason == ReturnReason.CHANGE_OF_MIND,
             returnId = returnId,
         )

@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 
-/** 기본 배송비(ROADMAP 7.1): 판매자(SubOrder) 단위 부과, 멤버십 무료배송 면제, 관리자 정책 변경. */
+/** 기본 배송비(ROADMAP 7.1): 판매자(SubOrder) 단위 부과, 관리자 정책 변경. 배송비는 판매자 몫이라 멤버십 면제가 없다(7.3). */
 @AutoConfigureMockMvc
 @Transactional
 class ShippingFeeIntegrationTest : AbstractIntegrationTest() {
@@ -81,13 +81,13 @@ class ShippingFeeIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `멤버십 무료배송 회원은 기본 배송비가 면제된다`() {
+    fun `멤버십 회원도 기본 배송비를 낸다 - 배송비는 판매자가 받는 택배비라 플랫폼 혜택으로 면제하지 않는다`() {
         val buyer = seedBuyer("ship-2@example.com")
-        every { membershipBenefitService.isFreeShippingActive(buyer.userId, any()) } returns true
+        every { membershipBenefitService.isBenefitActive(buyer.userId, any()) } returns true
 
         order(buyer, seedOption("SHIP2-A", 10_000)).andExpect {
-            jsonPath("$.data.deliveryFeeTotal") { value(0) }
-            jsonPath("$.data.payableAmount") { value(10_000) }
+            jsonPath("$.data.deliveryFeeTotal") { value(3_000) }
+            jsonPath("$.data.payableAmount") { value(13_000) }
         }
     }
 

@@ -17,7 +17,8 @@ import java.time.Instant
 
 /**
  * 판매자 정산서. 미정산 SubOrder 들을 판매자 단위로 집계한 1건.
- * 지급액([payoutAmount]) = 판매액([salesAmount]) − 플랫폼 수수료([commissionAmount]).
+ * 지급액([payoutAmount]) = 판매액([salesAmount]) − 플랫폼 수수료([commissionAmount]) + 배송비([deliveryFeeAmount]).
+ * 배송비는 판매자가 자기 택배사로 내는 실비라 수수료를 매기지 않는다(ROADMAP 7.3).
  */
 @Entity
 @Table(name = "settlements")
@@ -31,6 +32,9 @@ class Settlement(
 
     @Column(name = "commission_amount", nullable = false)
     val commissionAmount: Long,
+
+    @Column(name = "delivery_fee_amount", nullable = false)
+    val deliveryFeeAmount: Long,
 
     @Column(name = "payout_amount", nullable = false)
     val payoutAmount: Long,

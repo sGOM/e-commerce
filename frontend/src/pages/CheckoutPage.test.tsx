@@ -169,7 +169,7 @@ describe('CheckoutPage', () => {
     expect(orderApi.create).toHaveBeenCalledTimes(1)
   })
 
-  it('판매자마다 기본 배송비를 미리보기에 더하고, 멤버십 무료배송이면 0원이다', async () => {
+  it('판매자마다 기본 배송비를 미리보기에 더하고, 멤버십 회원도 배송비는 그대로다', async () => {
     asMember()
     renderPage()
     expect(await screen.findByText('+3,000원')).toBeTruthy()
@@ -179,11 +179,11 @@ describe('CheckoutPage', () => {
     asMember()
     vi.mocked(membershipApi.my).mockResolvedValue({
       benefitActive: true,
-      benefits: { freeShipping: true, pointEarnMultiplierBp: 10_000 },
+      benefits: { pointEarnMultiplierBp: 15_000 },
     } as never)
     renderPage()
-    expect(await screen.findByText(/무료배송 적용됨/)).toBeTruthy()
-    expect(screen.queryByText('+3,000원')).toBeNull()
-    expect(screen.getAllByText('20,000원')).toHaveLength(2) // 상품금액 = 결제금액
+    expect(await screen.findByText(/포인트 1.5배 적립 예정/)).toBeTruthy()
+    expect(screen.getByText('+3,000원')).toBeTruthy() // 배송비는 판매자 몫이라 면제하지 않는다
+    expect(screen.getByText('23,000원')).toBeTruthy()
   })
 })

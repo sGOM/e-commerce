@@ -31,16 +31,20 @@ class SettlementService(
     @Transactional
     fun generate(): List<SettlementResponse> {
         val rateBp = settlementPolicyService.currentRateBp()
+        // 반품 완료 건은 판매자가 받을 반품 배송비가 있을 때만(불량·오배송 반품은 판매자 부담이라 줄 돈이 없다)
         val targets = subOrderRepository.findBySettlementIdIsNullAndStatusIn(SETTLEABLE)
+            .filter { it.status != SubOrderStatus.RETURNED || it.sellerReturnFee > 0 }
         return targets.groupBy { requireNotNull(it.seller.id) }.map { (_, subOrders) ->
-            val sales = subOrders.sumOf { it.subtotal }
+            val sales = subOrders.sumOf { it.settlementSales }
             val commission = sales * rateBp / 10_000
+            val deliveryFee = subOrders.sumOf { it.settlementDeliveryFee } // 수수료 없음(7.3)
             val settlement = settlementRepository.save(
                 Settlement(
                     seller = subOrders.first().seller,
                     salesAmount = sales,
                     commissionAmount = commission,
-                    payoutAmount = sales - commission,
+                    deliveryFeeAmount = deliveryFee,
+                    payoutAmount = sales - commission + deliveryFee,
                     settledCount = subOrders.size,
                 ),
             )
@@ -78,12 +82,13 @@ class SettlementService(
             ).id!!
 
     companion object {
-        // 취소를 제외한 결제 완료 이후 상태를 정산 대상으로 본다.
+        // 취소·반품 진행 중을 제외한 결제 완료 이후 상태 + 반품 완료(반품 배송비 정산용)를 대상으로 본다.
         private val SETTLEABLE = listOf(
             SubOrderStatus.PAID,
             SubOrderStatus.PREPARING,
             SubOrderStatus.SHIPPED,
             SubOrderStatus.DELIVERED,
+            SubOrderStatus.RETURNED,
         )
     }
 }

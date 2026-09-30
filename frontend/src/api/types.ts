@@ -329,6 +329,8 @@ export interface Settlement {
   storeName: string
   salesAmount: number
   commissionAmount: number
+  // 배송비·단순변심 반품 배송비 — 판매자 택배 실비라 수수료 없이 지급(ROADMAP 7.3)
+  deliveryFeeAmount: number
   payoutAmount: number
   settledCount: number
   status: SettlementStatus
@@ -480,7 +482,6 @@ export type BillingHistoryStatus = 'SUCCESS' | 'FAILED'
 
 /** 지금 적용 중인 혜택 값 — 체크아웃 인라인 안내에 그대로 쓸 수 있는 형태. */
 export interface MembershipBenefitSummary {
-  freeShipping: boolean
   pointEarnMultiplierBp: number
 }
 
@@ -526,7 +527,6 @@ export interface AdminMembership {
 export interface MembershipPolicy {
   monthlyPrice: number
   pointEarnMultiplierBp: number
-  freeShippingEnabled: boolean
   maxRetryCount: number
   graceDays: number
 }
