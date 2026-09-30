@@ -138,6 +138,38 @@ class SubOrderCancelIntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `부분 취소 후 관리자 전체 환불은 이미 취소된 하위 주문의 재고를 다시 복원하지 않는다`() {
+        val buyer = seedBuyer("sub-cancel-4@example.com")
+        val other = seedBuyer("sub-cancel-4-other@example.com")
+        val optionA = seedOption("SUBC4-A", basePrice = 20_000)
+        val optionB = seedOption("SUBC4-B", basePrice = 30_000)
+        addToCart(other, optionA, 1) // 다른 구매자의 A 예약 1개는 끝까지 유지돼야 한다
+        mockMvc.post("/api/orders") {
+            with(user(other)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"ordererName":"구매","ordererPhone":"010-1","ordererEmail":"b@e.com",$address}"""
+        }.andExpect { status { isOk() } }
+        addToCart(buyer, optionA, 1)
+        addToCart(buyer, optionB, 1)
+        val res = mockMvc.post("/api/orders") {
+            with(user(buyer)); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"ordererName":"구매","ordererPhone":"010-1","ordererEmail":"b@e.com",$address}"""
+        }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+        val orderId = Regex(""""orderId":(\d+)""").find(res)!!.groupValues[1].toLong()
+        mockMvc.post("/api/payments/$orderId") { with(user(buyer)); with(csrf()) }.andExpect { status { isOk() } }
+        val subOrderA = orderRepository.findById(orderId).get().subOrders.first { it.subtotal == 20_000L }
+        mockMvc.post("/api/orders/sub-orders/${subOrderA.id}/cancel") { with(user(buyer)); with(csrf()) }
+            .andExpect { status { isOk() } }
+
+        mockMvc.post("/api/admin/orders/$orderId/refund") { with(user("admin").roles("ADMIN")); with(csrf()) }
+            .andExpect { status { isOk() } }
+
+        assertEquals(1, reservedOf(optionA))
+        assertEquals(0, reservedOf(optionB))
+    }
+
+    @Test
     fun `이미 취소된 하위 주문은 다시 취소할 수 없다`() {
         val buyer = seedBuyer("sub-cancel-3@example.com")
         val optionId = seedOption("SUBC3", basePrice = 10_000)

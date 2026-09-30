@@ -5,6 +5,7 @@ import { orderApi } from '../api/endpoints'
 import { ApiError } from '../api/client'
 import { giftClaimStatusLabel } from '../labels'
 import OrderView from '../components/OrderView'
+import OrderReturnCard from '../components/OrderReturnCard'
 import { payMemberOrder } from '../lib/payment'
 import type { GiftClaim, Order } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -179,8 +180,12 @@ export default function OrderDetailPage() {
   if (error && !order) return <p className="py-20 text-center text-sm text-destructive">{error}</p>
   if (!order) return null
 
+  // 발송 이후(배송·반품) 하위 주문이 있으면 취소가 아니라 반품 대상이다
   const cancelable =
-    order.status !== 'CANCELED' && !order.subOrders.some((s) => s.status === 'SHIPPED' || s.status === 'DELIVERED')
+    order.status !== 'CANCELED' &&
+    order.subOrders.every(
+      (s) => s.status === 'CREATED' || s.status === 'PAID' || s.status === 'PREPARING' || s.status === 'CANCELED',
+    )
 
   return (
     <div className="space-y-6">
@@ -196,6 +201,8 @@ export default function OrderDetailPage() {
         confirmingSubOrderId={confirmingSubOrderId}
         trackable
       />
+
+      <OrderReturnCard order={order} onRequested={() => orderApi.detail(orderId).then(setOrder)} />
 
       {error && (
         <p role="alert" className="text-sm text-destructive">

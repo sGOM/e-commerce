@@ -123,6 +123,9 @@ export default function SellerLayout() {
         <NavLink to="/seller/orders" className={tab}>
           주문/배송
         </NavLink>
+        <NavLink to="/seller/returns" className={tab}>
+          반품
+        </NavLink>
         <NavLink to="/seller/settlements" className={tab}>
           정산
         </NavLink>

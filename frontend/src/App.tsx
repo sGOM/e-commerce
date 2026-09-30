@@ -36,6 +36,7 @@ const SellerDashboardPage = lazy(() => import('./pages/seller/SellerDashboardPag
 const SellerProductsPage = lazy(() => import('./pages/seller/SellerProductsPage'))
 const SellerOrdersPage = lazy(() => import('./pages/seller/SellerOrdersPage'))
 const SellerSettlementsPage = lazy(() => import('./pages/seller/SellerSettlementsPage'))
+const SellerReturnsPage = lazy(() => import('./pages/seller/SellerReturnsPage'))
 const SellerFlashSalesPage = lazy(() => import('./pages/seller/SellerFlashSalesPage'))
 const SellerInquiriesPage = lazy(() => import('./pages/seller/SellerInquiriesPage'))
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
@@ -192,6 +193,7 @@ export default function App() {
                     <Route path="dashboard" element={<SellerDashboardPage />} />
                     <Route path="products" element={<SellerProductsPage />} />
                     <Route path="orders" element={<SellerOrdersPage />} />
+                    <Route path="returns" element={<SellerReturnsPage />} />
                     <Route path="settlements" element={<SellerSettlementsPage />} />
                     <Route path="flash-sales" element={<SellerFlashSalesPage />} />
                     <Route path="inquiries" element={<SellerInquiriesPage />} />

@@ -103,7 +103,7 @@ Order ─< SubOrder(판매자 단위) ─< OrderItem ┘     ← 멀티셀러 �
 | Phase 4 | 쿠폰/포인트 적용 + 결제(Mock PG) + 상태 전이 | ✅ |
 | Phase 5 | 배송(SubOrder 단위 송장) + 게스트 주문/조회 + 배송지 + 결제후 취소/환불 | ✅ |
 | Phase 6 | 판매자 백오피스 + 관리자 운영(셀러 심사·카테고리·쿠폰·주문검색·환불) | ✅ |
-| 추가 | SubOrder 부분 취소/환불 · 포인트 만료(lot FIFO) · PG 어댑터 골격 · 셀러 정산 | ✅ |
+| 추가 | SubOrder 부분 취소/환불 · 반품(요청→회수→검수→환불) · 포인트 만료(lot FIFO) · PG 어댑터 골격 · 셀러 정산 | ✅ |
 | Phase 7 | 테스트 보강 / 문서화 | ✅ |
 | Phase 8 | 고객 스토어프론트(React SPA) + 판매자/관리자 백오피스 | ✅ |
 | Phase 9 | 상품 검색(키워드·카테고리·판매자) + 판매량 기반 인기 상품 | ✅ |
@@ -249,6 +249,7 @@ npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 
 | POST · GET | `/api/me/inquiries` | 상품 비밀 문의 작성 / 내 문의·답변 조회 | 회원 |
 | POST · DELETE | `/api/products/options/{optionId}/restock-alerts` | 재입고 알림 신청/해제 | 회원 |
 | POST · DELETE · GET | `/api/me/wishlist` · `/api/me/wishlist/{productId}` | 위시리스트 담기/빼기/목록(가격 인하 배지) | 회원 |
+| GET · POST | `/api/me/returns` | 내 반품 조회 / 반품 요청(하위 주문 단위, 환불액 서버 계산) | 회원 |
 | GET | `/api/me/loyalty-tier` | 내 로열티 등급·다음 등급까지 남은 금액 | 회원 |
 | GET · PATCH | `/api/me/notifications` · `/api/me/notifications/{id}/read` | 인앱 알림함 조회·읽음(재입고·가격인하·카트리마인드 등) | 회원 |
 | GET · POST | `/api/me/membership` | 내 멤버십 조회 / 구독(빌링키) | 회원 |
@@ -264,6 +265,7 @@ npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 
 | PATCH | `/api/seller/products/{id}/stock` | 재고 조정(절대값) |
 | GET | `/api/seller/orders?status=` | 본인 판매분 SubOrder 조회 |
 | POST | `/api/seller/orders/{subOrderId}/ship` | 송장 등록 → SHIPPED |
+| GET · POST | `/api/seller/returns` · `/{id}/approve` · `/{id}/complete` · `/{id}/reject` | 반품 처리(승인=회수 시작, 검수 완료=환불, 거절=원상태 복귀) |
 | GET | `/api/seller/settlements` | 본인 상점 정산 내역 |
 | GET · POST | `/api/seller/flash-sales` | 본인 상품 플래시세일 신청/조회 |
 | GET · PUT | `/api/seller/inquiries` · `/{id}/answer` | 내 상품 문의 조회(미답변 필터)·답변 |

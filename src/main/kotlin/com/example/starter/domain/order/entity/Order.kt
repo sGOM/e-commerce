@@ -123,12 +123,12 @@ class Order(
     /** 하위 주문 중 하나라도 발송/배송 단계에 들어갔는지 — 배송 시작 후에는 취소 불가. */
     val hasShipmentStarted: Boolean
         get() = subOrders.any {
-            it.status == SubOrderStatus.SHIPPED || it.status == SubOrderStatus.DELIVERED
+            it.status in listOf(SubOrderStatus.SHIPPED, SubOrderStatus.DELIVERED, SubOrderStatus.RETURNING, SubOrderStatus.RETURNED)
         }
 
-    /** 모든 하위 주문이 취소되었는지(부분 취소 누적이 전체가 됐는지). */
-    val isFullyCanceled: Boolean
-        get() = subOrders.isNotEmpty() && subOrders.all { it.status == SubOrderStatus.CANCELED }
+    /** 모든 하위 주문이 취소·반품으로 종료되었는지(부분 취소·반품 누적이 전체가 됐는지). */
+    val isFullyClosed: Boolean
+        get() = subOrders.isNotEmpty() && subOrders.all { it.status.isClosed }
 
     /**
      * 최종 결제금액([payableAmount])을 하위 주문 상품합계 비례로 배분해 각 [SubOrder.payableShare] 에 저장한다.

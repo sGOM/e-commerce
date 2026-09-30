@@ -72,6 +72,8 @@ import type {
   Faq,
   Inquiry,
   Tracking,
+  ReturnReason,
+  OrderReturn,
 } from './types'
 
 // ----- 인증 -----
@@ -364,6 +366,17 @@ export const sellerApi = {
       trackingNumber,
     }),
   settlements: () => api.get<Settlement[]>('/api/seller/settlements'),
+  // 반품 처리: 승인(회수 시작) → 검수 완료(환불) / 거절
+  returns: () => api.get<OrderReturn[]>('/api/seller/returns'),
+  returnAction: (returnId: number, action: 'approve' | 'complete' | 'reject') =>
+    api.post<OrderReturn>(`/api/seller/returns/${returnId}/${action}`),
+}
+
+// ----- 반품(회원) — 발송 후·구매확정 후 정책 일수 이내, 하위 주문 단위 -----
+export const returnApi = {
+  mine: () => api.get<OrderReturn[]>('/api/me/returns'),
+  request: (subOrderId: number, reason: ReturnReason, detail?: string) =>
+    api.post<OrderReturn>('/api/me/returns', { subOrderId, reason, detail }),
 }
 
 // ----- 상품 Q&A: 고객 문의는 비밀(본인·판매자만), 공개는 판매자 FAQ -----

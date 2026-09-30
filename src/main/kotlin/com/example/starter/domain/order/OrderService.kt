@@ -380,10 +380,8 @@ class OrderService(
         if (order.userId != userId) {
             throw BusinessException(ErrorCode.SUB_ORDER_NOT_FOUND) // 본인 주문이 아니면 존재를 숨긴다
         }
-        if (subOrder.status == SubOrderStatus.CANCELED ||
-            subOrder.status == SubOrderStatus.SHIPPED ||
-            subOrder.status == SubOrderStatus.DELIVERED
-        ) {
+        // 발송 이후(배송·반품)는 취소가 아니라 반품 대상이다
+        if (subOrder.status !in listOf(SubOrderStatus.CREATED, SubOrderStatus.PAID, SubOrderStatus.PREPARING)) {
             throw BusinessException(ErrorCode.ORDER_NOT_CANCELABLE)
         }
 
@@ -399,27 +397,49 @@ class OrderService(
         subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
         subOrder.status = SubOrderStatus.CANCELED
 
-        // 전체 취소 완료 시점에만 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리
-        if (order.isFullyCanceled) {
-            if (order.discountAmount > 0) {
-                couponService.restoreForOrder(orderId)
-            }
-            if (order.pointUsed > 0) {
-                order.userId?.let { pointService.restoreUse(it, order.pointUsed, orderId) }
-            }
-            if (wasPaid) {
-                order.userId?.let { pointService.revokeEarnForOrder(it, orderId) }
-            }
-            order.status = OrderStatus.CANCELED
-        }
+        closeOrderIfFullyClosed(order, wasPaid)
         // PG 취소는 내부 상태 변경을 모두 끝낸 뒤 마지막에(실패 시 전체 롤백) — PaymentService.refund 참고
         if (wasPaid) {
-            val fully = order.isFullyCanceled
+            val fully = order.isFullyClosed
             paymentService.refund(
                 orderId, subOrder.payableShare, if (fully) "전체 취소 완료" else "부분 취소", "cancel-sub-$subOrderId", fully,
             )
         }
         return OrderResponse.from(order)
+    }
+
+    /**
+     * 반품 검수 완료 — 하위 주문을 RETURNED 로 닫고 [refundAmount](반품 배송비 차감 후)를 환불한다
+     * ([com.example.starter.domain.returns.SellerReturnService.complete]). 재고는 [restock] 일 때만 복원한다
+     * (단순변심은 재판매 가능, 불량·오배송 회수품은 판매자가 재고를 직접 판단). 발송된 주문이라 슬롯·타임딜 한도는 건드리지 않는다.
+     * 모든 하위 주문이 닫히면 [cancelSubOrder] 와 같게 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
+     */
+    @Transactional
+    fun completeReturn(subOrder: SubOrder, refundAmount: Long, restock: Boolean, returnId: Long) {
+        val order = subOrder.order
+        if (restock) subOrder.items.forEach { inventoryRepository.release(it.optionId, it.quantity) }
+        subOrder.status = SubOrderStatus.RETURNED
+        closeOrderIfFullyClosed(order, wasPaid = true)
+        val fully = order.isFullyClosed
+        paymentService.refund(
+            requireNotNull(order.id), refundAmount, if (fully) "반품 완료(전체)" else "반품 완료", "return-$returnId", fully,
+        )
+    }
+
+    /** 부분 취소·반품이 누적돼 전체가 닫힌 시점에만 쿠폰/포인트 복원·적립 회수·주문 취소 상태를 마무리한다. */
+    private fun closeOrderIfFullyClosed(order: Order, wasPaid: Boolean) {
+        if (!order.isFullyClosed) return
+        val orderId = requireNotNull(order.id)
+        if (order.discountAmount > 0) {
+            couponService.restoreForOrder(orderId)
+        }
+        if (order.pointUsed > 0) {
+            order.userId?.let { pointService.restoreUse(it, order.pointUsed, orderId) }
+        }
+        if (wasPaid) {
+            order.userId?.let { pointService.revokeEarnForOrder(it, orderId) }
+        }
+        order.status = OrderStatus.CANCELED
     }
 
     /**
@@ -499,17 +519,15 @@ class OrderService(
     private fun doCancel(order: Order, reason: String, refundAtPg: Boolean = true) {
         val orderId = requireNotNull(order.id)
         val wasPaid = order.status == OrderStatus.PAID
-        // 이미 부분 취소로 환불된 SubOrder 몫은 빼고 남은 금액만 PG 에 취소 요청한다.
-        val remainingPayable = order.subOrders.filter { it.status != SubOrderStatus.CANCELED }.sumOf { it.payableShare }
-        order.subOrders.forEach { subOrder ->
+        // 이미 부분 취소·반품으로 닫힌 SubOrder 는 환불·재고·슬롯 복원이 끝났으므로 건너뛴다(이중 환불·복원 방지).
+        val openSubOrders = order.subOrders.filterNot { it.status.isClosed }
+        val remainingPayable = openSubOrders.sumOf { it.payableShare }
+        openSubOrders.forEach { subOrder ->
             subOrder.items.forEach { item ->
                 inventoryRepository.release(item.optionId, item.quantity)
                 item.flashSaleId?.let { flashSaleRepository.release(it, item.quantity) }
             }
-            // 이미 부분취소(cancelSubOrder)로 슬롯을 복원한 SubOrder 는 다시 복원하지 않는다(이중 복원 방지).
-            if (subOrder.status != SubOrderStatus.CANCELED) {
-                subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
-            }
+            subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
             subOrder.status = SubOrderStatus.CANCELED
         }
         if (order.discountAmount > 0) {

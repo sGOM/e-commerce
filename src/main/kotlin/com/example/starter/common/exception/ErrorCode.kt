@@ -81,6 +81,13 @@ enum class ErrorCode(
     INSUFFICIENT_POINT(HttpStatus.CONFLICT, "POINT-001", "보유 포인트가 부족합니다."),
     POINT_EXCEEDS_PAYABLE(HttpStatus.BAD_REQUEST, "POINT-002", "사용 포인트가 결제금액을 초과합니다."),
 
+    // 반품 (RETURN)
+    RETURN_NOT_FOUND(HttpStatus.NOT_FOUND, "RETURN-001", "반품 요청을 찾을 수 없습니다."),
+    SUB_ORDER_NOT_RETURNABLE(HttpStatus.CONFLICT, "RETURN-002", "배송 중이거나 구매확정한 주문만 반품을 요청할 수 있습니다."),
+    RETURN_WINDOW_EXPIRED(HttpStatus.CONFLICT, "RETURN-003", "반품 가능 기간이 지났습니다."),
+    RETURN_ALREADY_SETTLED(HttpStatus.CONFLICT, "RETURN-004", "이미 판매자 정산이 끝난 주문은 고객센터로 문의해 주세요."),
+    RETURN_INVALID_TRANSITION(HttpStatus.CONFLICT, "RETURN-005", "현재 반품 상태에서는 처리할 수 없습니다."),
+
     // 정산 (SETTLEMENT)
     SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTLEMENT-001", "정산 내역을 찾을 수 없습니다."),
 
