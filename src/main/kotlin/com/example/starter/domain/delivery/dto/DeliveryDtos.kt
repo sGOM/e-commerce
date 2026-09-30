@@ -5,6 +5,7 @@ import com.example.starter.domain.delivery.entity.DeliverySlot
 import com.example.starter.domain.delivery.entity.DeliverySlotType
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.PositiveOrZero
 import java.time.Instant
 import java.time.LocalDate
@@ -87,14 +88,22 @@ data class DeliveryRegionResponse(
     }
 }
 
-/** 기본 배송비 정책 응답. [baseFee] 는 판매자(SubOrder) 단위 금액(원). */
+/**
+ * 배송비 정책 응답. [baseFee] 는 판매자(SubOrder) 단위 금액(원), [returnFee] 는 단순변심 반품 시 환불에서 빼는
+ * 반품 배송비(판매자에게 정산), [returnWindowDays] 는 구매확정 후 반품 가능 일수.
+ */
 data class ShippingPolicyResponse(
     val baseFee: Long,
+    val returnFee: Long,
+    val returnWindowDays: Int,
 )
 
-/** 기본 배송비 변경 요청(관리자). */
+/** 배송비 정책 부분 변경 요청(관리자) — 보낸 항목만 바꾼다. */
 data class UpdateShippingPolicyRequest(
-    @field:NotNull
     @field:PositiveOrZero
     val baseFee: Long? = null,
+    @field:PositiveOrZero
+    val returnFee: Long? = null,
+    @field:Positive
+    val returnWindowDays: Int? = null,
 )

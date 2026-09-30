@@ -113,7 +113,7 @@ export type SubOrderStatus =
 
 // ----- 반품(하위 주문 단위). 금액은 서버가 요청 시점 정책으로 계산해 스냅샷한다 -----
 export type ReturnReason = 'CHANGE_OF_MIND' | 'DEFECTIVE' | 'WRONG_DELIVERY'
-export type ReturnStatus = 'REQUESTED' | 'COLLECTING' | 'COMPLETED' | 'REJECTED'
+export type ReturnStatus = 'REQUESTED' | 'COLLECTING' | 'COMPLETED' | 'REJECTED' | 'CANCELED'
 
 export interface OrderReturn {
   returnId: number
@@ -755,6 +755,9 @@ export interface PointPolicy {
 /** 기본 배송비 정책(판매자 단위, 원) */
 export interface ShippingPolicy {
   baseFee: number
+  // 단순변심 반품 시 환불에서 빼는 반품 배송비, 구매확정 후 반품 가능 일수
+  returnFee: number
+  returnWindowDays: number
 }
 
 // ----- 상품 Q&A (docs/planning/product-qna.md) -----

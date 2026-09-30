@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-/** 기본 배송비 정책 변경 (`ROLE_ADMIN`). */
+/** 배송비·반품 정책 변경 (`ROLE_ADMIN`). */
 @RestController
 @RequestMapping("/api/admin/shipping-policy")
 class AdminShippingPolicyController(
@@ -18,5 +18,5 @@ class AdminShippingPolicyController(
 
     @PatchMapping
     fun update(@RequestBody @Valid request: UpdateShippingPolicyRequest): ApiResponse<ShippingPolicyResponse> =
-        ApiResponse.success(shippingPolicyService.update(request.baseFee!!), "배송비 정책을 변경했습니다.")
+        ApiResponse.success(shippingPolicyService.update(request), "배송비 정책을 변경했습니다.")
 }

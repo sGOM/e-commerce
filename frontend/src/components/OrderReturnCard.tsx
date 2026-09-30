@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { returnApi } from '../api/endpoints'
+import { returnApi, shippingPolicyApi } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
 import { returnReasonLabel, returnStatusLabel } from '../labels'
-import type { Order, ReturnReason, OrderReturn } from '../api/types'
+import type { Order, ReturnReason, OrderReturn, ShippingPolicy } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
@@ -20,6 +20,16 @@ export default function OrderReturnCard({ order, onRequested }: { order: Order; 
   const [detail, setDetail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [policy, setPolicy] = useState<ShippingPolicy | null>(null)
+
+  useEffect(() => {
+    shippingPolicyApi
+      .get()
+      .then(setPolicy)
+      .catch(() => {
+        // 안내 문구만 일반화된다 — 실제 차감액은 서버가 계산해 신청 결과로 보여준다
+      })
+  }, [])
 
   const returnable = order.subOrders.filter((s) => s.status === 'SHIPPED' || s.status === 'DELIVERED')
   const selected = subOrderId ?? returnable[0]?.subOrderId ?? null
@@ -125,7 +135,9 @@ export default function OrderReturnCard({ order, onRequested }: { order: Order; 
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            단순 변심은 반품 배송비가 환불액에서 차감됩니다. 구매확정 후에는 정해진 기간 안에만 반품할 수 있습니다.
+            {policy
+              ? `단순 변심은 반품 배송비 ${formatKRW(policy.returnFee)}이 환불액에서 차감됩니다. 구매확정 후 ${policy.returnWindowDays}일 안에만 반품할 수 있습니다.`
+              : '단순 변심은 반품 배송비가 환불액에서 차감됩니다. 구매확정 후에는 정해진 기간 안에만 반품할 수 있습니다.'}
           </p>
           {error && (
             <p role="alert" className="text-sm text-destructive">

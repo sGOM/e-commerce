@@ -1,6 +1,7 @@
 package com.example.starter.domain.delivery
 
 import com.example.starter.domain.delivery.dto.ShippingPolicyResponse
+import com.example.starter.domain.delivery.dto.UpdateShippingPolicyRequest
 import com.example.starter.domain.delivery.entity.ShippingPolicy
 import com.example.starter.domain.delivery.repository.ShippingPolicyRepository
 import org.springframework.stereotype.Service
@@ -13,7 +14,9 @@ class ShippingPolicyService(
     private val shippingPolicyRepository: ShippingPolicyRepository,
 ) {
 
-    fun getPolicy(): ShippingPolicyResponse = ShippingPolicyResponse(baseFee = baseFee())
+    fun getPolicy(): ShippingPolicyResponse = currentPolicy().let {
+        ShippingPolicyResponse(baseFee = it.baseFee, returnFee = it.returnFee, returnWindowDays = it.returnWindowDays)
+    }
 
     fun baseFee(): Long = currentPolicy().baseFee
 
@@ -24,8 +27,11 @@ class ShippingPolicyService(
     fun returnWindowDays(): Int = currentPolicy().returnWindowDays
 
     @Transactional
-    fun update(baseFee: Long): ShippingPolicyResponse {
-        currentPolicy().baseFee = baseFee
+    fun update(request: UpdateShippingPolicyRequest): ShippingPolicyResponse {
+        val policy = currentPolicy()
+        request.baseFee?.let { policy.baseFee = it }
+        request.returnFee?.let { policy.returnFee = it }
+        request.returnWindowDays?.let { policy.returnWindowDays = it }
         return getPolicy()
     }
 

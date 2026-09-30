@@ -31,6 +31,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
@@ -233,6 +234,43 @@ class OrderReturnIntegrationTest : AbstractIntegrationTest() {
         assertEquals(returnFee, mine.payoutAmount)
         // 불량 반품은 판매자 부담 — 받을 돈이 없어 정산서도 없다
         assert(settlements.none { it.storeName == "RET-11-D" })
+    }
+
+    @Test
+    fun `반품 진행 중 관리자가 주문을 환불하면 열린 반품은 취소 상태로 닫힌다`() {
+        val (seller, optionId) = seedSeller("RET-12")
+        val buyer = seedBuyer("ret-buyer-12@example.com")
+        val subOrderId = placeShippedOrder(buyer, seller, optionId)
+        val returnId = returnIdOf(requestReturn(buyer, subOrderId).andReturn().response.contentAsString)
+        val orderId = subOrderRepository.findById(subOrderId).get().order.id!!
+
+        mockMvc.post("/api/admin/orders/$orderId/refund") { with(user("admin").roles("ADMIN")); with(csrf()) }
+            .andExpect { status { isOk() } }
+
+        mockMvc.get("/api/seller/returns") { with(user(seller)) }.andExpect {
+            jsonPath("$.data[?(@.returnId == $returnId)].status") { value("CANCELED") }
+        }
+        sellerAction(seller, returnId, "approve").andExpect { jsonPath("$.code") { value("RETURN-005") } }
+    }
+
+    @Test
+    fun `관리자는 반품 배송비와 반품 기간을 배송비 정책으로 바꾼다`() {
+        mockMvc.patch("/api/admin/shipping-policy") {
+            with(user("admin").roles("ADMIN")); with(csrf())
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"returnFee":4000,"returnWindowDays":14}"""
+        }.andExpect { status { isOk() } }
+        mockMvc.get("/api/shipping-policy").andExpect {
+            jsonPath("$.data.baseFee") { value(3_000) } // 보내지 않은 값은 그대로
+            jsonPath("$.data.returnFee") { value(4_000) }
+            jsonPath("$.data.returnWindowDays") { value(14) }
+        }
+
+        val (seller, optionId) = seedSeller("RET-13")
+        val buyer = seedBuyer("ret-buyer-13@example.com")
+        requestReturn(buyer, placeShippedOrder(buyer, seller, optionId)).andExpect {
+            jsonPath("$.data.returnFee") { value(4_000) }
+        }
     }
 
     @Test

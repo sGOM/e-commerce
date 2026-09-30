@@ -54,6 +54,7 @@ export const returnStatusLabel: Record<ReturnStatus, string> = {
   COLLECTING: '회수 중',
   COMPLETED: '환불 완료',
   REJECTED: '반품 거절',
+  CANCELED: '주문 환불로 종료',
 }
 
 export const reviewStatusLabel: Record<ReviewStatus, string> = {

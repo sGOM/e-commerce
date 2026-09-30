@@ -7,10 +7,17 @@ enum class ReturnReason(val buyerPaysFee: Boolean) {
     WRONG_DELIVERY(false),
 }
 
-/** 반품 진행 상태. REQUESTED → COLLECTING(회수 중) → COMPLETED(검수 통과·환불) / REJECTED(요청·검수 거절). */
+/**
+ * 반품 진행 상태. REQUESTED → COLLECTING(회수 중) → COMPLETED(검수 통과·환불) / REJECTED(요청·검수 거절).
+ * CANCELED 는 반품 도중 주문 전체가 환불·취소돼 반품이 의미를 잃은 경우다(관리자 환불·PG 웹훅).
+ */
 enum class ReturnStatus {
     REQUESTED,
     COLLECTING,
     COMPLETED,
     REJECTED,
+    CANCELED,
+    ;
+
+    val isOpen: Boolean get() = this == REQUESTED || this == COLLECTING
 }

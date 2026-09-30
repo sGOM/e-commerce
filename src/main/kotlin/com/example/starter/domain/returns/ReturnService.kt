@@ -31,7 +31,8 @@ class ReturnService(
 
     @Transactional
     fun request(userId: Long, request: CreateReturnRequest): ReturnResponse {
-        val subOrder = subOrderRepository.findById(request.subOrderId!!)
+        // 행을 잠가 같은 하위 주문의 동시 요청(두 번째는 RETURNING 을 보고 409)·정산 생성과 순서를 정한다
+        val subOrder = subOrderRepository.findWithLockById(request.subOrderId!!)
             .orElseThrow { BusinessException(ErrorCode.SUB_ORDER_NOT_FOUND) }
         if (subOrder.order.userId != userId) {
             throw BusinessException(ErrorCode.SUB_ORDER_NOT_FOUND) // 본인 주문이 아니면 존재를 숨긴다
@@ -44,7 +45,6 @@ class ReturnService(
         if (subOrder.status == SubOrderStatus.DELIVERED && deliveredAt != null && Instant.now().isAfter(deliveredAt.plus(window))) {
             throw BusinessException(ErrorCode.RETURN_WINDOW_EXPIRED)
         }
-        // ponytail: 정산 생성(SettlementService.generate)과 동시에 들어오면 둘 다 통과할 수 있다. 정산 주기가 짧아지면 하위 주문 행 잠금으로 중재.
         if (subOrder.settlementId != null) {
             throw BusinessException(ErrorCode.RETURN_ALREADY_SETTLED)
         }

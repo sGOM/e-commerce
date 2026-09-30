@@ -236,6 +236,9 @@ when {
 ### 7-1. 멱등한 집계
 `SettlementService.generate()`는 **`settlement_id IS NULL`인 SubOrder(취소·반품 진행 중 제외 상태)만** 대상으로 판매자별 집계 후,
 처리한 SubOrder에 `settlementId`를 찍는다. 다음 실행은 이미 찍힌 건을 자연히 건너뛴다 → 같은 주문은 두 번 정산되지 않는다.
+대상 행은 `SELECT … FOR UPDATE` 로 잠근다. 반품 요청도 같은 SubOrder 행을 잠그므로 둘이 겹치면 한쪽이 기다리고,
+PostgreSQL 이 잠금 뒤 WHERE 를 다시 평가해 그 사이 `RETURNING` 이 된 행은 정산에서 빠진다(Hibernate 는 행 전체를 UPDATE 하므로
+잠그지 않으면 정산이 반품 상태를 옛 값으로 덮어쓰는 lost update 가 난다).
 
 ```kotlin
 val targets = subOrderRepository.findBySettlementIdIsNullAndStatusIn(SETTLEABLE)
