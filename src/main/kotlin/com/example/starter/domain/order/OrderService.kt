@@ -499,17 +499,15 @@ class OrderService(
     private fun doCancel(order: Order, reason: String, refundAtPg: Boolean = true) {
         val orderId = requireNotNull(order.id)
         val wasPaid = order.status == OrderStatus.PAID
-        // 이미 부분 취소로 환불된 SubOrder 몫은 빼고 남은 금액만 PG 에 취소 요청한다.
-        val remainingPayable = order.subOrders.filter { it.status != SubOrderStatus.CANCELED }.sumOf { it.payableShare }
-        order.subOrders.forEach { subOrder ->
+        // 이미 부분 취소된 SubOrder 는 환불·재고·슬롯 복원이 끝났으므로 건너뛴다(이중 환불·복원 방지).
+        val openSubOrders = order.subOrders.filter { it.status != SubOrderStatus.CANCELED }
+        val remainingPayable = openSubOrders.sumOf { it.payableShare }
+        openSubOrders.forEach { subOrder ->
             subOrder.items.forEach { item ->
                 inventoryRepository.release(item.optionId, item.quantity)
                 item.flashSaleId?.let { flashSaleRepository.release(it, item.quantity) }
             }
-            // 이미 부분취소(cancelSubOrder)로 슬롯을 복원한 SubOrder 는 다시 복원하지 않는다(이중 복원 방지).
-            if (subOrder.status != SubOrderStatus.CANCELED) {
-                subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
-            }
+            subOrder.deliverySlotId?.let { deliverySlotRepository.release(it) }
             subOrder.status = SubOrderStatus.CANCELED
         }
         if (order.discountAmount > 0) {
