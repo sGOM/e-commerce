@@ -109,7 +109,7 @@ lines.groupBy { it.seller.id }.values.forEach { sellerLines ->
 
 ### payable 배분 — 부분 환불의 기반
 쿠폰/포인트는 Order 전체에 적용되지만 환불은 SubOrder 단위로 일어난다. 그래서 최종 결제금액을
-SubOrder별 `payableShare`로 **배분**(`order.distributePayable()`)해 둔다. SubOrder 하나를 부분 취소하면
+SubOrder별 `payableShare`로 **배분**(`order.distributePayable()`)해 둔다 — 상품 몫은 subtotal 비례, 나눗셈 잔액은 마지막 SubOrder 가 흡수하고, 배송비는 각 SubOrder 에 그대로 더한다. SubOrder 하나를 부분 취소하면
 그 `payableShare`만큼만 부분 환불하고, **모든 SubOrder가 취소된 시점**에 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
 
 ```kotlin
