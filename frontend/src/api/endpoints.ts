@@ -267,6 +267,11 @@ export const flashSaleApi = {
 
 // ----- 배송 슬롯(공개 조회) -----
 // 기본 배송비(판매자 단위) — 체크아웃 미리보기용. 최종 금액은 주문 생성 시 서버가 계산한다.
+export const adminShippingPolicyApi = {
+  // 보낸 항목만 바꾸는 부분 변경(기본 배송비·반품 배송비·반품 가능 일수)
+  update: (body: Partial<ShippingPolicy>) => api.patch<ShippingPolicy>('/api/admin/shipping-policy', body),
+}
+
 export const shippingPolicyApi = {
   get: () => api.get<ShippingPolicy>('/api/shipping-policy'),
 }
