@@ -62,7 +62,6 @@ data class MembershipResponse(
 
 /** 지금 적용 중인 혜택 값(체크아웃 인라인 안내에 그대로 쓸 수 있는 형태). */
 data class MembershipBenefitSummary(
-    val freeShipping: Boolean,
     val pointEarnMultiplierBp: Int,
 )
 
@@ -121,7 +120,6 @@ data class AdminMembershipResponse(
 data class MembershipPolicyResponse(
     val monthlyPrice: Long,
     val pointEarnMultiplierBp: Int,
-    val freeShippingEnabled: Boolean,
     val maxRetryCount: Int,
     val graceDays: Int,
 )
@@ -130,7 +128,6 @@ data class MembershipPolicyResponse(
 data class UpdateMembershipPolicyRequest(
     val monthlyPrice: Long? = null,
     val pointEarnMultiplierBp: Int? = null,
-    val freeShippingEnabled: Boolean? = null,
     val maxRetryCount: Int? = null,
     val graceDays: Int? = null,
 )

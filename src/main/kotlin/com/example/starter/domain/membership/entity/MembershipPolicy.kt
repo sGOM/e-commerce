@@ -25,9 +25,6 @@ class MembershipPolicy(
     @Column(name = "point_earn_multiplier_bp", nullable = false)
     var pointEarnMultiplierBp: Int = 10_000,
 
-    @Column(name = "free_shipping_enabled", nullable = false)
-    var freeShippingEnabled: Boolean = true,
-
     @Column(name = "max_retry_count", nullable = false)
     var maxRetryCount: Int = 3,
 

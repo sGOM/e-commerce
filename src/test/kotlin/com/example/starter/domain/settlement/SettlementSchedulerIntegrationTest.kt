@@ -84,7 +84,7 @@ class SettlementSchedulerIntegrationTest : AbstractIntegrationTest() {
         val after = settlementService.getSellerSettlements(seller.userId)
         assertThat(after).hasSize(1)
         assertThat(after.first().salesAmount).isEqualTo(200_000)
-        assertThat(after.first().payoutAmount).isEqualTo(180_000) // 기본 수수료 10%
+        assertThat(after.first().payoutAmount).isEqualTo(183_000) // 기본 수수료 10% + 배송비 3,000
 
         // 재실행: 미정산 대상 없음 → 정산서가 늘지 않는다(멱등).
         scheduler.run()

@@ -126,7 +126,8 @@ if (order.isFullyClosed) { /* 쿠폰/포인트 복원 + 적립 회수 + 결제 m
 
 클라이언트가 보낸 금액은 절대 신뢰하지 않는다. 순서가 정해져 있다: **상품합계 → 쿠폰 할인 → 포인트 사용 → 재계산**.
 배송비는 주문 조립 때 판매자(SubOrder)마다 `ShippingPolicy.baseFee`(기본 3,000원) + 배송 슬롯 추가요금으로 스냅샷되고
-(멤버십 무료배송이면 0), 쿠폰·포인트 대상이 아니라 결제금액에 그대로 더해진다.
+쿠폰·포인트 대상이 아니라 결제금액에 그대로 더해진다. 배송비는 판매자가 자기 택배사로 내는 실비라 멤버십으로도
+면제하지 않고, 정산 때 수수료 없이 판매자에게 지급한다(§7, ROADMAP 7.3).
 
 ```kotlin
 // OrderService.createFromCart
@@ -233,15 +234,16 @@ when {
 ## 7. 정산 — 집계 멱등성 + 조건부 스케줄러
 
 ### 7-1. 멱등한 집계
-`SettlementService.generate()`는 **`settlement_id IS NULL`인 SubOrder(취소 제외 상태)만** 대상으로 판매자별 집계 후,
+`SettlementService.generate()`는 **`settlement_id IS NULL`인 SubOrder(취소·반품 진행 중 제외 상태)만** 대상으로 판매자별 집계 후,
 처리한 SubOrder에 `settlementId`를 찍는다. 다음 실행은 이미 찍힌 건을 자연히 건너뛴다 → 같은 주문은 두 번 정산되지 않는다.
 
 ```kotlin
 val targets = subOrderRepository.findBySettlementIdIsNullAndStatusIn(SETTLEABLE)
 targets.groupBy { it.seller.id }.map { (_, subOrders) ->
-    val sales = subOrders.sumOf { it.subtotal }
+    val sales = subOrders.sumOf { it.settlementSales }             // 반품 완료 건은 0
     val commission = sales * rateBp / 10_000          // 수수료율은 정책 DB 행(basis point)
-    settlementRepository.save(Settlement(payoutAmount = sales - commission, ...))
+    val deliveryFee = subOrders.sumOf { it.settlementDeliveryFee } // 배송비·단순변심 반품 배송비, 수수료 없음(7.3)
+    settlementRepository.save(Settlement(payoutAmount = sales - commission + deliveryFee, ...))
     subOrders.forEach { it.settlementId = settlement.id }   // 재정산 방지 마킹
 }
 ```

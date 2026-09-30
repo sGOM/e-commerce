@@ -15,7 +15,6 @@ import com.example.starter.domain.delivery.repository.DeliveryRegionRepository
 import com.example.starter.domain.delivery.repository.DeliverySlotRepository
 import com.example.starter.domain.flashsale.repository.FlashSaleRepository
 import com.example.starter.domain.gift.GiftClaimService
-import com.example.starter.domain.membership.MembershipBenefitService
 import com.example.starter.domain.order.dto.ClaimGuestOrderRequest
 import com.example.starter.domain.order.dto.CreateOrderRequest
 import com.example.starter.domain.order.dto.DeliverySlotSelectionRequest
@@ -66,7 +65,6 @@ class OrderService(
     private val flashSaleRepository: FlashSaleRepository,
     private val deliverySlotRepository: DeliverySlotRepository,
     private val deliveryRegionRepository: DeliveryRegionRepository,
-    private val membershipBenefitService: MembershipBenefitService,
     private val shippingPolicyService: ShippingPolicyService,
     private val giftClaimService: GiftClaimService,
     private val eventPublisher: ApplicationEventPublisher,
@@ -267,9 +265,8 @@ class OrderService(
             isGift = isGift,
             giftMessage = giftMessage,
         )
-        // 기본 배송비(ROADMAP 7.1): 판매자(SubOrder)마다 부과, 멤버십 무료배송 회원은 면제(슬롯 추가요금도 면제).
-        val freeShipping = userId != null && membershipBenefitService.isFreeShippingActive(userId, now)
-        val baseFee = if (freeShipping) 0 else shippingPolicyService.baseFee()
+        // 기본 배송비(ROADMAP 7.1): 판매자(SubOrder)마다 부과. 판매자가 받는 택배비라 멤버십으로도 면제하지 않는다(7.3).
+        val baseFee = shippingPolicyService.baseFee()
         lines.groupBy { it.seller.id }.values.forEach { sellerLines ->
             val subOrder = SubOrder(seller = sellerLines.first().seller)
             sellerLines.forEach { line ->
@@ -291,7 +288,7 @@ class OrderService(
             // 실제로는 선물 주문이 slotSelections 를 비워 보내도록 상위에서 막아 이 분기는 도달하지 않는다.
             slotSelections[sellerId]?.let { slotId ->
                 val nonNullAddress = address ?: throw BusinessException(ErrorCode.GIFT_DELIVERY_SLOT_NOT_SUPPORTED)
-                applyDeliverySlot(subOrder, slotId, sellerLines, nonNullAddress, now, freeShipping)
+                applyDeliverySlot(subOrder, slotId, sellerLines, nonNullAddress, now)
             }
             subOrder.deliveryFee += baseFee
             order.addSubOrder(subOrder)
@@ -305,10 +302,7 @@ class OrderService(
      * 배송 슬롯 선택(AC6/AC7) — 새벽배송 가능 상품이 포함된 SubOrder 에 한해 허용하고(AC3), 새벽배송
      * 슬롯은 배송지가 화이트리스트 지역일 때만(AC5), 권역 한정 슬롯은 배송지가 그 권역일 때만 허용한다.
      * 정원 예약은 재고와 동일한 단일 원자적 UPDATE 로 하며, 영향 행이 0이면 마감/정원초과로 판단한다(AC7).
-     *
-     * 멤버십 무료배송 혜택(`docs/planning/subscription-membership.md` AC8)이 활성인 회원은 슬롯 추가
-     * 배송비를 0원으로 스냅샷한다 — 정원은 그대로 소모하되(자리는 실제로 쓰므로) 결제 금액에는 반영하지
-     * 않는다. 게스트는 멤버십 대상이 아니므로 항상 정가 배송비가 적용된다. 기본 배송비는 호출 뒤 [buildOrder] 가 더한다.
+     * 기본 배송비는 호출 뒤 [buildOrder] 가 더한다.
      */
     private fun applyDeliverySlot(
         subOrder: SubOrder,
@@ -316,7 +310,6 @@ class OrderService(
         sellerLines: List<OrderLine>,
         address: ShippingAddress,
         now: Instant,
-        freeShipping: Boolean,
     ) {
         if (sellerLines.none { it.dawnDeliveryEligible }) {
             throw BusinessException(ErrorCode.DELIVERY_SLOT_NOT_APPLICABLE, "새벽배송 대상 상품이 없어 배송 슬롯을 선택할 수 없습니다.")
@@ -334,7 +327,7 @@ class OrderService(
             throw BusinessException(ErrorCode.DELIVERY_SLOT_SOLD_OUT, "선택한 배송 슬롯이 마감되었거나 정원이 초과되었습니다.")
         }
         subOrder.deliverySlotId = slotId
-        subOrder.deliveryFee = if (freeShipping) 0 else slot.extraFee
+        subOrder.deliveryFee = slot.extraFee
     }
 
     /** 요청의 슬롯 선택 목록을 sellerId 기준 맵으로 변환한다(같은 판매자 중복 선택은 뒤 항목이 덮어씀). */
@@ -410,15 +403,17 @@ class OrderService(
 
     /**
      * 반품 검수 완료 — 하위 주문을 RETURNED 로 닫고 [refundAmount](반품 배송비 차감 후)를 환불한다
-     * ([com.example.starter.domain.returns.SellerReturnService.complete]). 재고는 [restock] 일 때만 복원한다
+     * ([com.example.starter.domain.returns.SellerReturnService.complete]). 차감한 반품 배송비([sellerReturnFee])는
+     * 회수 택배비를 낸 판매자에게 정산된다(ROADMAP 7.3). 재고는 [restock] 일 때만 복원한다
      * (단순변심은 재판매 가능, 불량·오배송 회수품은 판매자가 재고를 직접 판단). 발송된 주문이라 슬롯·타임딜 한도는 건드리지 않는다.
      * 모든 하위 주문이 닫히면 [cancelSubOrder] 와 같게 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
      */
     @Transactional
-    fun completeReturn(subOrder: SubOrder, refundAmount: Long, restock: Boolean, returnId: Long) {
+    fun completeReturn(subOrder: SubOrder, refundAmount: Long, sellerReturnFee: Long, restock: Boolean, returnId: Long) {
         val order = subOrder.order
         if (restock) subOrder.items.forEach { inventoryRepository.release(it.optionId, it.quantity) }
         subOrder.status = SubOrderStatus.RETURNED
+        subOrder.sellerReturnFee = sellerReturnFee // 정산 시 판매자에게 지급(7.3)
         closeOrderIfFullyClosed(order, wasPaid = true)
         val fully = order.isFullyClosed
         paymentService.refund(

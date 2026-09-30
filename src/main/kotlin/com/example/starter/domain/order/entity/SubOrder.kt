@@ -62,11 +62,23 @@ class SubOrder(
     @Column(name = "delivery_slot_id")
     var deliverySlotId: Long? = null
 
-    // 배송비 스냅샷(원) = 기본 배송비(ShippingPolicy, 판매자 단위) + 슬롯 추가요금. 멤버십 무료배송이면 0.
+    // 배송비 스냅샷(원) = 기본 배송비(ShippingPolicy, 판매자 단위) + 슬롯 추가요금
     // ([com.example.starter.domain.order.entity.Order.recalculateAmounts]/[distributePayable] 참고).
-    // 정산(SettlementService) 은 subtotal 만 사용하므로 배송비는 셀러 매출/수수료 기준에서 제외된다.
+    // 판매자가 자기 택배사로 내는 실비라 정산에서 수수료 없이 판매자에게 지급한다(ROADMAP 7.3).
     @Column(name = "delivery_fee", nullable = false)
     var deliveryFee: Long = 0
+
+    // 단순변심 반품 완료 시 고객 환불에서 뺀 반품 배송비 — 회수 택배비를 낸 판매자 몫(7.3). 그 외 0.
+    @Column(name = "seller_return_fee", nullable = false)
+    var sellerReturnFee: Long = 0
+
+    /** 수수료를 매기는 판매액 — 반품 완료 건은 판매가 없던 것으로 본다. */
+    val settlementSales: Long
+        get() = if (status == SubOrderStatus.RETURNED) 0 else subtotal
+
+    /** 수수료 없이 판매자에게 주는 배송비 — 반품 완료 건은 고객이 낸 반품 배송비만. */
+    val settlementDeliveryFee: Long
+        get() = if (status == SubOrderStatus.RETURNED) sellerReturnFee else deliveryFee
 
     @OneToMany(mappedBy = "subOrder", cascade = [CascadeType.ALL], orphanRemoval = true)
     val items: MutableList<OrderItem> = mutableListOf()

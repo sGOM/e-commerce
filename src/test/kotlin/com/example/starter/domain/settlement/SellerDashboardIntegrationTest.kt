@@ -106,7 +106,7 @@ class SellerDashboardIntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.data.to") { value(today.toString()) }
             jsonPath("$.data.orderCount") { value(1) }
             jsonPath("$.data.unsettledAmount") { value(0) }
-            jsonPath("$.data.pendingPayoutAmount") { value(180_000) }
+            jsonPath("$.data.pendingPayoutAmount") { value(183_000) } // 수수료 10% 차감 + 배송비 3,000(7.3)
         }
     }
 }

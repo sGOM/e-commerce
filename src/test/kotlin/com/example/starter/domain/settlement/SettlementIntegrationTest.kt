@@ -74,16 +74,17 @@ class SettlementIntegrationTest : AbstractIntegrationTest() {
     fun `정산을 생성하면 판매자별로 수수료를 제하고 지급액이 계산된다`() {
         val (seller, optionId) = seedSeller("STL-1", basePrice = 100_000)
         val buyer = seedBuyer("stl-buyer-1@example.com")
-        placePaidOrder(buyer, optionId, 2) // 판매액 200,000
+        placePaidOrder(buyer, optionId, 2) // 판매액 200,000 + 기본 배송비 3,000
 
-        // 관리자 정산 생성 — 기본 수수료 10%
+        // 관리자 정산 생성 — 기본 수수료 10%. 배송비는 수수료 없이 판매자에게(7.3)
         mockMvc.post("/api/admin/settlements") {
             with(user("admin").roles("ADMIN")); with(csrf())
         }.andExpect {
             status { isOk() }
             jsonPath("$.data[0].salesAmount") { value(200_000) }
             jsonPath("$.data[0].commissionAmount") { value(20_000) } // 10%
-            jsonPath("$.data[0].payoutAmount") { value(180_000) }
+            jsonPath("$.data[0].deliveryFeeAmount") { value(3_000) }
+            jsonPath("$.data[0].payoutAmount") { value(183_000) }
             jsonPath("$.data[0].status") { value("PENDING") }
         }
 
@@ -93,7 +94,7 @@ class SettlementIntegrationTest : AbstractIntegrationTest() {
         }.andExpect {
             status { isOk() }
             jsonPath("$.data.length()") { value(1) }
-            jsonPath("$.data[0].payoutAmount") { value(180_000) }
+            jsonPath("$.data[0].payoutAmount") { value(183_000) }
         }
     }
 
@@ -140,7 +141,7 @@ class SettlementIntegrationTest : AbstractIntegrationTest() {
         }.andExpect {
             status { isOk() }
             jsonPath("$.data[0].commissionAmount") { value(20_000) } // 20%
-            jsonPath("$.data[0].payoutAmount") { value(80_000) }
+            jsonPath("$.data[0].payoutAmount") { value(83_000) } // + 배송비 3,000(수수료 없음)
         }.andReturn().response.contentAsString
         val settlementId = Regex(""""settlementId":(\d+)""").find(res)!!.groupValues[1].toLong()
 

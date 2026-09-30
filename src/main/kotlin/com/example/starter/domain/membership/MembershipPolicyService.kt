@@ -31,7 +31,6 @@ class MembershipPolicyService(
             require(it >= 0) { "포인트 적립 배율은 0 이상이어야 합니다." }
             policy.pointEarnMultiplierBp = it
         }
-        request.freeShippingEnabled?.let { policy.freeShippingEnabled = it }
         request.maxRetryCount?.let {
             require(it >= 1) { "최대 재시도 횟수는 1 이상이어야 합니다." }
             policy.maxRetryCount = it
@@ -50,7 +49,6 @@ class MembershipPolicyService(
     private fun MembershipPolicy.toResponse() = MembershipPolicyResponse(
         monthlyPrice = monthlyPrice,
         pointEarnMultiplierBp = pointEarnMultiplierBp,
-        freeShippingEnabled = freeShippingEnabled,
         maxRetryCount = maxRetryCount,
         graceDays = graceDays,
     )

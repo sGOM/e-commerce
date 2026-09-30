@@ -49,6 +49,10 @@ export default function SellerSettlementsPage() {
                   <span>수수료</span>
                   <span>-{formatKRW(s.commissionAmount)}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>배송비(수수료 없음)</span>
+                  <span>+{formatKRW(s.deliveryFeeAmount)}</span>
+                </div>
                 <div className="flex justify-between border-t border-border pt-1 font-bold text-foreground">
                   <span>지급액</span>
                   <span className="text-primary">{formatKRW(s.payoutAmount)}</span>

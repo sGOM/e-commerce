@@ -102,14 +102,6 @@ function PolicyPanel() {
                 onChange={(e) => setForm({ ...form, graceDays: Number(e.target.value) })}
               />
             </div>
-            <label className="flex items-center gap-2 self-end pb-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.freeShippingEnabled}
-                onChange={(e) => setForm({ ...form, freeShippingEnabled: e.target.checked })}
-              />
-              무료배송 활성화
-            </label>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={saving} size="sm">
@@ -117,9 +109,8 @@ function PolicyPanel() {
           </Button>
           {policy && (
             <p className="text-xs text-muted-foreground">
-              현재: {formatKRW(policy.monthlyPrice)}/월 · 포인트 {policy.pointEarnMultiplierBp / 10_000}배 ·
-              {policy.freeShippingEnabled ? ' 무료배송 ON' : ' 무료배송 OFF'} · 재시도 {policy.maxRetryCount}회 · 유예{' '}
-              {policy.graceDays}일
+              현재: {formatKRW(policy.monthlyPrice)}/월 · 포인트 {policy.pointEarnMultiplierBp / 10_000}배 · 재시도{' '}
+              {policy.maxRetryCount}회 · 유예 {policy.graceDays}일
             </p>
           )}
         </form>

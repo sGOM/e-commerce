@@ -98,12 +98,6 @@ function MembershipSummary({ membership, onCancel }: { membership: Membership; o
           </p>
           <ul className="space-y-0.5 text-muted-foreground">
             <li>
-              무료배송:{' '}
-              <span className="font-medium text-foreground">
-                {membership.benefits.freeShipping ? '적용' : '미적용'}
-              </span>
-            </li>
-            <li>
               포인트 적립:{' '}
               <span className="font-medium text-foreground">
                 {multiplierLabel(membership.benefits.pointEarnMultiplierBp)} 적립
@@ -204,7 +198,6 @@ function SubscribeFlow({ onSubscribed }: { onSubscribed: () => void }) {
         </CardHeader>
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>매 주문 무료배송</li>
             <li>포인트 우대 적립(일반 회원보다 더 많이 적립)</li>
             <li>멤버십 전용 쿠폰 수령 가능</li>
           </ul>
