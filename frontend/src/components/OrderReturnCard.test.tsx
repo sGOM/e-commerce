@@ -8,6 +8,7 @@ import type { Order, SubOrderStatus } from '../api/types'
 
 vi.mock('../api/endpoints', () => ({
   returnApi: { mine: vi.fn(), request: vi.fn() },
+  shippingPolicyApi: { get: vi.fn().mockResolvedValue({ baseFee: 3_000, returnFee: 6_000, returnWindowDays: 7 }) },
 }))
 
 const orderWith = (status: SubOrderStatus) =>
@@ -51,5 +52,12 @@ describe('OrderReturnCard', () => {
     fireEvent.click(screen.getByRole('button', { name: '반품 신청' }))
 
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', '반품 가능 기간이 지났습니다.')
+  })
+
+  it('정책의 반품 배송비와 반품 기간을 안내한다', async () => {
+    vi.mocked(returnApi.mine).mockResolvedValue([])
+    render(<OrderReturnCard order={orderWith('SHIPPED')} onRequested={vi.fn()} />)
+
+    expect(await screen.findByText(/반품 배송비 6,000원이 환불액에서 차감됩니다. 구매확정 후 7일/)).toBeTruthy()
   })
 })

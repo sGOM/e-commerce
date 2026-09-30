@@ -282,7 +282,7 @@ npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 
 | POST | `/api/admin/categories` | 카테고리 등록 |
 | POST | `/api/admin/coupons` | 쿠폰 발행 + 회원 지급 |
 | GET · PATCH | `/api/admin/point-policy` | 적립률·유효기간 정책 |
-| PATCH | `/api/admin/shipping-policy` | 기본 배송비(판매자 단위) 변경 — 조회는 공개 `GET /api/shipping-policy` |
+| PATCH | `/api/admin/shipping-policy` | 기본 배송비(판매자 단위)·반품 배송비·반품 기간 부분 변경 — 조회는 공개 `GET /api/shipping-policy` |
 | POST | `/api/admin/points/expire` | 포인트 만료 트리거 |
 | POST · PATCH | `/api/admin/settlements` · `/api/admin/settlements/{id}/pay` | 정산 생성/지급 |
 | GET · PATCH | `/api/admin/settlements/policy` | 수수료율 정책 |

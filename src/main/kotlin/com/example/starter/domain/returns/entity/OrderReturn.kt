@@ -74,6 +74,11 @@ class OrderReturn(
         subOrder.status = previousSubOrderStatus
     }
 
+    /** 주문 전체 환불로 반품이 필요 없어졌다 — 환불은 주문 취소 쪽이 이미 했다. */
+    fun cancelByOrderRefund() {
+        if (status.isOpen) status = ReturnStatus.CANCELED
+    }
+
     private fun transition(from: List<ReturnStatus>, to: ReturnStatus) {
         // 관리자 전체 환불 등으로 하위 주문이 이미 반품 진행 상태를 벗어났다면 더 진행하지 않는다
         if (status !in from || subOrder.status != SubOrderStatus.RETURNING) {

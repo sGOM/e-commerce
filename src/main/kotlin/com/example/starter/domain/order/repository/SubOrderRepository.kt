@@ -2,8 +2,10 @@ package com.example.starter.domain.order.repository
 
 import com.example.starter.domain.order.entity.SubOrder
 import com.example.starter.domain.order.entity.SubOrderStatus
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
@@ -28,9 +30,18 @@ interface SubOrderRepository : JpaRepository<SubOrder, Long> {
     @EntityGraph(attributePaths = ["order", "items", "shipment"])
     fun findBySellerIdAndStatusOrderByIdDesc(sellerId: Long, status: SubOrderStatus): List<SubOrder>
 
-    /** 미정산(settlementId IS NULL) 이면서 정산 대상 상태인 하위 주문 — 정산 생성용 */
-    @EntityGraph(attributePaths = ["seller"])
+    /**
+     * 미정산(settlementId IS NULL) 이면서 정산 대상 상태인 하위 주문 — 정산 생성용. 행을 잠가(SELECT … FOR UPDATE)
+     * 같은 행을 잠그는 반품 요청([findWithLockById])과 순서를 정한다. 잠금 대기 뒤 PostgreSQL 이 조건을 다시 확인하므로
+     * 그 사이 반품 진행(RETURNING)으로 바뀐 행은 빠지고, 정산이 반품 상태를 옛 값으로 덮어쓰지 않는다.
+     * (외부 조인에는 FOR UPDATE 를 걸 수 없어 판매자 페치 그래프는 쓰지 않는다 — 판매자는 id·프록시만 쓴다.)
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findBySettlementIdIsNullAndStatusIn(statuses: Collection<SubOrderStatus>): List<SubOrder>
+
+    /** 행 잠금 조회 — 같은 하위 주문의 반품 요청 동시 진입·정산 생성과의 경합을 직렬화한다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findWithLockById(id: Long): Optional<SubOrder>
 
     /** 판매자 대시보드 — [from, to) 에 생성된 하위 주문 중 해당 상태의 건수와 판매액 */
     @Query(

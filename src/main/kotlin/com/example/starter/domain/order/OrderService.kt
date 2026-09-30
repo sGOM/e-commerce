@@ -29,6 +29,7 @@ import com.example.starter.domain.order.entity.OrderStatus
 import com.example.starter.domain.order.entity.ShippingAddress
 import com.example.starter.domain.order.entity.SubOrder
 import com.example.starter.domain.order.entity.SubOrderStatus
+import com.example.starter.domain.order.event.OrderCanceledEvent
 import com.example.starter.domain.order.repository.OrderRepository
 import com.example.starter.domain.order.repository.SubOrderRepository
 import com.example.starter.domain.payment.PaymentService
@@ -535,6 +536,7 @@ class OrderService(
             order.userId?.let { pointService.revokeEarnForOrder(it, orderId) }
         }
         order.status = OrderStatus.CANCELED
+        eventPublisher.publishEvent(OrderCanceledEvent(orderId)) // 진행 중 반품 등 연관 상태를 같은 트랜잭션에서 닫는다
         // PG 취소는 마지막에(실패 시 전체 롤백) — PaymentService.refund 참고
         if (wasPaid) {
             paymentService.refund(orderId, remainingPayable, reason, "cancel-order-$orderId", fullyCanceled = true, callPg = refundAtPg)
