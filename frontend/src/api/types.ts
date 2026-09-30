@@ -289,7 +289,20 @@ export interface Coupon {
   maxDiscountAmount: number | null
   validFrom: string
   validUntil: string
+  membershipOnly: boolean
   issuedCount: number
+}
+
+/** 멤버십 전용 쿠폰(받을 수 있는 목록) — claimed 는 이미 받았는지. */
+export interface MembershipCoupon {
+  couponId: number
+  name: string
+  discountType: DiscountType
+  discountValue: number
+  minOrderAmount: number
+  maxDiscountAmount: number | null
+  validUntil: string
+  claimed: boolean
 }
 
 export interface Category {

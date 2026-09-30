@@ -76,6 +76,8 @@ enum class ErrorCode(
     COUPON_ALREADY_USED(HttpStatus.CONFLICT, "COUPON-002", "이미 사용한 쿠폰입니다."),
     COUPON_EXPIRED(HttpStatus.CONFLICT, "COUPON-003", "사용 기간이 아닌 쿠폰입니다."),
     COUPON_MIN_ORDER_NOT_MET(HttpStatus.CONFLICT, "COUPON-004", "쿠폰 최소 주문금액을 충족하지 않습니다."),
+    COUPON_MEMBERSHIP_REQUIRED(HttpStatus.FORBIDDEN, "COUPON-005", "멤버십 회원만 받을 수 있는 쿠폰입니다."),
+    COUPON_ALREADY_CLAIMED(HttpStatus.CONFLICT, "COUPON-006", "이미 받은 쿠폰입니다."),
 
     // 포인트 (POINT)
     INSUFFICIENT_POINT(HttpStatus.CONFLICT, "POINT-001", "보유 포인트가 부족합니다."),
