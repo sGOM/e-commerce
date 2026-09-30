@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { authApi, cartApi } from '../api/endpoints'
 import { ApiError } from '../api/client'
 import { clearGuestCart, readGuestCart } from '../cart/guestCart'
+import { disablePush } from '../lib/push'
 import type { User } from '../api/types'
 
 interface AuthState {
@@ -58,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await mergeGuestCart()
   }
   const logout = async () => {
+    // 이 브라우저로 이전 회원의 푸시가 계속 오지 않게 먼저 해지한다(실패해도 로그아웃은 진행)
+    await disablePush().catch(() => {})
     await authApi.logout()
     setUser(null)
   }

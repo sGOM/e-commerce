@@ -2,7 +2,7 @@ import { pushApi } from '../api/endpoints'
 
 /** 이 브라우저가 웹 푸시를 지원하는지(서비스워커 + Push API + 알림 권한). */
 export function pushSupported(): boolean {
-  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+  return 'serviceWorker' in navigator && 'PushManager' in globalThis && 'Notification' in globalThis
 }
 
 /** VAPID 공개키(base64url) → pushManager.subscribe 의 applicationServerKey 형식. */
@@ -35,7 +35,11 @@ export async function enablePush(): Promise<'enabled' | 'denied' | 'unavailable'
   return 'enabled'
 }
 
-/** 브라우저 구독만 해지한다 — 서버 행은 다음 발송 때 푸시 서비스의 410 응답으로 지워진다. */
+/**
+ * 브라우저 구독만 해지한다 — 서버 행은 다음 발송 때 푸시 서비스의 410 응답으로 지워진다.
+ * 로그아웃·탈퇴에서도 불러 공용 PC 에서 이전 회원의 알림이 계속 뜨지 않게 한다(미지원 브라우저는 무시).
+ */
 export async function disablePush(): Promise<void> {
+  if (!pushSupported()) return
   await (await currentPushSubscription())?.unsubscribe()
 }

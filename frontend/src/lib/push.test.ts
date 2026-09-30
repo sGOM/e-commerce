@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { base64UrlToBytes, enablePush } from './push'
+import { base64UrlToBytes, disablePush, enablePush } from './push'
 import { pushApi } from '../api/endpoints'
 
 vi.mock('../api/endpoints', () => ({ pushApi: { publicKey: vi.fn(), subscribe: vi.fn() } }))
@@ -43,5 +43,20 @@ describe('push', () => {
     expect(register).toHaveBeenCalledWith('/sw.js')
     expect(subscribe).toHaveBeenCalledWith({ userVisibleOnly: true, applicationServerKey: new Uint8Array([1, 0, 1]) })
     expect(pushApi.subscribe).toHaveBeenCalledWith(json)
+  })
+
+  it('로그아웃 때 부르는 해지는 이 브라우저의 구독을 끊는다', async () => {
+    const unsubscribe = vi.fn().mockResolvedValue(true)
+    vi.stubGlobal('navigator', {
+      serviceWorker: {
+        getRegistration: vi.fn().mockResolvedValue({ pushManager: { getSubscription: async () => ({ unsubscribe }) } }),
+      },
+    })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', {})
+
+    await disablePush()
+
+    expect(unsubscribe).toHaveBeenCalled()
   })
 })

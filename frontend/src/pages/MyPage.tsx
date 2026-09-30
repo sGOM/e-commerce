@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi, meApi } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
+import { disablePush } from '../lib/push'
 import { useAuth } from '../auth/AuthContext'
 import type { IssuedCoupon, PointSummary, PointTransactionType } from '../api/types'
 import { Button } from '@/components/ui/button'
@@ -179,6 +180,7 @@ function WithdrawSection() {
     setError(null)
     try {
       await authApi.withdraw(password || undefined)
+      await disablePush().catch(() => {}) // 서버 구독은 탈퇴 시 지워진다. 브라우저 쪽도 해지한다
       await refresh()
       navigate('/', { replace: true })
     } catch (err) {

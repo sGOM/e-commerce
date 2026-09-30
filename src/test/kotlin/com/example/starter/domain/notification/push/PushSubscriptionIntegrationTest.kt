@@ -59,7 +59,7 @@ class PushSubscriptionIntegrationTest : AbstractIntegrationTest() {
         mockMvc.post("/api/me/push-subscriptions") {
             with(user(user)); with(csrf())
             contentType = MediaType.APPLICATION_JSON
-            content = """{"endpoint":"$endpoint","keys":{"p256dh":"$p256dh","auth":"$authSecret"}}"""
+            content = """{"endpoint":"$endpoint","expirationTime":null,"keys":{"p256dh":"$p256dh","auth":"$authSecret"}}"""
         }
 
     @Test

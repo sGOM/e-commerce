@@ -11,13 +11,21 @@ self.addEventListener('push', (event) => {
   )
 })
 
+// 푸시를 켠 그 탭도 새로고침 없이 이 워커의 제어를 받게 한다(그래야 알림 클릭 시 navigate 가 된다).
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const url = new URL(event.notification.data.url, self.location.origin).href
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
       const tab = windows.find((w) => new URL(w.url).origin === self.location.origin)
-      return tab ? tab.focus().then(() => tab.navigate(url)) : self.clients.openWindow(url)
+      if (!tab) return self.clients.openWindow(url)
+      // 워커가 제어하지 않는 탭이면 navigate 가 거절된다 — 그때는 새 창으로 연다
+      return tab
+        .focus()
+        .then(() => tab.navigate(url))
+        .catch(() => self.clients.openWindow(url))
     }),
   )
 })
