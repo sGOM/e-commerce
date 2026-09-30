@@ -75,6 +75,7 @@ import type {
   ReturnReason,
   OrderReturn,
   MembershipCoupon,
+  NotificationPreference,
 } from './types'
 
 // ----- 인증 -----
@@ -203,6 +204,14 @@ export const notificationApi = {
       .then((d) => ({ ...d.notifications, unreadCount: d.unreadCount }))
   },
   markRead: (id: number) => api.patch<AppNotification>(`/api/me/notifications/${id}/read`),
+}
+
+// ----- 알림 수신 설정(메일·푸시, 종류별) — 설정이 없으면 받는다 -----
+export const notificationPreferenceApi = {
+  get: () => api.get<NotificationPreference[]>('/api/me/notification-preferences'),
+  // 보낸 종류만 바꾸고 전체 설정을 돌려준다
+  update: (prefs: NotificationPreference[]) =>
+    api.put<NotificationPreference[]>('/api/me/notification-preferences', prefs),
 }
 
 // ----- 웹 푸시 구독 — 서버에 VAPID 키가 없으면 publicKey 가 null(토글 숨김) -----

@@ -111,6 +111,7 @@ enum class ErrorCode(
 
     // 알림함 (NOTIFICATION)
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION-001", "알림을 찾을 수 없습니다."),
+    NOTIFICATION_PREFERENCE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "NOTIFICATION-002", "메일·푸시로 받는 알림 종류만 설정할 수 있습니다."),
 
     // 기획전/컬렉션 (COLLECTION)
     COLLECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "COLLECTION-001", "컬렉션을 찾을 수 없습니다."),

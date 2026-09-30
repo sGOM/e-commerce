@@ -779,3 +779,10 @@ export interface Faq {
   answer: string
   sortOrder: number
 }
+
+/** 알림 수신 설정 한 줄 — 메일·푸시로도 오는 알림 종류별. 인앱 알림함은 항상 받는다. */
+export interface NotificationPreference {
+  type: NotificationType
+  email: boolean
+  push: boolean
+}

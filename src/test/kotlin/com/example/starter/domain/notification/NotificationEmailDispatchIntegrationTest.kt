@@ -46,7 +46,7 @@ class NotificationEmailDispatchIntegrationTest : AbstractIntegrationTest() {
         notificationService.notify(userId, NotificationType.LOW_STOCK, "재고 부족", "재고가 얼마 남지 않았습니다.")
 
         assertThat(events.stream(NotificationDispatchEvent::class.java).toList())
-            .containsExactly(NotificationDispatchEvent(userId, "재입고", "상품이 재입고되었습니다.", null))
+            .containsExactly(NotificationDispatchEvent(userId, NotificationType.RESTOCK, "재입고", "상품이 재입고되었습니다.", null))
         verify(exactly = 0) { emailSender.send(any(), any(), any()) }
     }
 

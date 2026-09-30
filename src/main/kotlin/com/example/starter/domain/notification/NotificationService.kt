@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional
  * 범용 인앱 알림함. 재입고 외 다른 도메인(주문상태변경/쿠폰 등)도 [notify] 를 그대로 호출해
  * 재사용할 수 있다. 인앱과 함께 **메일**([EmailSender], ROADMAP 6.1)·**웹 푸시**(ROADMAP 6.3) 채널로도 커밋 후 비동기로 나가며,
  * 대상은 [OUT_OF_APP_TYPES] 로 한정한다 — 저재고·장바구니 리마인드처럼 자주 뜨는 알림까지 밖으로 보내지 않기 위함이다.
- * 수신 채널을 회원이 고르는 알림 설정은 후속 과제다(푸시는 브라우저 구독 여부가 곧 수신 동의).
+ * 회원은 종류×채널별로 메일·푸시를 끌 수 있다([NotificationPreferenceService] — 각 채널 리스너가 발송 직전 확인).
  */
 @Service
 @Transactional(readOnly = true)
@@ -34,13 +34,13 @@ class NotificationService(
             Notification(userId = userId, type = type, title = title, body = body, linkUrl = linkUrl),
         )
         if (type in OUT_OF_APP_TYPES) {
-            eventPublisher.publishEvent(NotificationDispatchEvent(userId, title, body, linkUrl))
+            eventPublisher.publishEvent(NotificationDispatchEvent(userId, type, title, body, linkUrl))
         }
     }
 
     companion object {
-        /** 메일·푸시로도 보내는 알림 — 사용자가 기다리는 1회성 소식만 넣는다. */
-        private val OUT_OF_APP_TYPES = setOf(
+        /** 메일·푸시로도 보내는 알림 — 사용자가 기다리는 1회성 소식만 넣는다. 수신 설정 대상이기도 하다. */
+        val OUT_OF_APP_TYPES = setOf(
             NotificationType.RESTOCK,
             NotificationType.PRICE_DROP,
             NotificationType.MEMBERSHIP,

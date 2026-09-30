@@ -1,6 +1,7 @@
 package com.example.starter.domain.notification.push
 
 import com.example.starter.domain.notification.NotificationDispatchEvent
+import com.example.starter.domain.notification.entity.NotificationType
 import com.example.starter.domain.user.entity.User
 import com.example.starter.domain.user.repository.UserRepository
 import com.example.starter.security.userdetails.CustomUserDetails
@@ -111,7 +112,7 @@ class PushSubscriptionIntegrationTest : AbstractIntegrationTest() {
         every { pushSender.send(match { it.endpoint.endsWith("gone") }, any()) } returns PushResult.GONE
         every { pushSender.send(match { it.endpoint.contains("broken") }, any()) } throws RuntimeException("timeout")
 
-        listener.send(NotificationDispatchEvent(member.userId, "재입고", "상품이 재입고되었습니다.", "/products/1"))
+        listener.send(NotificationDispatchEvent(member.userId, NotificationType.RESTOCK, "재입고", "상품이 재입고되었습니다.", "/products/1"))
 
         verify(exactly = 3) { pushSender.send(any(), any()) }
         assertThat(payload.captured).contains("\"title\":\"재입고\"", "\"url\":\"/products/1\"")

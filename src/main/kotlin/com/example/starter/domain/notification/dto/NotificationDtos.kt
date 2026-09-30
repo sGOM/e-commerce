@@ -59,3 +59,17 @@ data class SubscribePushRequest(
 data class PushPublicKeyResponse(
     val publicKey: String?,
 )
+
+/** 알림 수신 설정 한 줄(종류별 메일·푸시). */
+data class NotificationPreferenceResponse(
+    val type: NotificationType,
+    val email: Boolean,
+    val push: Boolean,
+)
+
+/** 알림 수신 설정 변경 — 보낸 종류만 바꾼다. */
+data class UpdateNotificationPreferenceRequest(
+    val type: NotificationType,
+    val email: Boolean,
+    val push: Boolean,
+)

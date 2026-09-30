@@ -253,6 +253,7 @@ npm run dev          # http://localhost:5173 (/api 요청은 :8080 백엔드로 
 | GET | `/api/me/loyalty-tier` | 내 로열티 등급·다음 등급까지 남은 금액 | 회원 |
 | GET · PATCH | `/api/me/notifications` · `/api/me/notifications/{id}/read` | 인앱 알림함 조회·읽음(재입고·가격인하·카트리마인드 등) | 회원 |
 | GET · POST | `/api/me/push-subscriptions/public-key` · `/api/me/push-subscriptions` | 웹 푸시 VAPID 공개키 / 브라우저 구독 등록 | 회원 |
+| GET · PUT | `/api/me/notification-preferences` | 알림 수신 설정(메일·푸시 대상 종류별 on/off, 기본 켜짐) | 회원 |
 | GET · POST | `/api/me/membership` | 내 멤버십 조회 / 구독(빌링키) | 회원 |
 | GET · POST | `/api/me/membership/coupons` · `/{couponId}/claim` | 멤버십 전용 쿠폰 목록 / 받기(혜택 활성 회원, 1회) | 회원 |
 | GET | `/api/delivery-slots?regionId=&date=` | 배송 권역·슬롯 예약 가능 조회 | 불필요 |
