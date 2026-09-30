@@ -43,7 +43,7 @@ export default function AdminLayout() {
           타임딜
         </NavLink>
         <NavLink to="/admin/delivery-slots" className={tab}>
-          배송 슬롯
+          배송비·슬롯
         </NavLink>
         <NavLink to="/admin/delivery-regions" className={tab}>
           새벽배송 지역

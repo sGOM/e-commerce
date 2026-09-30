@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import ShippingPolicyCard from './ShippingPolicyCard'
 
 const typeFilters: (DeliverySlotType | '')[] = ['', 'DAWN', 'DAYTIME']
 const selectClass =
@@ -41,6 +42,7 @@ export default function AdminDeliverySlotsPage() {
 
   return (
     <div className="space-y-4">
+      <ShippingPolicyCard />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Input
