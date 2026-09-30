@@ -1,6 +1,8 @@
 # 배송 슬롯 예약 (새벽배송/시간대 지정)
 
 > 우선순위: **P1** (Should, 단 지역 커버리지 등 전제 확정 후)
+> 상태: ✅ 구현됨 — `domain/delivery/`. 아래 데이터 모델·API·화면은 기획 당시 개략이고 코드가 원천이다.
+> 오픈 이슈의 결정은 코드 KDoc 에 있다(`grep -rn "오픈 *이슈" src/main` → `delivery/` 등).
 > 관련 도메인: `order`(SubOrder/Shipment), `catalog`(Product 배송속성), 신규 `delivery`(가칭) 도메인
 
 ## 1. 개요 및 배경

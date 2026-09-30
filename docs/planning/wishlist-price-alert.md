@@ -1,6 +1,8 @@
 # 위시리스트(찜) + 가격 인하 알림
 
 > 우선순위: **P1** (Should) — 브레인스토밍 5개 중 최우선 추천안
+> 상태: ✅ 구현됨 — `domain/wishlist/`. 아래 데이터 모델·API·화면은 기획 당시 개략이고 코드가 원천이다.
+> 오픈 이슈의 결정은 코드 KDoc 에 있다(`grep -rn "오픈 *이슈" src/main` → `wishlist/` 등).
 > 작성일: 2026-07-05 / 작성자: 프로덕트 기획(planner)
 > 관련 도메인: 신규 `wishlist`, `catalog`(Product.basePrice), `notification`(기존 재사용)
 

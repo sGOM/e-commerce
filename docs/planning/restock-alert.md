@@ -1,6 +1,8 @@
 # 재입고 알림
 
 > 우선순위: **P0** (Must)
+> 상태: ✅ 구현됨 — `domain/restock/`. 아래 데이터 모델·API·화면은 기획 당시 개략이고 코드가 원천이다.
+> 오픈 이슈의 결정은 코드 KDoc 에 있다(`grep -rn "오픈 *이슈" src/main` → `restock/` 등).
 > 관련 도메인: `catalog`(Inventory/Product), `seller`(재고 조정), `notification`(신규, 최소 인앱)
 
 ## 1. 개요 및 배경

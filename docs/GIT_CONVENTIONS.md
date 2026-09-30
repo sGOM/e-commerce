@@ -1,7 +1,6 @@
 # Git 컨벤션 가이드
 
-이 문서는 이 저장소에서 **브랜치 / 커밋 / PR을 어떤 기준으로 나누고 작성하는지**를 정의한다.
-사람과 서브에이전트(spring-expert, react-expert 등)가 동일한 규칙으로 이력을 쌓아, **나중에 버그를 추적하고 되돌리기 쉬운 히스토리**를 만드는 것이 목적이다.
+브랜치 / 커밋 / PR 을 나누고 쓰는 기준. 사람과 서브에이전트가 같은 규칙으로 **버그를 추적하고 되돌리기 쉬운 히스토리**를 쌓는 것이 목적이다.
 
 핵심 원칙 세 가지:
 
@@ -77,13 +76,10 @@ docs: rewrite README for the e-commerce marketplace platform
 | `chore` | 빌드·의존성·설정 등 |
 | `style` | 포맷팅(로직 변화 없음) |
 
-### 2.3 scope = 도메인 (요청 원칙 #2 "기능 별")
+### 2.3 scope = 도메인
 
-scope는 **변경이 속한 도메인/영역**을 적는다. 이 저장소에서 실제 쓰는 scope:
-
-`catalog` · `order` · `cart` · `payment` · `coupon-point` · `settlement` · `seller` · `frontend`
-
-- 새 기획(`docs/planning/`)을 구현할 땐 해당 기능 slug에 맞는 scope를 쓴다. 예: 리뷰 → `feat(review):`, 정기배송 → `feat(subscription):`.
+scope는 **변경이 속한 도메인/영역**을 적는다. 백엔드는 `domain/` 패키지명(`order`, `payment`, `catalog`, `gift` …),
+프론트는 `frontend`, 그 밖에 `auth`·`config`·`ops` 등. 실제 사용 목록: `git log --format=%s | grep -oE '^[a-z]+\([a-z-]+\)' | sort | uniq -c`.
 - **한 커밋의 scope는 하나**가 원칙. 두 도메인을 건드려야 하면 커밋을 나눈다(§1.2).
 
 ### 2.4 제목(subject) 작성 규칙
@@ -91,7 +87,7 @@ scope는 **변경이 속한 도메인/영역**을 적는다. 이 저장소에서
 - 명령형 현재시제: "add", "fix" (O) / "added", "adds" (X)
 - 왜 명령형인가: git 자체가 만드는 커밋("Merge branch…")과 문법을 맞춰 이력을 읽기 쉽게 하기 위함. 참고: [Git 프로젝트 커밋 가이드라인](https://git-scm.com/docs/SubmittingPatches#describe-changes)
 
-### 2.5 본문(body): "왜"를 남긴다 (요청 원칙 #3)
+### 2.5 본문(body): "왜"를 남긴다
 
 제목은 "무엇"을, **본문은 "왜"와 "어떻게"**를 담는다. 아래에 해당하면 본문을 **반드시** 작성한다:
 
@@ -209,21 +205,16 @@ Closes #<issue>
 
 ### 4.5 gh CLI
 
-이 환경에서는 `gh`로 PR을 만든다:
-
 ```bash
 gh pr create --base main --title "feat(review): 상품 포토리뷰" --body-file <파일>
+gh pr merge <번호> --merge      # §4.4 — squash 아님
 ```
 
-PR 본문 말미(에이전트 생성 시):
-
-```
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-```
+에이전트가 만든 PR 은 본문 말미에 세션이 지정한 생성 표기 줄을 붙인다.
 
 ---
 
-## 5. "일반 지식을 벗어난 내용"의 문서화 위치 (요청 원칙 #3)
+## 5. "일반 지식을 벗어난 내용"의 문서화 위치
 
 한눈에 이해하기 어려운 지식은 성격에 따라 **가장 오래 살아남는 위치**에 남긴다:
 
