@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { membershipApi } from '../api/endpoints'
 import { ApiError, formatKRW } from '../api/client'
 import { membershipStatusLabel } from '../labels'
-import type { Membership } from '../api/types'
+import type { Membership, MembershipCoupon } from '../api/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,7 +72,10 @@ export default function MyMembershipPage() {
       {notSubscribed ? (
         <SubscribeFlow onSubscribed={load} />
       ) : membership ? (
-        <MembershipSummary membership={membership} onCancel={cancel} />
+        <>
+          <MembershipSummary membership={membership} onCancel={cancel} />
+          {membership.benefitActive && <MembershipCoupons />}
+        </>
       ) : null}
     </div>
   )
@@ -148,6 +151,78 @@ function MembershipSummary({ membership, onCancel }: { membership: Membership; o
   )
 }
 
+/** 멤버십 전용 쿠폰 받기(AC10) — 받은 쿠폰은 결제 화면 쿠폰 목록에 나온다. */
+function MembershipCoupons() {
+  const [coupons, setCoupons] = useState<MembershipCoupon[] | null>(null)
+  const [claimingId, setClaimingId] = useState<number | null>(null)
+
+  const load = useCallback(() => {
+    membershipApi
+      .coupons()
+      .then(setCoupons)
+      .catch(() => setCoupons([]))
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const claim = async (couponId: number) => {
+    setClaimingId(couponId)
+    try {
+      await membershipApi.claimCoupon(couponId)
+      toast.success('쿠폰을 받았습니다. 결제할 때 사용할 수 있어요.')
+      load()
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : '쿠폰을 받지 못했습니다.')
+    } finally {
+      setClaimingId(null)
+    }
+  }
+
+  if (!coupons) return null
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>멤버십 전용 쿠폰</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {coupons.length === 0 ? (
+          <p className="text-sm text-muted-foreground">지금 받을 수 있는 쿠폰이 없습니다.</p>
+        ) : (
+          <ul className="space-y-2">
+            {coupons.map((c) => (
+              <li
+                key={c.couponId}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+              >
+                <div className="text-sm">
+                  <p className="font-medium">{c.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.discountType === 'RATE' ? `${c.discountValue}%` : formatKRW(c.discountValue)} 할인
+                    {c.minOrderAmount > 0 && ` · ${formatKRW(c.minOrderAmount)} 이상`} ·{' '}
+                    {new Date(c.validUntil).toLocaleDateString('ko-KR')}까지
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={c.claimed ? 'outline' : 'default'}
+                  disabled={c.claimed || claimingId === c.couponId}
+                  onClick={() => claim(c.couponId)}
+                >
+                  {c.claimed ? '받음' : '받기'}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function SubscribeFlow({ onSubscribed }: { onSubscribed: () => void }) {
   const [cardNumber, setCardNumber] = useState('')
   const [registering, setRegistering] = useState(false)
@@ -199,7 +274,7 @@ function SubscribeFlow({ onSubscribed }: { onSubscribed: () => void }) {
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             <li>포인트 우대 적립(일반 회원보다 더 많이 적립)</li>
-            <li>멤버십 전용 쿠폰 수령 가능</li>
+            <li>멤버십 전용 쿠폰(이벤트) 직접 받기</li>
           </ul>
           <p className="mt-3 text-xs text-muted-foreground">
             월 정기 구독료가 결제되며, 언제든 해지할 수 있습니다. 해지해도 이미 결제한 기간까지는 혜택이 유지됩니다.

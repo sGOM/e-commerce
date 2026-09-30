@@ -41,6 +41,10 @@ class Coupon(
 
     @Column(name = "valid_until", nullable = false)
     val validUntil: Instant,
+
+    // 멤버십 전용(AC10) — 혜택 활성 회원이 직접 받는다(MembershipCouponService). 사용 조건은 일반 쿠폰과 같다.
+    @Column(name = "membership_only", nullable = false)
+    val membershipOnly: Boolean = false,
 ) : BaseTimeEntity() {
 
     @Id

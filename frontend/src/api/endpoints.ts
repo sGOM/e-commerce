@@ -74,6 +74,7 @@ import type {
   Tracking,
   ReturnReason,
   OrderReturn,
+  MembershipCoupon,
 } from './types'
 
 // ----- 인증 -----
@@ -131,6 +132,9 @@ export const membershipApi = {
   // 미가입 시 404(MEMBERSHIP-001) — 호출부에서 ApiError 로 잡아 가입 CTA 를 보여준다.
   my: () => api.get<Membership>('/api/me/membership'),
   cancel: () => api.del<Membership>('/api/me/membership'),
+  // 멤버십 전용 쿠폰(무료배송 대신 주는 이벤트 혜택)
+  coupons: () => api.get<MembershipCoupon[]>('/api/me/membership/coupons'),
+  claimCoupon: (couponId: number) => api.post<void>(`/api/me/membership/coupons/${couponId}/claim`),
 }
 
 // ----- 재입고 알림 -----
@@ -427,6 +431,8 @@ export interface CreateCouponBody {
   maxDiscountAmount?: number | null
   validFrom: string
   validUntil: string
+  // 멤버십 전용 — 혜택 활성 회원이 멤버십 화면에서 직접 받는다
+  membershipOnly?: boolean
   issueToUserIds?: number[]
 }
 

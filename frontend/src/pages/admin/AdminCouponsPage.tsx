@@ -28,6 +28,7 @@ function CouponForm() {
   const [validFrom, setValidFrom] = useState('')
   const [validUntil, setValidUntil] = useState('')
   const [issueTo, setIssueTo] = useState('')
+  const [membershipOnly, setMembershipOnly] = useState(false)
   const [created, setCreated] = useState<Coupon | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -50,6 +51,7 @@ function CouponForm() {
         maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
         validFrom: new Date(validFrom).toISOString(),
         validUntil: new Date(validUntil).toISOString(),
+        membershipOnly,
         issueToUserIds,
       })
       setCreated(coupon)
@@ -139,6 +141,10 @@ function CouponForm() {
             value={issueTo}
             onChange={(e) => setIssueTo(e.target.value)}
           />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={membershipOnly} onChange={(e) => setMembershipOnly(e.target.checked)} />
+            멤버십 전용(혜택 활성 회원이 멤버십 화면에서 직접 받음)
+          </label>
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}

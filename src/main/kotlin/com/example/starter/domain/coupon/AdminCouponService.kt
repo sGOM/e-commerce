@@ -30,6 +30,7 @@ class AdminCouponService(
                 maxDiscountAmount = request.maxDiscountAmount,
                 validFrom = request.validFrom!!,
                 validUntil = request.validUntil!!,
+                membershipOnly = request.membershipOnly,
             ),
         )
         request.issueToUserIds.distinct().forEach { userId ->

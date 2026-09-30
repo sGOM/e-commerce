@@ -15,6 +15,8 @@ data class CreateCouponRequest(
     val maxDiscountAmount: Long? = null,
     @field:NotNull val validFrom: Instant?,
     @field:NotNull val validUntil: Instant?,
+    /** 멤버십 전용 쿠폰 — 혜택 활성 회원이 멤버십 화면에서 직접 받는다. */
+    val membershipOnly: Boolean = false,
     /** 발급 대상 회원. 비우면 정의만 생성한다. */
     val issueToUserIds: List<Long> = emptyList(),
 )
@@ -29,6 +31,7 @@ data class CouponResponse(
     val maxDiscountAmount: Long?,
     val validFrom: Instant,
     val validUntil: Instant,
+    val membershipOnly: Boolean,
     val issuedCount: Int,
 ) {
     companion object {
@@ -41,6 +44,7 @@ data class CouponResponse(
             maxDiscountAmount = coupon.maxDiscountAmount,
             validFrom = coupon.validFrom,
             validUntil = coupon.validUntil,
+            membershipOnly = coupon.membershipOnly,
             issuedCount = issuedCount,
         )
     }
