@@ -351,6 +351,7 @@ try {
 | `payment.gateway` = `mock`/`toss` | 결제 게이트웨이 구현체 선택 | `@ConditionalOnProperty` |
 | `billing.gateway` = `mock` | 정기결제(빌링키) 게이트웨이 구현체(현재 mock 만) | `@ConditionalOnProperty` |
 | `spring.mail.host` 유무 | 이메일 발송: 있으면 SMTP, 없으면 로그만(`EmailSender`) | `@ConditionalOnProperty` |
+| `push.vapid.private-key` 유무 | 웹 푸시 발송: 있으면 RFC 8291/8292 직접 구현 발송(`WebPushSender`), 없으면 로그만. `push.vapid.public-key` 가 없으면 프론트 토글 숨김 | `@ConditionalOnProperty` |
 | `upload.storage` = `local`/`s3` | 업로드 이미지 저장소(디스크 / S3·MinIO), 공개 URL 은 동일 | `@ConditionalOnProperty` |
 | `delivery.tracker` = `mock`/`sweettracker` | 배송 조회 구현체(스마트택배 API 키 필요) | `@ConditionalOnProperty` |
 | `settlement.scheduler.enabled` | 주기 자동 정산 스케줄러 등록 여부 | `@ConditionalOnProperty` |

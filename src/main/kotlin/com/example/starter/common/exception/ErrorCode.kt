@@ -167,6 +167,10 @@ enum class ErrorCode(
     ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "ADDRESS-001", "배송지를 찾을 수 없습니다."),
     ADDRESS_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "ADDRESS-002", "등록할 수 있는 배송지 개수를 초과했습니다."),
 
+    // 웹 푸시 (PUSH)
+    PUSH_INVALID_SUBSCRIPTION(HttpStatus.BAD_REQUEST, "PUSH-001", "지원하지 않는 푸시 구독 정보입니다."),
+    PUSH_NOT_CONFIGURED(HttpStatus.CONFLICT, "PUSH-002", "푸시 알림이 아직 설정되지 않았습니다."),
+
     // 파일 업로드 (UPLOAD)
     UNSUPPORTED_IMAGE(HttpStatus.BAD_REQUEST, "UPLOAD-001", "JPEG, PNG, GIF, WEBP 이미지만 업로드할 수 있습니다."),
     UPLOAD_NOT_FOUND(HttpStatus.NOT_FOUND, "UPLOAD-002", "파일을 찾을 수 없습니다."),
