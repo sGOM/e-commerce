@@ -17,6 +17,12 @@ class ShippingPolicyService(
 
     fun baseFee(): Long = currentPolicy().baseFee
 
+    /** 단순변심 반품 시 환불액에서 차감하는 반품 배송비(왕복). */
+    fun returnFee(): Long = currentPolicy().returnFee
+
+    /** 구매확정(DELIVERED) 후 반품을 요청할 수 있는 일수. */
+    fun returnWindowDays(): Int = currentPolicy().returnWindowDays
+
     @Transactional
     fun update(baseFee: Long): ShippingPolicyResponse {
         currentPolicy().baseFee = baseFee

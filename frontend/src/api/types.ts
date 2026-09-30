@@ -101,7 +101,31 @@ export interface Cart {
 }
 
 export type OrderStatus = 'CREATED' | 'PAID' | 'CANCELED'
-export type SubOrderStatus = 'CREATED' | 'PAID' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELED'
+export type SubOrderStatus =
+  | 'CREATED'
+  | 'PAID'
+  | 'PREPARING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELED'
+  | 'RETURNING'
+  | 'RETURNED'
+
+// ----- 반품(하위 주문 단위). 금액은 서버가 요청 시점 정책으로 계산해 스냅샷한다 -----
+export type ReturnReason = 'CHANGE_OF_MIND' | 'DEFECTIVE' | 'WRONG_DELIVERY'
+export type ReturnStatus = 'REQUESTED' | 'COLLECTING' | 'COMPLETED' | 'REJECTED'
+
+export interface OrderReturn {
+  returnId: number
+  subOrderId: number
+  orderNumber: string
+  reason: ReturnReason
+  detail: string | null
+  status: ReturnStatus
+  returnFee: number
+  refundAmount: number
+  createdAt: string
+}
 
 export interface OrderItem {
   optionId: number

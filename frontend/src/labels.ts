@@ -13,6 +13,8 @@ import type {
   OrderStatus,
   ProductStatus,
   RestockAlertStatus,
+  ReturnReason,
+  ReturnStatus,
   ReviewStatus,
   SubOrderStatus,
 } from './api/types'
@@ -37,6 +39,21 @@ export const subOrderStatusLabel: Record<SubOrderStatus, string> = {
   SHIPPED: '배송중',
   DELIVERED: '배송완료',
   CANCELED: '취소',
+  RETURNING: '반품진행중',
+  RETURNED: '반품완료',
+}
+
+export const returnReasonLabel: Record<ReturnReason, string> = {
+  CHANGE_OF_MIND: '단순 변심',
+  DEFECTIVE: '상품 불량',
+  WRONG_DELIVERY: '오배송',
+}
+
+export const returnStatusLabel: Record<ReturnStatus, string> = {
+  REQUESTED: '반품 요청',
+  COLLECTING: '회수 중',
+  COMPLETED: '환불 완료',
+  REJECTED: '반품 거절',
 }
 
 export const reviewStatusLabel: Record<ReviewStatus, string> = {

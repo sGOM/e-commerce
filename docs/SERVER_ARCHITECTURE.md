@@ -110,12 +110,14 @@ lines.groupBy { it.seller.id }.values.forEach { sellerLines ->
 ### payable 배분 — 부분 환불의 기반
 쿠폰/포인트는 Order 전체에 적용되지만 환불은 SubOrder 단위로 일어난다. 그래서 최종 결제금액을
 SubOrder별 `payableShare`로 **배분**(`order.distributePayable()`)해 둔다 — 상품 몫은 subtotal 비례, 나눗셈 잔액은 마지막 SubOrder 가 흡수하고, 배송비는 각 SubOrder 에 그대로 더한다. SubOrder 하나를 부분 취소하면
-그 `payableShare`만큼만 부분 환불하고, **모든 SubOrder가 취소된 시점**에 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
+그 `payableShare`만큼만 부분 환불하고, **모든 SubOrder가 취소·반품으로 닫힌 시점**에 쿠폰/포인트 복원·적립 회수·결제 취소를 마무리한다.
+반품(`returns` 패키지)도 같은 단위다 — 검수 완료 시 요청 때 스냅샷한 `payableShare - 반품 배송비`를 환불하고 SubOrder 를 `RETURNED` 로 닫는다.
+반품 진행 중(`RETURNING`)·완료 SubOrder 는 정산 대상 상태에서 빠지며, 이미 정산된 SubOrder 는 역분개가 없어 반품을 받지 않는다.
 
 ```kotlin
 // cancelSubOrder: 부분 환불 → 전부 취소되면 마무리
 if (wasPaid) paymentRepository.findByOrderId(orderId).ifPresent { it.recordPartialRefund(subOrder.payableShare) }
-if (order.isFullyCanceled) { /* 쿠폰/포인트 복원 + 적립 회수 + 결제 markCanceled */ }
+if (order.isFullyClosed) { /* 쿠폰/포인트 복원 + 적립 회수 + 결제 markCanceled */ }
 ```
 
 ---
@@ -364,7 +366,7 @@ try {
 | `cart-reminder.inactivityHours` | 이탈 판정 미활동 시간(기본 24h) | `@ConfigurationProperties(cart-reminder)` |
 | 프로파일 `oauth-<id>`(`oauth` = 전부) | 제공자별 소셜 로그인 활성화(등록정보 `application-oauth-<id>.yml`, 켜진 목록 `GET /api/auth/oauth2/providers`) | 런타임 `ClientRegistrationRepository` 존재 검사 |
 | `app.audit.*` | 감사 로그 on/off·제외경로·마스킹 키·본문 길이 | `@ConfigurationProperties` |
-| 적립률·유효기간·수수료율·리뷰적립·기본 배송비 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`, `ShippingPolicy`) |
+| 적립률·유효기간·수수료율·리뷰적립·기본 배송비·반품 배송비/기간 | 런타임 변경(배포 불필요) | **DB 정책 행** (`PointPolicy`, `SettlementPolicy`, `ReviewPolicy`, `ShippingPolicy`) |
 
 ---
 
@@ -434,6 +436,7 @@ fun on(e: ProductPriceChangedEvent) { wishlistService.notifyPriceDrop(e.productI
 | `coupon` | 쿠폰 발행/적용/복원 | `CouponService` |
 | `settlement` | 셀러 정산·스케줄러 | `SettlementService`(멱등 집계), `SettlementScheduler` |
 | `seller` | 입점/심사, 송장 | `SellerOrderService` |
+| `returns` | 반품 요청→회수→검수 완료(환불)/거절 | `ReturnService`(기간·정산 검증), `OrderReturn`(상태 전이), `OrderService.completeReturn` |
 | `review` | 상품 리뷰/포토리뷰, 구매 인증·요약 | `ReviewService`(구매내역 검증), `ReviewPolicy` |
 | `restock` | 재입고 알림(옵션 임계값 감지) | `RestockAlertEventListener`(@Async·AFTER_COMMIT) |
 | `notification` | 범용 인앱 알림함 | `NotificationType`(enum), `NotificationService`(@Async 발송) |

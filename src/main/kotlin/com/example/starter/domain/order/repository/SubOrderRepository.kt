@@ -11,7 +11,7 @@ import java.util.Optional
 
 interface SubOrderRepository : JpaRepository<SubOrder, Long> {
 
-    /** 회원 주문 중 결제 후 아직 배송이 끝나지 않은(PAID/PREPARING/SHIPPED) 하위 주문이 있는지 — 탈퇴 가능 여부. */
+    /** 회원 주문 중 결제 후 아직 끝나지 않은(PAID/PREPARING/SHIPPED/RETURNING) 하위 주문이 있는지 — 탈퇴 가능 여부. */
     @Query("select count(s) > 0 from SubOrder s where s.order.userId = :userId and s.status in :statuses")
     fun existsByUserIdAndStatusIn(
         @Param("userId") userId: Long,

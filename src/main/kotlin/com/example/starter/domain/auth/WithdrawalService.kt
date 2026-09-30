@@ -68,6 +68,6 @@ class WithdrawalService(
     }
 
     private companion object {
-        val IN_PROGRESS = listOf(SubOrderStatus.PAID, SubOrderStatus.PREPARING, SubOrderStatus.SHIPPED)
+        val IN_PROGRESS = listOf(SubOrderStatus.PAID, SubOrderStatus.PREPARING, SubOrderStatus.SHIPPED, SubOrderStatus.RETURNING)
     }
 }
