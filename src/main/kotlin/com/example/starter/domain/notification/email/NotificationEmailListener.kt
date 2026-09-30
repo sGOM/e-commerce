@@ -1,6 +1,8 @@
 package com.example.starter.domain.notification.email
 
 import com.example.starter.domain.notification.NotificationDispatchEvent
+import com.example.starter.domain.notification.NotificationPreferenceService
+import com.example.starter.domain.notification.entity.NotificationChannel
 import com.example.starter.domain.user.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -16,11 +18,18 @@ import org.springframework.transaction.event.TransactionalEventListener
 class NotificationEmailListener(
     private val userRepository: UserRepository,
     private val emailSender: EmailSender,
+    private val preferenceService: NotificationPreferenceService,
 ) {
 
     @Async("notificationExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun on(event: NotificationDispatchEvent) = send(event.userId, event.title, event.body)
+    fun on(event: NotificationDispatchEvent) = dispatch(event)
+
+    /** 회원이 이 종류의 메일을 끄지 않았으면 보낸다(설정이 없으면 받는다). */
+    fun dispatch(event: NotificationDispatchEvent) {
+        if (!preferenceService.isEnabled(event.userId, event.type, NotificationChannel.EMAIL)) return
+        send(event.userId, event.title, event.body)
+    }
 
     /** 메일 발송은 보조 채널 — 실패해도 인앱 알림을 되돌리지 않고 로그만 남긴다. */
     fun send(userId: Long, title: String, body: String) {

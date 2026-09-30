@@ -1,6 +1,8 @@
 package com.example.starter.domain.notification.push
 
 import com.example.starter.domain.notification.NotificationDispatchEvent
+import com.example.starter.domain.notification.NotificationPreferenceService
+import com.example.starter.domain.notification.entity.NotificationChannel
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
@@ -17,6 +19,7 @@ class NotificationPushListener(
     private val pushSubscriptionRepository: PushSubscriptionRepository,
     private val pushSender: PushSender,
     private val objectMapper: ObjectMapper,
+    private val preferenceService: NotificationPreferenceService,
 ) {
 
     @Async("notificationExecutor")
@@ -24,6 +27,7 @@ class NotificationPushListener(
     fun on(event: NotificationDispatchEvent) = send(event)
 
     fun send(event: NotificationDispatchEvent) {
+        if (!preferenceService.isEnabled(event.userId, event.type, NotificationChannel.PUSH)) return
         // 서비스워커(public/sw.js)가 읽는 형식. 레코드 한도(4KB) 안에 들도록 본문을 자른다.
         val payload = objectMapper.writeValueAsString(
             mapOf("title" to event.title, "body" to event.body.take(MAX_BODY), "url" to (event.linkUrl ?: "/notifications")),

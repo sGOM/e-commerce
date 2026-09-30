@@ -138,6 +138,15 @@ export const loyaltyTierBadgeClass: Record<LoyaltyTier, string> = {
 
 // 알림함(NotificationsPage/NotificationBell)은 제목/본문을 서버가 그대로 내려주므로 타입별 렌더는
 // 아이콘 정도만 덧붙인다. 등록되지 않은(미래) 타입은 undefined 로 떨어져 기본 아이콘(🔔)을 쓴다.
+// 알림 수신 설정 화면에 보이는 종류 이름(메일·푸시로도 나가는 종류만 설정 대상)
+export const notificationTypeLabel: Partial<Record<NotificationType, string>> = {
+  RESTOCK: '재입고',
+  PRICE_DROP: '찜한 상품 가격 인하',
+  MEMBERSHIP: '멤버십 결제',
+  DELIVERY_SUBSCRIPTION: '정기배송',
+  GIFT: '선물하기',
+}
+
 export const notificationTypeIcon: Partial<Record<NotificationType, string>> = {
   RESTOCK: '📦',
   MEMBERSHIP: '💳',

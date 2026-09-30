@@ -5,6 +5,7 @@ import { notifyNotificationsChanged } from '../hooks/useNotifications'
 import { notificationTypeIcon } from '../labels'
 import { ApiError } from '../api/client'
 import PushToggle from '../components/PushToggle'
+import NotificationPreferencesCard from '../components/NotificationPreferencesCard'
 import type { AppNotification, PageResponse } from '../api/types'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -82,6 +83,7 @@ export default function NotificationsPage() {
       </div>
 
       <PushToggle />
+      <NotificationPreferencesCard />
 
       {loading ? (
         <p className="py-20 text-center text-sm text-muted-foreground">불러오는 중…</p>
