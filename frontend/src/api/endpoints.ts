@@ -201,6 +201,13 @@ export const notificationApi = {
   markRead: (id: number) => api.patch<AppNotification>(`/api/me/notifications/${id}/read`),
 }
 
+// ----- 웹 푸시 구독 — 서버에 VAPID 키가 없으면 publicKey 가 null(토글 숨김) -----
+export const pushApi = {
+  publicKey: () => api.get<{ publicKey: string | null }>('/api/me/push-subscriptions/public-key'),
+  // 브라우저 PushSubscription.toJSON() 을 그대로 보낸다({ endpoint, keys: { p256dh, auth } })
+  subscribe: (subscription: PushSubscriptionJSON) => api.post<void>('/api/me/push-subscriptions', subscription),
+}
+
 // ----- 내 리뷰(마이페이지) -----
 export const meReviewApi = {
   // HIDDEN 포함 — 화면에서 "관리자 숨김" 안내로 구분해 보여준다.

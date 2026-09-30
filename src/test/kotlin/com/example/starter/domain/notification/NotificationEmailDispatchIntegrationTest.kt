@@ -2,7 +2,6 @@ package com.example.starter.domain.notification
 
 import com.example.starter.domain.notification.email.EmailSender
 import com.example.starter.domain.notification.email.NotificationEmailListener
-import com.example.starter.domain.notification.email.NotificationEmailRequestedEvent
 import com.example.starter.domain.notification.entity.NotificationType
 import com.example.starter.domain.notification.repository.NotificationRepository
 import com.example.starter.domain.user.entity.User
@@ -46,8 +45,8 @@ class NotificationEmailDispatchIntegrationTest : AbstractIntegrationTest() {
         notificationService.notify(userId, NotificationType.RESTOCK, "재입고", "상품이 재입고되었습니다.")
         notificationService.notify(userId, NotificationType.LOW_STOCK, "재고 부족", "재고가 얼마 남지 않았습니다.")
 
-        assertThat(events.stream(NotificationEmailRequestedEvent::class.java).toList())
-            .containsExactly(NotificationEmailRequestedEvent(userId, "재입고", "상품이 재입고되었습니다."))
+        assertThat(events.stream(NotificationDispatchEvent::class.java).toList())
+            .containsExactly(NotificationDispatchEvent(userId, "재입고", "상품이 재입고되었습니다.", null))
         verify(exactly = 0) { emailSender.send(any(), any(), any()) }
     }
 

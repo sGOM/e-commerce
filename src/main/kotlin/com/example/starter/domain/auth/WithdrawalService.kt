@@ -5,6 +5,7 @@ import com.example.starter.common.exception.ErrorCode
 import com.example.starter.domain.membership.entity.MembershipStatus
 import com.example.starter.domain.membership.repository.MembershipBillingKeyRepository
 import com.example.starter.domain.membership.repository.MembershipRepository
+import com.example.starter.domain.notification.push.PushSubscriptionRepository
 import com.example.starter.domain.order.OrderService
 import com.example.starter.domain.order.entity.OrderStatus
 import com.example.starter.domain.order.entity.SubOrderStatus
@@ -38,6 +39,7 @@ class WithdrawalService(
     private val membershipBillingKeyRepository: MembershipBillingKeyRepository,
     private val deliverySubscriptionRepository: DeliverySubscriptionRepository,
     private val deliverySubscriptionBillingKeyRepository: DeliverySubscriptionBillingKeyRepository,
+    private val pushSubscriptionRepository: PushSubscriptionRepository,
 ) {
 
     @Transactional
@@ -64,6 +66,8 @@ class WithdrawalService(
             .forEach { it.cancel(now) }
         membershipBillingKeyRepository.findByUserId(userId)?.let(membershipBillingKeyRepository::delete)
         deliverySubscriptionBillingKeyRepository.findByUserId(userId)?.let(deliverySubscriptionBillingKeyRepository::delete)
+        // 탈퇴 후 이 계정의 알림이 브라우저로 계속 가지 않게 푸시 구독도 지운다
+        pushSubscriptionRepository.deleteAll(pushSubscriptionRepository.findByUserId(userId))
         user.withdraw(now)
     }
 

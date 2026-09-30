@@ -3,6 +3,10 @@ package com.example.starter.domain.notification.dto
 import com.example.starter.domain.admin.dto.PageResponse
 import com.example.starter.domain.notification.entity.Notification
 import com.example.starter.domain.notification.entity.NotificationType
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 import java.time.Instant
 
 /** 알림 1건 응답. */
@@ -32,4 +36,26 @@ data class NotificationResponse(
 data class MyNotificationsResponse(
     val notifications: PageResponse<NotificationResponse>,
     val unreadCount: Long,
+)
+
+/** 브라우저 `PushSubscription.toJSON()` 형식 그대로 받는다(웹 푸시 구독, ROADMAP 6.3). */
+data class SubscribePushRequest(
+    @field:NotBlank
+    @field:Size(max = 1000)
+    val endpoint: String? = null,
+    @field:NotNull
+    @field:Valid
+    val keys: Keys? = null,
+) {
+    data class Keys(
+        @field:NotBlank
+        val p256dh: String? = null,
+        @field:NotBlank
+        val auth: String? = null,
+    )
+}
+
+/** VAPID 공개키(구독 시 applicationServerKey). 서버에 키가 없으면 null — 프론트는 푸시 토글을 숨긴다. */
+data class PushPublicKeyResponse(
+    val publicKey: String?,
 )

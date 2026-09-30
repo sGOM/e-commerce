@@ -10,6 +10,8 @@ import com.example.starter.domain.membership.entity.MembershipBillingKey
 import com.example.starter.domain.membership.entity.MembershipStatus
 import com.example.starter.domain.membership.repository.MembershipBillingKeyRepository
 import com.example.starter.domain.membership.repository.MembershipRepository
+import com.example.starter.domain.notification.push.PushSubscription
+import com.example.starter.domain.notification.push.PushSubscriptionRepository
 import com.example.starter.domain.order.entity.OrderStatus
 import com.example.starter.domain.order.entity.ShippingAddress
 import com.example.starter.domain.order.repository.OrderRepository
@@ -28,6 +30,7 @@ import com.example.starter.support.AbstractIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -54,6 +57,7 @@ class WithdrawalIntegrationTest : AbstractIntegrationTest() {
     @Autowired lateinit var membershipRepository: MembershipRepository
     @Autowired lateinit var membershipBillingKeyRepository: MembershipBillingKeyRepository
     @Autowired lateinit var deliverySubscriptionRepository: DeliverySubscriptionRepository
+    @Autowired lateinit var pushSubscriptionRepository: PushSubscriptionRepository
 
     private val address = """"shippingAddress":{"receiverName":"수령","receiverPhone":"010-9","zipcode":"12345","address1":"서울 1"}"""
 
@@ -107,6 +111,10 @@ class WithdrawalIntegrationTest : AbstractIntegrationTest() {
             ),
         )
 
+        pushSubscriptionRepository.save(
+            PushSubscription(userId = me.userId, endpoint = "https://fcm.googleapis.com/fcm/send/wd-1", p256dh = "k", auth = "a"),
+        )
+
         withdraw(me).andExpect { status { isOk() } }
 
         val user = userRepository.findById(me.userId).get()
@@ -116,6 +124,7 @@ class WithdrawalIntegrationTest : AbstractIntegrationTest() {
         assertEquals(MembershipStatus.CANCELED, membershipRepository.findByUserId(me.userId)!!.status)
         assertNull(membershipBillingKeyRepository.findByUserId(me.userId))
         assertEquals(DeliverySubscriptionStatus.CANCELED, deliverySubscriptionRepository.findById(subscription.id!!).get().status)
+        assertTrue(pushSubscriptionRepository.findByUserId(me.userId).isEmpty())
 
         // 탈퇴 계정은 로그인할 수 없다(존재 여부를 흘리지 않는 단일 메시지)
         mockMvc.post("/api/auth/login") {

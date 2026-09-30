@@ -50,6 +50,11 @@ notification:
   email:
     from: ${MAIL_FROM:no-reply@example.com}
 
+# 웹 푸시(ROADMAP 6.3). VAPID 키가 없으면 발송 대신 로그로 남기고(LoggingPushSender) 프론트 푸시 토글도 숨는다.
+# 켜려면 환경변수로만 주입한다(private-key 는 시크릿): PUSH_VAPID_PUBLIC_KEY, PUSH_VAPID_PRIVATE_KEY,
+# (선택) PUSH_VAPID_SUBJECT=mailto:ops@example.com. 키 생성: `npx web-push generate-vapid-keys`(base64url 원시값).
+# 여기에 빈 기본값(`${PUSH_VAPID_PRIVATE_KEY:}`)을 두면 안 된다 — 빈 값도 @ConditionalOnProperty 를 만족해 실발송기가 뜬다.
+
 # 배송 조회(기본 mock — 송장 등록 사실만 표시). 스마트택배 실조회:
 #   DELIVERY_TRACKER=sweettracker, DELIVERY_SWEETTRACKER_API_KEY=...
 delivery:
