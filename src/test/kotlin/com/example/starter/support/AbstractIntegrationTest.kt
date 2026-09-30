@@ -58,6 +58,11 @@ abstract class AbstractIntegrationTest {
                 registry.add("spring.datasource.username") { externalUsername }
                 registry.add("spring.datasource.password") { externalPassword }
             }
+            // @MockkBean 조합이 다른 테스트 클래스마다 Spring 이 컨텍스트(와 커넥션 풀)를 새로 만들어 캐시한다.
+            // Hikari 기본값(최대 10, 최소 유휴 10)이면 컨텍스트 10개쯤에서 PostgreSQL max_connections(100)를 넘어
+            // "too many clients" 로 컨텍스트 로딩이 깨진다. 컨텍스트당 유휴 1개·최대 5개로 줄인다.
+            registry.add("spring.datasource.hikari.maximum-pool-size") { 5 }
+            registry.add("spring.datasource.hikari.minimum-idle") { 1 }
         }
     }
 }
